@@ -122,7 +122,7 @@
   ./service.sh up -f .env
   ```
 
-> **注意**：在配置 *EMBEDDING_MODEL_DIMENTION* 之后不要再次修改。
+> **注意**：在配置 *EMBEDDING_MODEL_DIMENTION* 之后启用了记忆，请不要再次修改，否则记忆功能会无法使用。embedding模型的其他配置也不建议修改，可能会影响效果。
 
 ### 问题二：openJiuwen 包含的 Docker 镜像清单
   
