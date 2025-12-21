@@ -29,32 +29,29 @@
 
 ## 二、openJiuwen 安装（以下以 Ubuntu 22.04 为例）
 
-### 1. 下载版本包
+### 1. 下载版本包（若已获取版本包跳过此步骤）
 
 * 运行以下命令下载版本包：
 
   ```
   # 下载 x86_64 架构版本包：
-  wget https://openjiuwen-ci.obs.cn-north-4.myhuaweicloud.com/agentstudio/deployTool_v0.1.0-beta_amd64.tar
+  wget https://openjiuwen-ci.obs.cn-north-4.myhuaweicloud.com/agentstudio/deployTool_v0.1.1_amd64.tar
 
   # 下载 arm 架构版本包：
-  wget https://openjiuwen-ci.obs.cn-north-4.myhuaweicloud.com/agentstudio/deployTool_v0.1.0-beta_arm64.tar
+  wget https://openjiuwen-ci.obs.cn-north-4.myhuaweicloud.com/agentstudio/deployTool_v0.1.1_arm64.tar
   ```
 
-* 运行以下命令下载版本包（将版本包下载链接替换成上述下载链接）
-
-    ```bash
-    wget 版本包下载链接
-    ```
-
 ### 2. 启动 openJiuwen
+
+* 将版本包放至安装目录。
+
 * 解压该版本包（将 xxx64 换为对应的机器架构）。
 
   ```bash
-  tar -xf deployTool_v0.1.0-beta_xxx64.tar
+  tar -xf deployTool_v0.1.1_xxx64.tar
   ```
 
-* 进入 *deployTool_v0.1.0-beta_xxx64* 目录，输入以下命令确认 Docker 已启动：
+* 进入 *deployTool_v0.1.1_xxx64* 目录，输入以下命令确认 Docker 已启动：
 
   ```bash
   sudo systemctl start docker
@@ -81,14 +78,6 @@
 * 若在本地查看，复制上述 *本地访问地址* 到浏览器地址栏，按下“回车键”将看到 openJiuwen 的界面。
 
 * 若在外部机器查看，复制上述 *网络访问地址* 到浏览器地址栏，按下 “回车键” 将看到 openJiuwen 的界面。
-
-### 4. 停止 openJiuwen
-
-请输入以下命令停止 openJiuwen：
-
-```
-./service.sh down
-```
 
 ## 三、常见问题（FAQ）
 
@@ -153,3 +142,11 @@ openEuler 环境中，Docker 部署时创建线程会收到 seccomp(Secure Compu
 | minio  | RELEASE.2024-12-18T13-15-44Z | GNU AGPL 3.0      | <a href="https://github.com/minio/minio/tree/RELEASE.2024-12-18T13-15-44Z" target="_blank" rel="nofollow noopener noreferrer"> 源码链接</a> |
 | milvus | 2.6.2                       | Apache 2.0    | -                                                            |
 | etcd   | 3.5.18                      | Apache 2.0    | -                                                            |
+
+### 问题五：如何停止 openJiuwen
+
+输入以下命令停止 openJiuwen：
+
+```
+./service.sh down
+```

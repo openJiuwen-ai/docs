@@ -46,17 +46,17 @@ Window 上运行 Docker Desktop 依赖虚拟化功能。
 
 ## 二、openJiuwen 安装
 
-### 1. 下载版本包
+### 1. 下载版本包（若已获取版本包跳过此步骤）
 
 * 单击版本下载链接，下载对应版本包至本地。
 
-  x86_64 架构下载链接：<a href="https://openjiuwen-ci.obs.cn-north-4.myhuaweicloud.com/agentstudio/deployTool_v0.1.0-beta_amd64.tar" target="_blank" rel="nofollow noopener noreferrer">openJiuwen v0.1.0-beta</a>
+  x86_64 架构下载链接：<a href="https://openjiuwen-ci.obs.cn-north-4.myhuaweicloud.com/agentstudio/deployTool_v0.1.1_amd64.tar" target="_blank" rel="nofollow noopener noreferrer">openJiuwen v0.1.1</a>
 
-  arm 架构下载链接：<a href="https://openjiuwen-ci.obs.cn-north-4.myhuaweicloud.com/agentstudio/deployTool_v0.1.0-beta_arm64.tar" target="_blank" rel="nofollow noopener noreferrer">openJiuwen v0.1.0-beta</a>
-
-* 新建 *openJiuwen 安装目录*，将版本包移至安装目录并解压。
+  arm 架构下载链接：<a href="https://openjiuwen-ci.obs.cn-north-4.myhuaweicloud.com/agentstudio/deployTool_v0.1.1_arm64.tar" target="_blank" rel="nofollow noopener noreferrer">openJiuwen v0.1.1</a>
 
 ### 2. Docker Desktop 设置 Virtual file shares
+
+* 新建 *openJiuwen 安装目录*。
 
 * 打开 Docker Desktop，按照图示步骤，在序号 4 处输入 *openJiuwen 的安装目录*（例如：`D:\openJiuwen`）；
 
@@ -65,7 +65,8 @@ Window 上运行 Docker Desktop 依赖虚拟化功能。
   <img src="../images/Docker-Desktop-file-share.png" width="600"/>
 
 ### 3. 启动 openJiuwen
-* 进入 *openJiuwen 安装目录*。
+
+* 将版本包放至 *openJiuwen 安装目录* 并解压。
 
 * 进入 *service.sh* 所在目录，在空白处右键打开 Git Bash，输入以下命令确认 Docker Desktop 已启动：
 
@@ -87,14 +88,6 @@ Window 上运行 Docker Desktop 依赖虚拟化功能。
 ### 4. 访问系统
 
 复制上述 *访问地址* 到浏览器地址栏，按下“回车键”将看到 openJiuwen 的界面。
-
-### 5. 停止 openJiuwen
-
-请输入以下命令停止 openJiuwen：
-
-```
-./service.sh down
-```
 
 ## 三、常见问题（FAQ）
 
@@ -149,3 +142,11 @@ Window 上运行 Docker Desktop 依赖虚拟化功能。
 | minio  | RELEASE.2024-12-18T13-15-44Z | GNU AGPL 3.0      | <a href="https://github.com/minio/minio/tree/RELEASE.2024-12-18T13-15-44Z" target="_blank" rel="nofollow noopener noreferrer"> 源码链接</a> |
 | milvus | 2.6.2                       | Apache 2.0    | -                                                            |
 | etcd   | 3.5.18                      | Apache 2.0    | -                                                            |
+
+### 问题三：如何停止 openJiuwen
+
+输入以下命令停止 openJiuwen：
+
+```
+./service.sh down
+```
