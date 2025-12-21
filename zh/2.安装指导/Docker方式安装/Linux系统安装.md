@@ -31,11 +31,15 @@
 
 ### 1. 下载版本包
 
-* 复制版本链接：
+* 运行以下命令下载版本包：
 
-  x86_64架构下载链接：https://openjiuwen-ci.obs.cn-north-4.myhuaweicloud.com/agentstudio/deployTool_v0.1.0_amd64.tar
+  ```
+  # 下载 x86_64 架构版本包：
+  wget https://openjiuwen-ci.obs.cn-north-4.myhuaweicloud.com/agentstudio/deployTool_v0.1.0-beta_amd64.tar
 
-  arm架构下载链接：https://openjiuwen-ci.obs.cn-north-4.myhuaweicloud.com/agentstudio/deployTool_v0.1.0_arm64.tar
+  # 下载 arm 架构版本包：
+  wget https://openjiuwen-ci.obs.cn-north-4.myhuaweicloud.com/agentstudio/deployTool_v0.1.0-beta_arm64.tar
+  ```
 
 * 运行以下命令下载版本包（将版本包下载链接替换成上述下载链接）
 
@@ -47,10 +51,10 @@
 * 解压该版本包（将 xxx64 换为对应的机器架构）。
 
   ```bash
-  tar -xf deployTool_v0.1.0_xxx64.tar
+  tar -xf deployTool_v0.1.0-beta_xxx64.tar
   ```
 
-* 进入 *deployTool_v0.1.0_xxx64* 目录，输入以下命令确认 Docker 已启动：
+* 进入 *deployTool_v0.1.0-beta_xxx64* 目录，输入以下命令确认 Docker 已启动：
 
   ```bash
   sudo systemctl start docker
@@ -72,17 +76,19 @@
 
   Network access: *网络访问地址*
 
-* 若要停止 openJiuwen，请输入以下命令：
-
-  ```
-  ./service.sh down
-  ```
-
 ### 3. 访问系统
 
 * 若在本地查看，复制上述 *本地访问地址* 到浏览器地址栏，按下“回车键”将看到 openJiuwen 的界面。
 
 * 若在外部机器查看，复制上述 *网络访问地址* 到浏览器地址栏，按下 “回车键” 将看到 openJiuwen 的界面。
+
+### 4. 停止 openJiuwen
+
+请输入以下命令停止 openJiuwen：
+
+```
+./service.sh down
+```
 
 ## 三、常见问题（FAQ）
 

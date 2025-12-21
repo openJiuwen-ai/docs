@@ -42,9 +42,9 @@
 
 * 单击版本下载链接，下载对应版本包至本地。
 
-  x86_64架构下载链接：<a href="https://openjiuwen-ci.obs.cn-north-4.myhuaweicloud.com/agentstudio/deployTool_v0.1.0_amd64.tar" target="_blank" rel="nofollow noopener noreferrer">openJiuwen v0.1.0</a>
+  x86_64 架构下载链接：<a href="https://openjiuwen-ci.obs.cn-north-4.myhuaweicloud.com/agentstudio/deployTool_v0.1.0-beta_amd64.tar" target="_blank" rel="nofollow noopener noreferrer">openJiuwen v0.1.0-beta</a>
 
-  arm架构下载链接：<a href="https://openjiuwen-ci.obs.cn-north-4.myhuaweicloud.com/agentstudio/deployTool_v0.1.0_arm64.tar" target="_blank" rel="nofollow noopener noreferrer">openJiuwen v0.1.0</a>
+  arm 架构下载链接：<a href="https://openjiuwen-ci.obs.cn-north-4.myhuaweicloud.com/agentstudio/deployTool_v0.1.0-beta_arm64.tar" target="_blank" rel="nofollow noopener noreferrer">openJiuwen v0.1.0-beta</a>
 
 * 新建 *openJiuwen 安装目录*，将版本包移至安装目录并解压。
 
@@ -72,17 +72,19 @@
 
   Network access: *网络访问地址*
 
-* 若要停止 openJiuwen，请输入以下命令：
-
-  ```
-  ./service.sh down
-  ```
-
 ### 3. 访问系统
 
 * 若在本地查看，复制上述 *本地访问地址* 到浏览器地址栏，按下“回车键”将看到 openJiuwen 的界面。
 
 * 若在外部机器查看，复制上述 *网络访问地址* 到浏览器地址栏，按下“回车键”将看到 openJiuwen 的界面。
+
+### 4. 停止 openJiuwen
+
+请输入以下命令停止 openJiuwen：
+
+```
+./service.sh down
+```
 
 ## 三、常见问题（FAQ）
 
