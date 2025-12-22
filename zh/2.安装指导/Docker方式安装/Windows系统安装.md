@@ -83,6 +83,8 @@ Window 上运行 Docker Desktop 依赖虚拟化功能。
   ./service.sh up
   ```
 
+  > **注意**：可能会因为网络原因出现 “up Plugin + Sandbox Server failed” 报错，请重新执行 `./service.sh up`。
+
 * 启动成功后会输出 Local access：*访问地址*。
 
 ### 4. 访问系统

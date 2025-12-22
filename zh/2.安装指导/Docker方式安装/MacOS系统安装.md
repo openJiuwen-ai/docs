@@ -66,6 +66,8 @@
   ./service.sh up
   ```
 
+  > **注意**：可能会因为网络原因出现 “up Plugin + Sandbox Server failed” 报错，请重新执行 `./service.sh up`。
+
 * 启动成功后会输出 
 
   Local access: *本地访问地址*
