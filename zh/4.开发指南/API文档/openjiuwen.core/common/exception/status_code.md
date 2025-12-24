@@ -167,3 +167,5 @@
 | RUNTIME_COMPONENT_INVALID_RUNTIME_TYPE              | 196100                        | 运行时应为NodeRuntime实例。                                                              | 检查组件初始化传入的运行时实例，替换为合法的NodeRuntime实例。                            |
 | RUNTIME_COMPONENT_ABILITY_NOT_IMPLEMENTED           | 196101                        | 组件能力已注册但对应方法未实现。                                                                 | 根据异常信息中，在指定组件类中实现对应方法。                                          |
 | RUNTIME_COMPONENT_ABILITY_NOT_SUPPORTED             | 196102                        | 组件不支持指定能力。                                                                       | 根据异常信息，确认组件已注册该能力或替换为支持该能力的组件。                                  |
+| RUNTIME_CHECKPOINTER_NONE_WORKFLOW_STORE_ERROR             | 197000                        | 工作流的检查点不存在。                                                                      | 检查是否存在多个工作流同时执行并使用了相同的session_id。                                  |
+| RUNTIME_CHECKPOINTER_NONE_AGENT_STORE_ERROR             | 197001                        | 智能体的检查点不存在。                                                                      | 检查是否存在多个智能体同时执行并使用了相同的session_id。
