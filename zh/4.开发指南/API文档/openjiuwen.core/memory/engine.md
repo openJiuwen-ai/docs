@@ -796,7 +796,7 @@ add_conversation_messages(user_id: str, group_id: str, messages: list[BaseMessag
 ### async get_message_by_id
 
 ```python
-get_message_by_id(msg_id: str) -> Tuple[BaseMessage, datetime]
+get_message_by_id(msg_id: str) -> Tuple[BaseMessage, datetime] | None
 ```
 
 根据消息ID获取单条消息及其时间戳。
@@ -806,7 +806,7 @@ get_message_by_id(msg_id: str) -> Tuple[BaseMessage, datetime]
 * **msg_id** (str)：消息唯一标识。
 
 **返回：**
-**Tuple[BaseMessage, datetime]**，消息对象与时间戳。
+**Tuple[BaseMessage, datetime]**，消息对象与时间戳，未找到时返回None。
 
 **样例：**
 
