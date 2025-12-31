@@ -7,7 +7,7 @@
 | CLASS                                                   | DESCRIPTION              |
 |---------------------------------------------------------|--------------------------|
 | [WorkflowComponent](./component/base.md#class-openjiuwencorecomponentbaseworkflowcomponent)                          | 自定义工作流组件的抽象基类。           |
-| [LLMComponent](./component/llm_comp.md#class-openjiuwencorecomponentbasellmcomponent)                           | openJiuwen预置的大模型组件。      |
+| [LLMComponent](./component/llm_comp.md#class-openjiuwencorecomponentllm_compllmcomponent)                           | openJiuwen预置的大模型组件。      |
 | [LLMCompConfig](./component/llm_comp.md#class-openjiuwencorecomponentllm_compllmcompconfig)                          | 大模型组件配置信息的数据类。           |
 | [IntentDetectionComponent](./component/intent_detection_comp.md#class-openjiuwencorecomponentintent_detection_compintentdetectioncomponent)  | openJiuwen预置的意图识别组件。     |
 | [IntentDetectionCompConfig](./component/intent_detection_comp.md#class-openjiuwencorecomponentintent_detection_compintentdetectioncompconfig) | 意图识别组件配置信息的数据类。          |

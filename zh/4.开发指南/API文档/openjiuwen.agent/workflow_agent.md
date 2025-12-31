@@ -755,7 +755,7 @@ bind_workflows(self, workflows: List[Workflow])
 
 **参数**：
 
-- **workflows**(List[[Workflow](../openjiuwen.core/workflow/base.md#openjiuwencoreworkflowbaseworkflow)])：需要绑定到WorkflowAgent的工作流列表。
+- **workflows**(List[[Workflow](../openjiuwen.core/workflow/base.md#class-openjiuwencoreworkflowbaseworkflow)])：需要绑定到WorkflowAgent的工作流列表。
 
 **样例**：
 
