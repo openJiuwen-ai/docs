@@ -125,6 +125,93 @@ set_end_comp(self, end_comp_id: str, component: Union[Executable, WorkflowCompon
 >>> workflow.set_end_comp("end", end, inputs_schema={"final_output": "${llm.query}"})
 ```
 
+### add_workflow_comp
+```
+add_workflow_comp(self, comp_id: str, workflow_comp: Union[Executable, WorkflowComponent], *, wait_for_all: bool = False, inputs_schema: dict = None, outputs_schema: dict = None, inputs_transformer: Transformer = None, outputs_transformer: Transformer = None, stream_inputs_schema: dict = None, stream_outputs_schema: dict = None, stream_inputs_transformer: Transformer = None, stream_outputs_transformer: Transformer = None, comp_ability: list[ComponentAbility] = None)->Self
+```
+
+工作流组件添加接口，用于向当前工作流实例中添加一个具体的可执行组件或子工作流组件，并配置该组件的输入输出规则、数据流转换逻辑及能力属性。
+
+​**参数**​：
+
+* ​**comp_id**​(str)：组件的唯一标识符，用于在工作流中引用此组件。
+* ​**workflow_comp**(Union[Executable, [WorkflowComponent](../component/base.md#class-openjiuwencorecomponentbaseworkflowcomponent)])：待添加的工作流组件实例，具体配置可参看相应组件要求。支持两种类型：
+  
+  * `Executable`：基础可执行组件（如函数、脚本、工具调用实例）。
+  * `WorkflowComponent`：工作流组件（即已定义的完整工作流，可作为当前工作流的一个子节点）。
+* ​*​：参数分隔符
+* ​**wait_for_all**​(bool, 可选)：是否等待所有前置依赖组件执行完成后再执行此组件。`True`表示需要等待所有前置依赖组件执行完成，`False`表示不需要。默认值：`False`。
+* ​**inputs_schema**​(dict, 可选)：组件输入参数的结构定义，键名应与组件输入参数名匹配，值为对应的输入参数类型。默认值：`None`。
+* ​**outputs_schema**​(dict, 可选)：组件输出结果的结构定义，用于定义输出数据的格式规范，便于后续组件解析。默认值：`None`。
+* ​**inputs_transformer**​(Transformer, 可选)：输入数据转换器，负责在将数据传递给组件前进行格式转换或预处理，允许开发者注入自定义逻辑。默认值：`None`。
+* ​**outputs_transformer**​(Transformer, 可选)：输出数据转换器，负责在组件产生结果后进行格式转换或后处理，允许开发者注入自定义逻辑。默认值：`None`。
+* ​**stream_inputs_schema**​(dict, 可选)：组件输入参数的结构定义。仅适用于支持流式数据输入的组件，作用同`inputs_schema`；默认值：`None`。
+* ​**stream_outputs_schema**​(dict, 可选)：组件输出结果的结构定义。仅适用于支持流式数据输出的组件，作用同`outputs_schema`。默认值：`None`。
+* ​**stream_inputs_transformer**​(Transformer, 可选)：对流式输入数据进行实时转换。默认值：`None`。
+* ​**stream_outputs_transformer**​(Transformer, 可选)：对流式输出数据进行实时转换。默认值：`None`。
+* ​**comp_ability**​(list[[ComponentAbility](./workflow_config.md#class-openjiuwencoreworkflowworkflow_configcomponentability)], 可选)：指定组件支持的操作。当组件上下游既有流式又有批时，组件无法自行判断使用transform、invoke、collect、stream中的哪些能力，需指定该值。默认值：`None`，表示只使用invoke能力。
+
+> **说明**
+>
+> * inputs_schema和inputs_transformer的配置可参见[待添加组件](../component.README.md#component)的要求，取值可引用上游组件的输出；outputs_schema和outputs_transformer的配置取值可使用组件本身输出。
+> * inputs_schema和inputs_transformer均未配置时表示透传所有输入；outputs_schema和outputs_transformer均未配置时表示输出格式为组件自身输出。
+> * schema和transform同时配置时，只有transformer生效。
+> * 当组件与上游组件连边是流式边的时候，可按需配置stream_inputs_schema或stream_inputs_transformer；当组件与下游组件连边是流式边的时候，可按需配置stream_outputs_schema或stream_outputs_transformer。配置非stream前缀的schema和transformer不生效。
+
+​**异常**​：
+
+* ​**JiuWenBaseException**​：openJiuwen异常基类，详细信息和解决方法，请参见[StatusCode](../common/exception/status_code.md#class-openjiuwencorecommonexceptionstatus_codestatuscode)。
+
+​**样例**​：
+
+```python
+>>> from openjiuwen.core.component.llm_comp import LLMCompConfig
+>>> 
+>>> def _create_llm_component() -> LLMComponent:
+...     """创建 LLM 组件，仅用于抽取结构化字段（location/date）。"""
+...     model_config = WorkflowAgentTest._create_model_config()
+...     current_date = build_current_date()
+...     user_prompt = ("\n原始query为：{{query}}\n\n帮我改写原始query，要求：\n"
+...         "1. 改为英文；\n"
+...         "2. 改写后的query必须包含当前的日期，默认日期为今天；\n"
+...         "3. 日期为YYYY-MM-DD格式。")
+...     config = LLMCompConfig(
+...         model=model_config,
+...         template_content=[{"role": "user", "content": SYSTEM_PROMPT_TEMPLATE.format(current_date) + user_prompt}],
+...         response_format={"type": "text"},
+...         output_config={
+...             "query": {"type": "string", "description": "改写后的query", "required": True}
+...         },
+...     )
+...     return LLMComponent(config)
+... 
+>>> llm = _create_llm_component()
+>>> 
+>>> # 注册大模型组件到工作流
+>>> workflow.add_workflow_comp("llm", llm, inputs_schema={"query": "${start.query}"})
+```
+
+### add_connection
+```
+add_connection(self, src_comp_id: str,  target_comp_id: str) -> Self
+```
+
+工作流组件连接接口，用于在源组件和目标组件间建立依赖关系，定义数据流和控制流的传递方向。
+
+​**参数**​：
+
+* ​**src_comp_id**​(str)：源组件的唯一标识符，表示连接的起点。
+* ​**target_comp_id**​(str)：目标组件的唯一标识符，表示连接的终点。
+
+​**样例**​：
+
+```python
+>>> # 添加普通连接：从"start"组件指向"llm"
+>>> workflow.add_connection("start", "llm")
+>>> 
+>>> # 添加普通连接：从"llm"指向"end"
+>>> workflow.add_connection("llm", "end")
+```
 
 ### add_conditional_connection
 ```
