@@ -91,7 +91,8 @@
 
 目前使用的 milvus2.6.2 需要 CPU 中存在 AVX 指令，如果不存在 milvus 会自动退出。可以通过 `lscpu | grep Flags` 查看 cpu 指令。
 
-### <a id="docker-linux-memory"></a>问题二：如何启用记忆功能
+<a id="docker-linux-memory"></a>
+### 问题二：如何启用记忆功能
 
 记忆功能的体验与大模型的参数规模相关。
   

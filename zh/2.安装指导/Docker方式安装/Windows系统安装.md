@@ -97,7 +97,8 @@ Window 上运行 Docker Desktop 依赖虚拟化功能。
 
 ## 三、常见问题（FAQ）
 
-### <a id="docker-windows-memory"></a>问题一：如何启用记忆功能
+<a id="docker-windows-memory"></a>
+### 问题一：如何启用记忆功能
 
 记忆功能的体验与大模型的参数规模相关。
   
