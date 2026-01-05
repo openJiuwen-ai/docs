@@ -127,10 +127,10 @@
 
 * 配置完成后启动 openJiuwen 平台即可使用记忆功能。
 
-* 若是在启动 openJiuwen 之后启用记忆功能，请在 *.env* 文件同级目录运行 `cp .env.xxxxx .env`（xxxxx为需要使用记忆功能的容器运行时生成的随机码，可以通过docker ps -a查看），在 *.env* 中添加 embedding 相关的信息；配置完成后，重新启动 openJiuwen 平台使配置生效即可使用记忆功能：
+* 若是在启动 openJiuwen 之后启用记忆功能，请在 *.env* 中添加 embedding 相关的信息；配置完成后，重新启动 openJiuwen 平台使配置生效即可使用记忆功能：
 
   ```
-  ./service.sh up -f .env
+  ./service.sh up
   ```
 
 > **注意**：在配置 *EMBEDDING_MODEL_DIMENTION* 之后启用了记忆，请不要再次修改，否则记忆功能会无法使用。embedding模型的其他配置也不建议修改，可能会影响效果。

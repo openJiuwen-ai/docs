@@ -118,10 +118,10 @@ The memory feature relies on an embedding model. The following steps uses Huawei
 
 * After completing the configuration, start the openJiuwen platform to use the memory feature.
 
-* If you enable the memory feature after openJiuwen has already been started, run the command `cp .env.xxxxx .env` in the same directory as *.env* (xxxxx is a random code generated at container runtime when memory is enabled, you can find it via `docker ps -a`). Then, add the embedding-related information to *.env*. After completing the configuration, restart the openJiuwen platform for the changes to take effect: 
+* If you enable the memory feature after openJiuwen has already been started, add the embedding-related information to *.env*. After configuration, restart the openJiuwen platform for the settings to take effect:
 
   ```
-  ./service.sh up -f .env
+  ./service.sh up
   ```
 
 > **Note**: Once the memory feature has been enabled after configuring *EMBEDDING_MODEL_DIMENTION*, do not modify this value again, otherwise the memory feature will stop working. It is also not recommended to change other embedding model configurations, as doing so may affect performance or results.
