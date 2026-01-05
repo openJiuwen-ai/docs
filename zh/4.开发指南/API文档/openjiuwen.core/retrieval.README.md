@@ -24,4 +24,13 @@
 | [Indexer](./retrieval/indexing/indexer/base.md)               | 索引管理器抽象基类。     |
 | [ChromaIndexer](./retrieval/indexing/indexer/chroma_indexer.md)| ChromaDB索引管理器实现。 |
 | [MilvusIndexer](./retrieval/indexing/indexer/milvus_indexer.md)| Milvus索引管理器实现。   |
+| [Processor](./retrieval/indexing/processor/base.md)                | 处理器抽象基类。         |
+| [Parser](./retrieval/indexing/processor/parser/base.md)           | 文档解析器抽象基类。     |
+| [AutoFileParser](./retrieval/indexing/processor/parser/auto_file_parser.md) | 自动文件解析器。         |
+| [Chunker](./retrieval/indexing/processor/chunker/base.md)         | 文本分块器抽象基类。     |
+| [CharChunker](./retrieval/indexing/processor/chunker/char_chunker.md) | 基于字符的分块器。       |
+| [TokenizerChunker](./retrieval/indexing/processor/chunker/tokenizer_chunker.md) | 基于tokenizer的分块器。 |
+| [TextChunker](./retrieval/indexing/processor/chunker/chunking.md) | 文本分块器（支持字符/token）。 |
+| [Extractor](./retrieval/indexing/processor/extractor/base.md)      | 提取器抽象基类。         |
+| [TripleExtractor](./retrieval/indexing/processor/extractor/triple_extractor.md) | 三元组提取器。          |
 

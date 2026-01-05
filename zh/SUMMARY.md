@@ -1,4 +1,4 @@
-# Summary
+﻿# Summary
 
 - [1.产品简介](1.产品简介.md)
 - [2.安装指导](2.安装指导/README.md)
@@ -157,6 +157,52 @@
       - [operator](4.开发指南/API文档/openjiuwen.core/operator.README.md)
         - [llm_call](4.开发指南/API文档/openjiuwen.core/operator/llm_call/base.md)
           - [base](4.开发指南/API文档/openjiuwen.core/operator/llm_call/base.md)
+      - [retrieval](4.开发指南/API文档/openjiuwen.core/retrieval.README.md)
+        - common
+          - [config](4.开发指南/API文档/openjiuwen.core/retrieval/common/config.md)
+          - [document](4.开发指南/API文档/openjiuwen.core/retrieval/common/document.md)
+          - [retrieval_result](4.开发指南/API文档/openjiuwen.core/retrieval/common/retrieval_result.md)
+          - [triple](4.开发指南/API文档/openjiuwen.core/retrieval/common/triple.md)
+        - embedding
+          - [api_embedding](4.开发指南/API文档/openjiuwen.core/retrieval/embedding/api_embedding.md)
+          - [base](4.开发指南/API文档/openjiuwen.core/retrieval/embedding/base.md)
+          - [ollama_embedding](4.开发指南/API文档/openjiuwen.core/retrieval/embedding/ollama_embedding.md)
+        - indexing
+          - indexer
+            - [base](4.开发指南/API文档/openjiuwen.core/retrieval/indexing/indexer/base.md)
+            - [chroma_indexer](4.开发指南/API文档/openjiuwen.core/retrieval/indexing/indexer/chroma_indexer.md)
+            - [milvus_indexer](4.开发指南/API文档/openjiuwen.core/retrieval/indexing/indexer/milvus_indexer.md)
+          - processor
+            - [base](4.开发指南/API文档/openjiuwen.core/retrieval/indexing/processor/base.md)
+            - chunker
+              - [base](4.开发指南/API文档/openjiuwen.core/retrieval/indexing/processor/chunker/base.md)
+              - [char_chunker](4.开发指南/API文档/openjiuwen.core/retrieval/indexing/processor/chunker/char_chunker.md)
+              - [chunking](4.开发指南/API文档/openjiuwen.core/retrieval/indexing/processor/chunker/chunking.md)
+              - [tokenizer_chunker](4.开发指南/API文档/openjiuwen.core/retrieval/indexing/processor/chunker/tokenizer_chunker.md)
+            - extractor
+              - [base](4.开发指南/API文档/openjiuwen.core/retrieval/indexing/processor/extractor/base.md)
+              - [triple_extractor](4.开发指南/API文档/openjiuwen.core/retrieval/indexing/processor/extractor/triple_extractor.md)
+            - parser
+              - [auto_file_parser](4.开发指南/API文档/openjiuwen.core/retrieval/indexing/processor/parser/auto_file_parser.md)
+              - [base](4.开发指南/API文档/openjiuwen.core/retrieval/indexing/processor/parser/base.md)
+        - retriever
+          - [agentic_retriever](4.开发指南/API文档/openjiuwen.core/retrieval/retriever/agentic_retriever.md)
+          - [base](4.开发指南/API文档/openjiuwen.core/retrieval/retriever/base.md)
+          - [graph_retriever](4.开发指南/API文档/openjiuwen.core/retrieval/retriever/graph_retriever.md)
+          - [hybrid_retriever](4.开发指南/API文档/openjiuwen.core/retrieval/retriever/hybrid_retriever.md)
+          - [sparse_retriever](4.开发指南/API文档/openjiuwen.core/retrieval/retriever/sparse_retriever.md)
+          - [vector_retriever](4.开发指南/API文档/openjiuwen.core/retrieval/retriever/vector_retriever.md)
+        - utils
+          - [config_manager](4.开发指南/API文档/openjiuwen.core/retrieval/utils/config_manager.md)
+          - [exceptions](4.开发指南/API文档/openjiuwen.core/retrieval/utils/exceptions.md)
+          - [fusion](4.开发指南/API文档/openjiuwen.core/retrieval/utils/fusion.md)
+        - vector_store
+          - [base](4.开发指南/API文档/openjiuwen.core/retrieval/vector_store/base.md)
+          - [chroma_store](4.开发指南/API文档/openjiuwen.core/retrieval/vector_store/chroma_store.md)
+          - [milvus_store](4.开发指南/API文档/openjiuwen.core/retrieval/vector_store/milvus_store.md)
+        - [simple_knowledge_base](4.开发指南/API文档/openjiuwen.core/retrieval/simple_knowledge_base.md)
+        - [knowledge_base](4.开发指南/API文档/openjiuwen.core/retrieval/knowledge_base.md)
+        - [graph_knowledge_base](4.开发指南/API文档/openjiuwen.core/retrieval/graph_knowledge_base.md)
       - [runner](4.开发指南/API文档/openjiuwen.core/runner.README.md)
         - [runner](4.开发指南/API文档/openjiuwen.core/runner/runner.md)
       - [runtime](4.开发指南/API文档/openjiuwen.core/runtime.README.md)
