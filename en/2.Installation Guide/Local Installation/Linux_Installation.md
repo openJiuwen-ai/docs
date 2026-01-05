@@ -68,7 +68,13 @@ Before the formal installation, complete the dependency installation, then proce
 
   > **Note**: If installation fails, please refer to the <a href="https://uv.doczh.com/getting-started/installation/#_1" target="_blank" rel="nofollow noopener noreferrer">uv official guide</a>.
 
-### 4. Install MySQL
+### 4. Install MySQL (Optional Component)
+
+* **Note**: `.env.example` defaults to SQLite. Simply keep `DB_TYPE` as `sqlite` to start the backend service directly—no additional installation or configuration is required. If you prefer to use MySQL, change `DB_TYPE` in `.env.example` to `mysql` and follow the steps below to install and configure MySQL.
+
+* **SQLite vs MySQL**:
+  * SQLite requires no extra setup and is suitable for development and testing, but it has limitations (e.g., no support for concurrent writes, no user permission management).
+  * MySQL offers more robust features and is better suited for complex scenarios, making it the recommended choice for real-world projects and production environments.
 
 - Run the following commands to install MySQL:
 
@@ -355,3 +361,11 @@ If you need to configure plugins that require the sandbox service, do the follow
 | (        | %28           | )         | %29          | +         | %2B          | ,         | %2C          | /         | %2F          |
 | :        | %3A           | ;         | %3B          | <         | %3C          | =         | %3D          | >         | %3E          |
 | ?        | %3F           | @         | %40          | \         | %5C          | \|        | %7C          | -         | -            |
+
+### Question 4: Why does local installation default to HTTP instead of HTTPS?
+
+In local installation mode, the system defaults to HTTP for communication. This design choice is primarily based on the fact that local environments are typically used for development and testing, and avoiding mandatory TLS certificate setup helps reduce the initial usage barrier.
+
+By contrast, the Docker installation method comes with built-in HTTPS support, allowing users to use secure communication out of the box without additional configuration.
+
+If HTTPS is required in a local environment, developers must manually generate and configure TLS certificates according to their deployment needs.

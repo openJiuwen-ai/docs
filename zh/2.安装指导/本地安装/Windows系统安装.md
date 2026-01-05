@@ -45,7 +45,13 @@
 
 * 安装完成后，输入：`uv --version`，若安装成功会输出 uv 版本号。
 
-### 4. 安装 MySQL
+### 4. 安装 MySQL（可选组件）
+
+* **说明**：`.env.example` 默认使用 SQLite，只需保持 `DB_TYPE` 为 `sqlite` 即可直接启动后端服务，无需额外安装或配置；若需使用 MySQL，请将 `.env.example` 中的 `DB_TYPE` 改为 `mysql`，并按照下列步骤完成 MySQL 的安装与配置。
+
+* **SQLite vs MySQL**：
+  * SQLite 无需额外安装和配置，适合开发和测试环境，但功能受限（如不支持高并发写入、无用户权限管理等）。
+  * MySQL 功能更完善，能够满足复杂场景的需求，因此在实际工程和生产环境中更推荐使用。
 
 * 下载 <a href="https://dev.mysql.com/get/Downloads/MySQL-8.4/mysql-8.4.7-winx64.msi" target="_blank" rel="nofollow noopener noreferrer"> MySQL 8.4</a> 安装包。
 
