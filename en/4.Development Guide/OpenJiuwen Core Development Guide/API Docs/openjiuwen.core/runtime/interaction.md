@@ -6,17 +6,17 @@
 class openjiuwen.core.runtime.interaction.interactive_input.InteractiveInput(raw_inputs: Any)
 ```
 
-中断场景下构造用户与工作流的交互输入。
+Construct interactive input between the user and the workflow in interruption scenarios.
 
-**参数**：
+**Parameters**:
 
-- **raw_inputs**(Any)：用户交互输入的信息，并且作为工作流中断恢复时返回的信息。传入None会抛出异常。
+- **raw_inputs** (Any): The user's interactive input, which will be returned when resuming the workflow after an interruption. Passing None will raise an exception.
 
-**异常**:
+**Exceptions**:
 
-- **JiuWenBaseException**：openJiuwen异常基类，具体详细信息和解决方法，参见[StatusCode](../common/exception/status_code.md)。
+- **JiuWenBaseException**: Base class for openJiuwen exceptions. For detailed information and solutions, see [StatusCode](../common/exception/status_code.md).
 
-**样例**：
+**Examples**:
 
 ```python
 >>> import asyncio
@@ -35,18 +35,18 @@ class openjiuwen.core.runtime.interaction.interactive_input.InteractiveInput(raw
 >>> from openjiuwen.core.workflow.base import Workflow
 >>> 
 >>> 
->>> # 创建一个带中断交互的工作流组件
+>>> # Create a workflow component with interruption-based interaction
 >>> class InteractiveNode(ComponentExecutable, WorkflowComponent):
 ...     def __init__(self):
 ...         super().__init__()
 ... 
 ...     async def invoke(self, inputs: Input, runtime: Runtime, context: Context) -> Output:
 ...         cmd = inputs.get("cmd")
-...         # 向用户提问, 等待用户回答
+...         # Ask the user and wait for a reply
 ...         user_input = await runtime.interact(f"Do you want to execute the command '{cmd}'?")
 ...         return {"result": user_input}
 ...  
->>> # 创建工作流，执行工作流触发中断交互流程
+>>> # Build a workflow and execute it to trigger the interactive interruption flow
 >>> flow = Workflow()
 >>> flow.set_start_comp("start", Start({}), inputs_schema={"command1": "${cmd1}"})
 >>> flow.add_workflow_comp("interactive_node1", InteractiveNode(), inputs_schema={"cmd": "${start.command1}"})
@@ -56,29 +56,29 @@ class openjiuwen.core.runtime.interaction.interactive_input.InteractiveInput(raw
 >>> 
 >>> session_id = uuid.uuid4().hex
 >>> 
->>> # 执行工作流
+>>> # Execute the workflow
 >>> output = asyncio.run(flow.invoke({"cmd1": "delete all files"}, WorkflowRuntime(session_id=session_id)))
 >>> 
->>> # 判断结果是否为中断交互输出
+>>> # Check whether the result is an interaction output (interruption)
 >>> if isinstance(output.result[0].payload, InteractionOutput):
-...     # 获取中断组件的提示信息
+...     # Get the prompt from the interrupted component
 ...     print(output.result[0].payload.value)
 ...
 Do you want to execute the command 'delete all files'?
 >>> 
->>> # 创建`InteractiveInput`进行交互输入,  并恢复工作流执行
+>>> # Create `InteractiveInput` to provide user input and resume workflow execution
 >>> 
->>> user_input = InteractiveInput(raw_inputs='是的')
+>>> user_input = InteractiveInput(raw_inputs='Yes')
 >>> output = asyncio.run(flow.invoke(user_input, WorkflowRuntime(session_id=session_id)))
 >>> print(output.result.get("output").get("result1"))
-是的
+Yes
 ```
 
-> **说明**
->
-> - output为工作流输出，详细见[工作流输出介绍](../../openjiuwen.core/workflow/base.md)。
-> - 工作流首次输出是`Do you want to execute the command '{delete all files}'`，此时output里的result为列表，列表中每个元素为流式输出的元素，详细见[流式输出介绍](../../../openJiuwen%20Core开发指南/高阶用法/Runtime/流式输出.md)；payload中的内容为中断输出，详细见[中断输出介绍](#class-openjiuwencoreruntimeinteractioninteractioninteractionoutput)。
-> - 通过`InteractiveInput`构造用户交互输入后，再次输出是`是的`，此时output里的result为结束组件的输出，详细见[结束组件介绍](../component/end_comp.md#class-openjiuwencorecomponentend_compend)。
+Notes
+
+- output is the workflow output. For details, see [Workflow output overview](../../openjiuwen.core/workflow/base.md).
+- The first workflow output is `Do you want to execute the command '{delete all files}'?`. At this time, output.result is a list, and each element is a streaming output chunk. For details, see [Streaming output overview](../../../../OpenJiuwen%20Core%20Development%20Guide/Advanced%20Usage/Runtime/Streaming%20Output.md). The payload contains the interaction output. For details, see [Interaction output overview](#class-openjiuwencoreruntimeinteractioninteractioninteractionoutput).
+- After constructing user input with InteractiveInput, the output becomes `Yes`. At this time, output.result comes from the end component. For details, see [End component overview](../component/end_comp.md#class-openjiuwencorecomponentend_compend).
 
 ### update
 
@@ -86,18 +86,18 @@ Do you want to execute the command 'delete all files'?
 update(self, node_id: str, value: Any)
 ```
 
-为指定组件提供用户交互输入信息，一般用于具有多个中断恢复的组件的工作流，当发生交互中断时，需要为每个中断组件提供不同的交互信息。如果已通过构造函数和`raw_inputs`构造，则调用该接口会抛出异常。
+Provide user input for a specified component. This is generally used in workflows that have components with multiple interruption resumes. When interactive interruptions occur, each interrupted component may require different user input. If user input has already been provided via the constructor and raw_inputs, calling this method will raise an exception.
 
-**参数**：
+**Parameters**:
 
-- **node_id**(str)：中断组件的id。传入None会抛出异常。
-- **value**(Any)：用户输入，会作为[interact](./runtime.md#interact)接口的返回值。传入None会抛出异常。
+- **node_id** (str): The ID of the interrupted component. Passing None will raise an exception.
+- **value** (Any): The user input, which will be returned by the [interact](./runtime.md#interact) API. Passing None will raise an exception.
 
-**异常**:
+**Exceptions**:
 
-- **JiuWenBaseException**：openJiuwen异常基类，具体详细信息和解决方法，参见[StatusCode](../common/exception/status_code.md)。
+- **JiuWenBaseException**: Base class for openJiuwen exceptions. For detailed information and solutions, see [StatusCode](../common/exception/status_code.md).
 
-**样例**：
+**Examples**:
 
 ```python
 >>> import asyncio
@@ -114,18 +114,19 @@ update(self, node_id: str, value: Any)
 >>> from openjiuwen.core.runtime.workflow import WorkflowRuntime
 >>> from openjiuwen.core.workflow.base import Workflow
 >>> 
->>> # 创建一个带有中断交互功能的组件
+>>> # Create a component with interactive interruption
 >>> class InteractiveNode(ComponentExecutable, WorkflowComponent):
 ...     def __init__(self):
 ...         super().__init__()
 ... 
 ...     async def invoke(self, inputs: Input, runtime: Runtime, context: Context) -> Output:
 ...         cmd = inputs.get("cmd")
-...         # 向用户提问, 等待用户回答
+...         # Ask the user and wait for a reply
 ...         user_input = await runtime.interact(f"Do you want to execute the command '{cmd}'?")
 ...         return {"result": user_input}
 ... 
->>> # 构建具有两个中断交互功能的工作流, 并执行工作流，触发两个组件组件的中断流程
+>>> # Build a workflow with two interactive interruption nodes,
+>>> # and execute it to trigger both components' interruption flows
 >>> flow = Workflow()
 >>> flow.set_start_comp("start", Start({}), inputs_schema={"command1": "${cmd1}", "command2": "${cmd2}"})
 >>> flow.add_workflow_comp("interactive_node1", InteractiveNode(), inputs_schema={"cmd": "${start.command1}"})
@@ -151,9 +152,9 @@ interactive_node1
 >>> print(output.result[1].payload.value)
 Do you want to execute the command 'delete all files'?
 >>> 
->>> # 为中断组件组件提供不同的交互输入信息
->>> print("----------第二轮------------")
-----------第二轮------------
+>>> # Provide different user inputs for the interrupted components
+>>> print("----------Second round------------")
+----------Second round------------
 >>> user_input = InteractiveInput()
 >>> user_input.update(node_id_1, "Yes")
 >>> user_input.update(node_id_2, "No")
@@ -164,11 +165,11 @@ Do you want to execute the command 'delete all files'?
 >>> 
 ```
 
-> **说明**
->
-> - 其中output为工作流输出，详细见[工作流输出介绍](../../openjiuwen.core/workflow/base.md)。
-> - 工作流首次输出包含`interactive_node1`、`Do you want to execute the command 'delete all files'?`、`interactive_node2`、`Do you want to execute the command 'kill all processes'?`，此时output的result为列表，列表中每个元素为流式输出的元素，详细见[流式输出介绍](../../../openJiuwen%20Core开发指南/高阶用法/Runtime/流式输出.md)；payload中的内容为中断输出，详细见[中断输出介绍](#class-openjiuwencoreruntimeinteractioninteractioninteractionoutput)。
-> - 通过`InteractiveInput`构造用户交互输入后，再次输出为`{'result1': 'Yes', 'result2': 'No'}`，此时output的result为结束组件的输出，详细见[结束组件介绍](../component/end_comp.md#class-openjiuwencorecomponentend_compend)。
+Notes
+
+- Here, output is the workflow output. For details, see [Workflow output overview](../../openjiuwen.core/workflow/base.md).
+- The first workflow output contains `interactive_node1`, `Do you want to execute the command 'delete all files'?`, `interactive_node2`, and `Do you want to execute the command 'kill all processes'?`. At this time, output.result is a list, and each element is a streaming output chunk. For details, see [Streaming output overview](../../../../OpenJiuwen%20Core%20Development%20Guide/Advanced%20Usage/Runtime/Streaming%20Output.md). The payload contains the interaction output. For details, see [Interaction output overview](#class-openjiuwencoreruntimeinteractioninteractioninteractionoutput).
+- After constructing the user inputs with InteractiveInput, the output becomes `{'result1': 'Yes', 'result2': 'No'}`. At this time, output.result comes from the end component. For details, see [End component overview](../component/end_comp.md#class-openjiuwencorecomponentend_compend).
 
 ## class openjiuwen.core.runtime.interaction.interaction.InteractionOutput
 
@@ -176,12 +177,12 @@ Do you want to execute the command 'delete all files'?
 class openjiuwen.core.runtime.interaction.interaction.InteractionOutput
 ```
 
-工作流与用户的交互输出的数据类，主要用在中断场景下。一般作为[WorkflowChunk](../../openjiuwen.core/workflow/base.md)的`payload`。
+A data class representing user–workflow interaction output, primarily used in interruption scenarios. It is typically used as the payload of a [WorkflowChunk](../../openjiuwen.core/workflow/base.md).
 
-- **id**(str)：中断组件的id。
-- **value**(Any)：中断组件发生中断的提示信息。
+- id (str): The ID of the interrupted component.
+- value (Any): The prompt message produced when the component is interrupted.
 
-**样例**：
+Examples:
 
 ```python
 >>> import asyncio
@@ -199,18 +200,18 @@ class openjiuwen.core.runtime.interaction.interaction.InteractionOutput
 >>> from openjiuwen.core.workflow.base import Workflow
 >>> 
 >>> 
->>> # 创建一个带中断交互的工作流组件
+>>> # Create a workflow component with interruption-based interaction
 >>> class InteractiveNode(ComponentExecutable, WorkflowComponent):
 ...     def __init__(self):
 ...         super().__init__()
 ... 
 ...     async def invoke(self, inputs: Input, runtime: Runtime, context: Context) -> Output:
 ...         cmd = inputs.get("cmd")
-...         # 向用户提问, 等待用户回答
+...         # Ask the user and wait for a reply
 ...         user_input = await runtime.interact(f"Do you want to execute the command '{cmd}'?")
 ...         return {"user_input": user_input}
 ... 
->>> # 创建工作流，执行工作流触发中断交互流程
+>>> # Build a workflow and execute it to trigger the interactive interruption flow
 >>> flow = Workflow()
 >>> flow.set_start_comp("start", Start({}), inputs_schema={"command1": "${cmd1}"})
 >>> flow.add_workflow_comp("interactive_node1", InteractiveNode(), inputs_schema={"cmd": "${start.command1}"})
@@ -219,12 +220,12 @@ class openjiuwen.core.runtime.interaction.interaction.InteractionOutput
 >>> flow.add_connection("interactive_node1", "end")
 >>> 
 >>> session_id = uuid.uuid4().hex
->>> # 执行工作流
+>>> # Execute the workflow
 >>> output = asyncio.run(flow.invoke({"cmd1": "delete all files"}, WorkflowRuntime(session_id=session_id)))
 >>> 
->>> # 判断结果是否为中断交互输出信息
+>>> # Check whether the result is an interaction output
 >>> if isinstance(output.result[0].payload, InteractionOutput):
-...     # 获取中断组件的提示信息
+...     # Get the prompt from the interrupted component
 ...     print(output.result[0].payload.id)
 ...
 interactive_node1
@@ -232,7 +233,7 @@ interactive_node1
 Do you want to execute the command '{delete all files}'
 ```
 
-> **说明**
->
-> - 其中output为工作流输出，详细见[工作流输出介绍](../../openjiuwen.core/workflow/base.md)。
-> - 工作流输出包含`interactive_node1`、`Do you want to execute the command '{delete all files}'`，此时output的result为列表，列表中每个元素为流式输出的元素，详细见[流式输出介绍](../../../openJiuwen%20Core开发指南/高阶用法/Runtime/流式输出.md)；payload中的内容为中断输出，即本章介绍的`InteractionOutput`。
+Notes
+
+- Here, output is the workflow output. For details, see [Workflow output overview](../../openjiuwen.core/workflow/base.md).
+- The workflow output contains `interactive_node1` and `Do you want to execute the command '{delete all files}'`. At this time, output.result is a list, and each element is a streaming output chunk. For details, see [Streaming output overview](../../../../OpenJiuwen%20Core%20Development%20Guide/Advanced%20Usage/Runtime/Streaming%20Output.md). The payload contains the interaction output, i.e., the `InteractionOutput` described in this section.

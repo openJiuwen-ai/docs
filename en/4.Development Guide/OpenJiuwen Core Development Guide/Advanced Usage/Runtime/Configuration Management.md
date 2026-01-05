@@ -3,7 +3,7 @@ openJiuwen stores both workflow and Agent configuration information in the Runti
 - **Workflow configuration**: Refers to the workflow's meta configuration information, including the workflow name, workflow ID, workflow version, and model configuration, obtained via `runtime.get_workflow_config()`.
 - **Agent configuration**: Refers to the Agent's configuration, such as the agent ID, agent version, and model/tool configuration, obtained via `runtime.get_agent_config()`.
 
-Below is an introduction based on a `jiuwen.agent.workflow_agent.WorkflowAgent` that contains a workflow, showing how to obtain workflow configuration and Agent configuration via `runtime` within WorkflowAgent's workflow components.
+Below is an introduction based on a `openjiuwen.agent.workflow_agent.WorkflowAgent` that contains a workflow, showing how to obtain workflow configuration and Agent configuration via `runtime` within WorkflowAgent's workflow components.
 
 # Retrieve workflow configuration
 

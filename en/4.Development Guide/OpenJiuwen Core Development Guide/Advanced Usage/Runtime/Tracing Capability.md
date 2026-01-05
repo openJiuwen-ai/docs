@@ -9,7 +9,7 @@ The Runtime provides a tracing module to make diagnostics convenient for users. 
 
 # Basic tracing capability
 
-Refer to the API documentation [jiuwen.core.stream.base.TraceSchema](../../../API%20Docs/openjiuwen.core/stream/base.md#class-openjiuwencorestreambasetraceschema) for the tracing fields.
+Refer to the API documentation [openjiuwen.core.stream.base.TraceSchema](../../API%20Docs/openjiuwen.core/stream/base.md#class-openjiuwencorestreambasetraceschema) for the tracing fields.
 
 Below are key fields and output examples for three typical tracing scenarios: basic workflow tracing, loop component tracing, and nested sub-workflow tracing.
 

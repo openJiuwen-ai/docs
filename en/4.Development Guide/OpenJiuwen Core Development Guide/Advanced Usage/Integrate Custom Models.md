@@ -1,6 +1,6 @@
 Users can customize model integration. You first need to obtain the model request URL (api_base) and the authentication token (api_key). Model integration typically involves the following three main steps:
 
-1. Create a model file: Create a custom model file under the `jiuwen/core/utils/llm/model_library` directory.
+1. Create a model file: Create a custom model file under the `openjiuwen/core/utils/llm/model_library` directory.
 2. Implement a custom model class: This usually includes handling model request parameters, sending model requests, and processing the returned result data.
 3. Use the custom model class: Create a model instance and call the methods it provides.
 
@@ -8,7 +8,7 @@ Below, using the already supported vendor siliconflow as an example, we explain 
 
 ## Create the file and configure environment variables
 
-Create a `siliconflow.py` file under the `jiuwen/core/utils/llm/model_library` directory.
+Create a `siliconflow.py` file under the `openjiuwen/core/utils/llm/model_library` directory.
 
 ## Implement the custom model class
 

@@ -110,7 +110,7 @@ Model invocation supports four types: synchronous non-streaming `invoke`, asynch
 - Synchronous streaming `stream`: Suitable for real-time, continuous one-way data pushing, where the entire processing pipeline must run in the same thread in order, with low latency.
 - Asynchronous streaming `astream`: Suitable for high-concurrency real-time pushing with non-blocking output, or for generating and displaying results incrementally.
 
-Using synchronous non-streaming invoke and asynchronous streaming astream as examples, we illustrate how to call the model and show the results. For other methods, see the API docs `jiuwen.core.utils.llm`.
+Using synchronous non-streaming invoke and asynchronous streaming astream as examples, we illustrate how to call the model and show the results. For other methods, see the API docs `openjiuwen.core.utils.llm`.
 
 ### Synchronous Non-Streaming `invoke`
 
