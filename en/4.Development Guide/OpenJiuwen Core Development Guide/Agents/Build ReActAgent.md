@@ -111,6 +111,48 @@ def _create_tool_schema():
     return tool_info
 ```
 
+## Creating MCP Plugin
+
+openJiuwen supports the creation of plugins integrated with the MCP (Model Context Protocol) protocol.
+This example demonstrates how to create an MCP plugin for weather queries based on the SSE protocol.
+openJiuwen provides `connect` and `disconnect` methods for the MCP client, enabling the MCP client to establish and terminate connections with the MCP server.
+
+```python
+from openjiuwen.core.utils.tool.mcp.base import MCPTool, SseClient, McpToolInfo
+
+class McpToolWrapper:
+    def __init__(self, server_path, name):
+        self.mcp_client = SseClient(server_path=server_path, name=name)
+
+    async def connect(self):
+        await self.mcp_client.connect()
+
+    async def disconnect(self):
+        await self.mcp_client.disconnect()
+
+    def create_mcp_tools(self):
+        mcp_tool_info = McpToolInfo(
+            type="function",
+            name="query_weather",
+            server_name="McpSseServer",
+            input_schema={
+                "type": "object",
+                "title": "query_weatherArguments",
+                "properties": {
+                    "location": {
+                        "title": "Location",
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "location"
+                ],
+            }
+        )
+        mcp_tool = MCPTool(mcp_client=self.mcp_client, tool_info=mcp_tool_info)
+        return [mcp_tool]
+```
+
 # Creating ReActAgent
 
 First, use the `create_react_agent_config` method provided by openJiuwen to quickly create a `ReActAgentConfig` object for weather queries. This covers configuration parameter information related to the `ReActAgent`, such as prompt definitions and LLM configuration information. The example code is as follows:
@@ -161,6 +203,31 @@ from openjiuwen.agent.react_agent import ReActAgent
 
 react_agent = ReActAgent(react_agent_config)
 react_agent.add_tools([_create_tool()])
+```
+
+### ReActAgent Binding MCP Plugin
+
+openJiuwen supports `ReActAgent` binding with MCP plugins. Developers specify the IP address for connecting to the MCP server and establish a connection with the MCP server via the `connect` method. After the execution of `ReActAgent` is completed, developers terminate the connection with the MCP server through the `disconnect` method.
+
+```python
+import asyncio
+from openjiuwen.agent.react_agent import ReActAgent
+from openjiuwen.core.runner.runner import Runner
+
+async def main():
+   react_agent = ReActAgent(react_agent_config)
+   wrapper = McpToolWrapper(server_path="your path to mcp server", name="McpSseServer")
+   await wrapper.connect()
+   react_agent.add_tools(wrapper.create_mcp_tools())
+   
+   try:
+       # Running ReActAgent
+       result = await Runner.run_agent(react_agent, {"query": "what is Beijing's weather?"})
+       print(f"ReActAgent final result：{result}")
+   finally:
+       await wrapper.disconnect()
+
+asyncio.run(main())
 ```
 
 # Running ReActAgent

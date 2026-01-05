@@ -111,6 +111,47 @@ def _create_tool_schema():
     return tool_info
 ```
 
+## 创建MCP扩展插件
+
+openJiuwen支持创建集成MCP（Model Context Protocol）扩展协议的插件。本示例创建了一个基于SSE协议的天气查询MCP插件。openJiuwen提供了MCP客户端的`connect`、`disconnect`方法，实现MCP客户端与MCP服务器建立、断开链接。
+
+```python
+from openjiuwen.core.utils.tool.mcp.base import MCPTool, SseClient, McpToolInfo
+
+class McpToolWrapper:
+    def __init__(self, server_path, name):
+        self.mcp_client = SseClient(server_path=server_path, name=name)
+
+    async def connect(self):
+        await self.mcp_client.connect()
+
+    async def disconnect(self):
+        await self.mcp_client.disconnect()
+
+    def create_mcp_tools(self):
+        mcp_tool_info = McpToolInfo(
+            type="function",
+            name="query_weather",
+            server_name="McpSseServer",
+            input_schema={
+                "type": "object",
+                "title": "query_weatherArguments",
+                "properties": {
+                    "location": {
+                        "title": "Location",
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "location"
+                ],
+            }
+        )
+        mcp_tool = MCPTool(mcp_client=self.mcp_client, tool_info=mcp_tool_info)
+        return [mcp_tool]
+```
+
+
 # 创建ReActAgent
 
 首先使用openJiuwen提供的`create_react_agent_config`方法快速创建天气查询的`ReActAgentConfig`对象，涵盖`ReActAgent`相关的配置参数信息，如提示词定义及大模型配置信息等。示例代码如下：
@@ -163,6 +204,31 @@ react_agent = ReActAgent(react_agent_config)
 react_agent.add_tools([_create_tool()])
 ```
 
+## ReActAgent关联MCP扩展插件
+
+openJiuwen支持`ReActAgent`关联MCP插件。开发者指定连接MCP服务器的IP地址，通过`connect`与MCP服务器建立链接。`ReActAgent`执行结束后，开发者通过`disconnect`与MCP服务器断开链接。
+
+```python
+import asyncio
+from openjiuwen.agent.react_agent import ReActAgent
+from openjiuwen.core.runner.runner import Runner
+
+async def main():
+   react_agent = ReActAgent(react_agent_config)
+   wrapper = McpToolWrapper(server_path="your path to mcp server", name="McpSseServer")
+   await wrapper.connect()  # 与MCP服务器建立链接
+   react_agent.add_tools(wrapper.create_mcp_tools())
+   
+   try:
+       # 运行ReActAgent
+       result = await Runner.run_agent(react_agent, {"query": "北京天气怎么样"})
+       print(f"ReActAgent 最终输出结果：{result}")
+   finally:
+       await wrapper.disconnect()  # 与MCP服务器断开链接
+
+asyncio.run(main())
+```
+
 # 运行ReActAgent
 
 创建完`ReActAgent`对象后，可以调用`invoke`方法，获取用户query的回复。`ReActAgent`的`invoke`方法实现了ReAct的规划流程，通过大模型生成计划，判断是否需要执行工具，如果需要，执行工具调用来完成任务，返回最终结果，否则直接返回模型输出结果，结束流程。示例代码如下：
@@ -187,6 +253,7 @@ ReActAgent 最终输出结果：
 
 建议外出时携带雨具，注意防雨防滑。需要其他天气信息可以随时告诉我哦~
 ```
+
 
 # 完整示例代码
 
