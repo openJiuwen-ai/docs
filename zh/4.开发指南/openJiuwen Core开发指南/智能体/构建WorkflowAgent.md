@@ -28,7 +28,7 @@ Python的版本应高于或者等于Python 3.11版本，建议使用3.11.4版本
 执行如下命令安装openJiuwen：
 
 ```bash
-pip install openjiuwen-x.y.z-py3-none-any.whl
+pip install -U openjiuwen
 ```
 
 # 创建Workflow流程
@@ -359,7 +359,6 @@ asyncio.run(test_weather_workflow())
 # 完整代码
 
 ```python
-
 import os
 from datetime import datetime
 

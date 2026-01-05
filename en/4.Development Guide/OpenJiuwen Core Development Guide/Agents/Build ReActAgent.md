@@ -29,7 +29,7 @@ The Python version should be higher than or equal to Python 3.11. Version 3.11.4
 Execute the following command to install openJiuwen:
 
 ```bash
-pip install openjiuwen-x.y.z-py3-none-any.whl
+pip install -U openjiuwen
 ```
 
 # Creating Prompt Templates

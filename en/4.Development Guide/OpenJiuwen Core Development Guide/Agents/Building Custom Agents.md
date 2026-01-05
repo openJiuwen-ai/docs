@@ -25,7 +25,7 @@ The Python version should be higher than or equal to Python 3.11. Version 3.11.4
 Users can choose to create a virtual environment to install openJiuwen. The installation command is as follows:
 
 ```bash
-pip install openjiuwen-x.y.z-py3-none-any.whl
+pip install -U openjiuwen
 ```
 
 # Implementing the Custom Agent Configuration Class
