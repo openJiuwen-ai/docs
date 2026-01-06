@@ -1,7 +1,8 @@
-openJiuwen supports the following two ways to convert developer-defined tools into tools that can be recognized and invoked by LLMs:
+openJiuwen supports the following three ways to convert developer-defined tools into tools that can be recognized and invoked by LLMs:
 
 - Toolifying local functions: Provides the `@tool` decorator, which can register local Python functions as a Tool class recognizable by LLMs, enabling Function Calling-like capabilities.
 - Wrapping Restful interfaces: Provides the `RestfulApi` class to conveniently define and manage Restful-style API interfaces, including interface name, description, parameters, path, headers, request method, and response information, enabling unified and standardized interface management and invocation.
+- Wrapping MCP interfaces: Provides the `MCPTool` class to conveniently define and manage MCP services, enabling unified and standardized interface management and invocation.
 
 # Toolifying Local Functions
 
@@ -102,4 +103,54 @@ Sample output:
 ```text
 Invocation succeeded, returned result: type='function' name='WeatherReporter' description='Weather query plugin' parameters=Parameters(type='object', properties={'location': {'description': 'Location for the weather query, must be in English', 'type': 'string'}, 'date': {'description': 'Date for the weather query, in format YYYY-MM-DD', 'type': 'string'}}, required=['location', 'date'])
 Invocation succeeded, returned result: The weather in beijing on 2023-10-01 is sunny
+```
+
+# Encapsulating MCP
+
+openJiuwen provides the `MCPTool` class to wrap MCP services; the resulting `MCPTool` class can be recognized and invoked by LLMs.
+
+## Using the MCPTool class to wrap MCP services
+
+After developers implement and deploy a MCP service, they can use the `MCPTool` class provided by openJiuwen for wrapping. The `MCPTool` class requires configuration of information such as MCP Client, input Schema, and service name to describe the MCP service. Currently, multiple Transport methods are supported, including SSE, stdio, and playwright.
+
+```python
+import asyncio
+from openjiuwen.core.utils.tool.mcp.base import MCPTool, SseClient
+
+# Developers implement and deploy a weather MCP service, then create a MCPTool instance for the weather query plugin
+mcp_client = SseClient(server_path="your weather mcp url", name="MockSseClient")
+await mcp_client.connect(timeout=10)
+tool_info_list = await mcp_client.list_tools()
+for tool_info in tool_info_list:
+    print("Invocation succeeded, returned result:", tool_info.model_dump_json())
+mcp_tool = MCPTool(mcp_client=mcp_client, tool_info=tool_info_list[0])
+```
+
+Sample output:
+```text
+Invocation succeeded, returned result: {"type":"function","name":"query_weather","description":"","parameters":null,"input_schema":{"properties":{"location":{"title":"Location","type":"string"}},"required":["location"],"title":"query_weatherArguments","type":"object"},"server_name":""}
+```
+
+## Invoking the tool
+
+The `MCPTool` class can be recognized and invoked by LLMs. Refer to the parameter definitions of the `MCPTool` class, prepare the tool inputs, and calling the `MCPTool` class's `ainvoke` method will run the MCP service remotely.
+
+```python
+# MCPTool instance, recognizable and callable by LLMs
+tool_info = mcp_tool.get_tool_info()
+print(f"Invocation succeeded, returned result: {tool_info}")
+
+inputs = {
+    "location": "beijing",
+}
+result = await mcp_tool.ainvoke(inputs=inputs)
+print(f"Invocation succeeded, returned result: {result}")
+await mcp_client.disconnect()
+```
+
+Sample output:
+
+```text
+Invocation succeeded, returned result: type='function' name='query_weather' description='' parameters=None input_schema={'properties': {'location': {'title': 'Location', 'type': 'string'}}, 'required': ['location'], 'title': 'query_weatherArguments', 'type': 'object'} server_name=''
+Invocation succeeded, returned result: {'result': '{\n  "location": "beijing",\n  "temperature": "22℃",\n  "condition": "sunny"\n}'}
 ```
