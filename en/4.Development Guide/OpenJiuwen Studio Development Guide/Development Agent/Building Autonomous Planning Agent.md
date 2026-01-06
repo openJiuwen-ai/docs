@@ -175,12 +175,13 @@ If the model's general capabilities can already cover the agent's core functions
 
 The functions currently included in agent orchestration are as follows:
 
-| Skill Name | Description |
-|---------|------|
-| Memory | Refers to the agent's ability to store and call information such as user interaction history and task context, enabling the agent to maintain coherence and personalization during conversations or task execution |
-| Workflow | Refers to a series of operation steps or logic processes executed in sequence. Agents can achieve automated processing of complex tasks and multi-step collaboration through workflows |
-| Plugin | Functional extension modules of agents. By integrating external services or specific capabilities, agents can access real-time data, perform specific operations, or obtain professional domain knowledge |
-| Opening Statement | Initial greeting or introduction information set for agent conversations, which can enrich the agent's usage scenarios and make the agent more friendly and personalized at the beginning of conversations |
+| Skill Name | Description                                                      |
+|------|---------------------------------------------------------|
+| Memory   | Refers to the agent's ability to store and call information such as user interaction history and task context, enabling the agent to maintain coherence and personalization during conversations or task execution |
+| Workflow  | Refers to a series of operation steps or logic processes executed in sequence. Agents can achieve automated processing of complex tasks and multi-step collaboration through workflows        |
+| Plugin   | Functional extension modules of agents. By integrating external services or specific capabilities, agents can access real-time data, perform specific operations, or obtain professional domain knowledge  |
+| Knowledge   | Information sources for agents. By integrating knowledge bases, agents can access user-specified documents to provide more accurate and professional answers.        |
+| Opening Statement  | Initial greeting or introduction information set for agent conversations, which can enrich the agent's usage scenarios and make the agent more friendly and personalized at the beginning of conversations    |
 
 
 
@@ -221,8 +222,6 @@ Plugins are functional extension modules of agents. By integrating external serv
    ![image](../images/b261ca49-241c-49ee-b30b-9ffdfabe2d9a.jpg)
 - Click the **Add New Plugin** button to go to the plugin marketplace to install the required plugins. Refer to the [Add Plugins and Tools](../Configure%20Tool.md) documentation.
 
-   
-
 ## Add Workflow
 
 ### Operation Steps
@@ -239,6 +238,48 @@ Plugins are functional extension modules of agents. By integrating external serv
    ![image](../images/ef3439a3-ad08-4d89-b057-bc9a0a15d016.png)
    Click the **Confirm Selection** button to select the workflow to be added.
 
+
+## Configure Knowledge Base
+
+### Prerequisites
+
+- A knowledge base has been created and document indexing has been completed on the **Knowledge Base Management** page.
+- You can click the **+** button in the **Knowledge** section on the **Orchestration Configuration** page, then click **Create New Knowledge Base** in the dropdown to jump to the Knowledge Base Management page for knowledge base configuration. For how to configure knowledge bases, please refer to the Knowledge Base Management related sections.
+
+  ![Create New Knowledge Base](../images/ScreenShot_2026-01-06_150759_187.png)
+
+### Operation Steps
+
+#### Add Knowledge Base
+
+1. On the **Orchestration Configuration** page, click the **+** button in the **Knowledge** section, then click **Add Existing Knowledge Base** in the dropdown.
+
+   ![Add Existing Knowledge Base](../images/ScreenShot_2026-01-06_150901_153.png)
+
+2. In the knowledge base selection dialog, select the knowledge base(s) to add. You can select multiple knowledge bases, but all selected knowledge bases must use the same Embedding model. After selection, click the **Confirm** button to complete knowledge base addition.
+
+   ![Select Knowledge Base](../images/ScreenShot_2026-01-06_151428_172.png)
+
+   **Note:**
+   - If the selected knowledge bases use different Embedding models, the system will prompt an error. You need to ensure all knowledge bases use the same Embedding model.
+3. At this point, expand the **Text** section under **Knowledge** to see all added knowledge bases.
+
+   ![Knowledge Base Added](../images/ScreenShot_2026-01-06_151527_820.png)
+
+#### Configure Retrieval Parameters
+
+After adding knowledge bases, you can click the settings icon (⚙️) on the right side of the **Knowledge** section to configure retrieval parameters and select how the agent retrieves information from knowledge bases. Click on a blank area to save after configuration.
+
+![Knowledge Base Retrieval Parameters](../images/ScreenShot_2026-01-06_151604_799.png)
+
+The retrieval configuration parameter descriptions are as follows:
+
+| Parameter Name    | Description            | Configuration Instructions                                                                                                                 |
+|---------|---------------|----------------------------------------------------------------------------------------------------------------------|
+| Enable Document Graph Retrieval | Whether to enable document graph retrieval function   | - **Function**: Controls the enabling of graph retrieval<br>- **Note**: Document graph retrieval can only be enabled when the knowledge base contains documents with graph-enhanced indexes                                                           |
+| Document Graph Retrieval Strategy | Controls the execution method of document graph retrieval  | - **Base Mode**: Basic document graph retrieval<br>- **Agentic Mode**: Document graph retrieval with agent autonomous decision-making, takes longer but has better results                                            |
+| Maximum Recall Count  | Maximum number of documents returned in a single retrieval | - **Function**: Controls the number of retrieval results<br>- **Range**: 1-10<br>- **Recommendation**: Set according to actual needs. Too small may miss relevant information, too large may include too much noise                                       |
+| Minimum Match Score  | Minimum similarity threshold for retrieval results  | - **Function**: Filters retrieval results with similarity below the threshold to improve result quality<br>- **Range**: 0.0 - 1.0<br>- **Recommendation**: Usually set to 0.5-0.7, can be adjusted according to actual effects<br>- **Note**: When set to 1.0, there may be no returned results |
 
 
 ## Set Opening Statement

@@ -1,6 +1,6 @@
 # Model Management
 
-openJiuwen Studio Model Management supports the following actions: adding models, testing models, editing model configurations, disabling/enabling models, and deleting models. The specific guidelines are as follows:
+openJiuwen Studio Model Management supports the following actions: adding models, testing models, editing model configurations, disabling/enabling models, and deleting models. It includes LLM models and Embedding models. The specific guidelines are as follows:
 
 # Add Model
 
@@ -14,25 +14,28 @@ openJiuwen Studio Model Management supports the following actions: adding models
 
 1. Log in to the openJiuwen platform;
 2. Navigate to the **Model Management** module in the left sidebar;
-3. Click the **Add Model** button in the top-right corner of the page;
-   ![image](./images/manage_model.png)
-4. In the configuration dialog box, set the relevant parameters;
-   ![image](./images/bc8ee210-f4dd-4daf-8b38-f8c49d15b135.jpg)
+3. Select the model type to add (LLM Model or Embedding Model);
+   ![image](./images/ScreenShot_2026-01-06_160916_247.png)
+4. Click the **Add Model** button in the top-right corner of the page;
+   ![image](./images/ScreenShot_2026-01-06_161039_711.png)
+5. In the configuration dialog box, set the relevant parameters;
+   ![image](./images/ScreenShot_2026-01-06_162753_988.png)
 
    **Parameter Descriptions**
    
-   | **Parameter**       | **Description**                                                                                                                                                                                                 |
-   |-------------|-----------|
-   | Model Name   | A custom, user-friendly alias for the model used for display on the platform, helping users identify it quickly.<br>Example: `General LLM v3` |
-   | Model ID| The specific identifier required by the API request. This must match the ID defined on the server side.<br>Example: `gpt-3.5-turbo` / `qwen-2-7b-instruct` |
-   | API Schema | The API format standard, which determines the request structure, authentication method, and response parsing rules.<br>This must match the model service provider. For example, selecting "OpenAI" implies the standard Chat Completion API schema. |
-   | API Key  | The authentication credential for the model service. It is usually obtained from the provider's console and will be encrypted and stored securely upon entry.<br>Example: `sk-xxxx` |
-   | Base URL   | The root endpoint address for API calls.<br>Example: `https://api.openai.com/v1`|
-   | Tags | Keywords used to categorize the model, facilitating quick filtering and identification. Separate multiple tags with commas.<br>Example: `"Chinese", "Chat", "LLM"` |
-   | Description | A brief summary of the model to help users understand its capabilities, applicable scenarios, and performance characteristics.<br>Example: `High-performance LLM optimized for Chinese dialogue`|
-   | Timeout  | The maximum duration allowed for a model request. This controls latency and prevents indefinite hanging.<br>Unit: seconds. Range: 0-300  |
-   | Temperature  |  Controls the randomness and creativity of the output. Higher values result in more diverse and random outputs; lower values produce more deterministic and conservative results.<br>Range: 0~2, Recommanded: 0.1~1.0.<br>Example: 0.7 (balanced)、1.2 (creative) |
-   | Top-p (Nucleus Sampling)  |  Limits the token selection to a cumulative probability threshold. The model samples only from the top tokens whose probabilities sum to this value. Lower values make results more focused; higher values increase diversity.<br>Range: 0~1, Recommended: 0.8~0.95.<br>Example: 0.9 (balance), 0.5 (focused) |
+   | **Parameter**       | **Component**    | **Description**                                                                                                                                                                                                 |
+   |-------------|-------------|-----------|
+   | Model Name   | Common          | A custom, user-friendly alias for the model used for display on the platform, helping users identify it quickly.<br>Example: `General LLM v3` / `Embedding Model v3` |
+   | Model ID| Common          | The specific identifier required by the API request. This must match the ID defined on the server side.<br>Example: `gpt-3.5-turbo` / `text-embedding-v3` |
+   | API Schema | Common          | The API format standard, which determines the request structure, authentication method, and response parsing rules.<br>This must match the model service provider. For example, selecting "OpenAI" implies the standard Chat Completion API schema. |
+   | API Key  | Common          | The authentication credential for the model service. It is usually obtained from the provider's console and will be encrypted and stored securely upon entry.<br>Example: `sk-xxxx` |
+   | Base URL   | Common          | The root endpoint address for API calls.<br>Example: `https://api.openai.com/v1`|
+   | Tags | Common          | Keywords used to categorize the model, facilitating quick filtering and identification. Separate multiple tags with commas.<br>Example: `"Chinese", "Chat", "LLM"` |
+   | Description | LLM Model       | A brief summary of the model to help users understand its capabilities, applicable scenarios, and performance characteristics.<br>Example: `High-performance LLM optimized for Chinese dialogue`|
+   | Timeout  | LLM Model       | The maximum duration allowed for a model request. This controls latency and prevents indefinite hanging.<br>Unit: seconds. Range: 0-300  |
+   | Temperature  | LLM Model       |  Controls the randomness and creativity of the output. Higher values result in more diverse and random outputs; lower values produce more deterministic and conservative results.<br>Range: 0~2, Recommanded: 0.1~1.0.<br>Example: 0.7 (balanced)、1.2 (creative) |
+   | Top-p (Nucleus Sampling)  | LLM Model       |  Limits the token selection to a cumulative probability threshold. The model samples only from the top tokens whose probabilities sum to this value. Lower values make results more focused; higher values increase diversity.<br>Range: 0~1, Recommended: 0.8~0.95.<br>Example: 0.9 (balance), 0.5 (focused) |
+   | Maximum Batch Size  | Embedding Model | The maximum number of texts processed in batch, used to control the number of text items processed in a single API call to improve processing efficiency.<br>Range: 1-10, Default value: 5                                                                 |
 
 # Test Model
 
@@ -45,12 +48,17 @@ To verify the validity of the configuration and connectivity, you can perform a 
 
 ## Steps
 
-1. ​**Initiate Test**​: Click the **Test Model** button in the **Actions** column for the target model.
+1. ​**Initiate Test**​: Click the **Test Model** button in the **Actions** column for the target model.<br>
    ![image](./images/begin_test.png)
-2. ​**Execute Test**​: In the test dialog, use the default test prompt (e.g., "Hello, please introduce yourself") or enter a custom prompt. Click **Start Test** to send the request.
+2. ​**Execute Test**​: 
+   - LLM Model: In the test dialog, use the default test prompt (e.g., "Hello, please introduce yourself") or enter a custom prompt. Click **Start Test** to send the request.<br>
    ![image](./images/test_model.png)
+   - Embedding Model: Click the **Test Model** button and the test will be performed automatically.
 3. ​**View Results**​:
+   - LLM Model: The test result shows test success and returns normal results.<br>
    ![image](./images/test_result.png)
+   - Embedding Model: A dialog displays test success.<br>
+   ![image](./images/ScreenShot_2026-01-06_163731_716.png)
 
 
 # Edit Model Configuration
@@ -98,6 +106,7 @@ If a model is no longer needed, you can permanently remove its configuration. Th
 
 * Backup configuration details (e.g., Base URL, API Key) before deletion if you plan to re-add the model later.
 * Ensure no applications or workflows depend on this model; otherwise, related functions will fail.
+* Before deleting an Embedding model, you need to delete all knowledge bases that use this model, otherwise deletion will fail.
 * Deletion is permanent and cannot be undone.
 
 
