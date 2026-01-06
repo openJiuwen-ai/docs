@@ -92,7 +92,7 @@ Before proceeding with the full installation, install the dependencies below, th
 
 ### 5. Milvus (Optional)
 
-The memory feature of openJiuwen relies on Milvus. If you want to try memory, see [How to Enable the Memory Feature](#windows-memory) to install and configure Milvus. If you only want a quick deployment to try basic features, you can skip this step.
+The memory and knowledge base features of openJiuwen rely on Milvus. If you want to try memory and knowledge base features, see [How to Enable the Memory and Knowledge Base Features](#windows-memory) to install and configure Milvus. If you only want a quick deployment to try basic features, you can skip this step.
 
 ## III. Install openJiuwen
 
@@ -174,7 +174,7 @@ The memory feature of openJiuwen relies on Milvus. If you want to try memory, se
    EMBED_MAX_RETRIES=1
    ```
 
-  See the table below for variable descriptions. To enable the memory feature, refer to [How to Enable the Memory Feature](#windows-memory).
+  See the table below for variable descriptions. To enable the memory and knowledge base features, refer to [How to Enable the Memory and Knowledge Base Features](#windows-memory).
  
    | Variable Name                          | Description                                                         | Example                                                                       |
    |----------------------------------------|---------------------------------------------------------------------|--------------------------------------------------------------------------------|
@@ -243,11 +243,11 @@ Copy the *access URL* from above into your browser’s address bar and press Ent
 
 ## IV. FAQ
 
-### <a id="windows-memory"></a> Question 1: How to Enable the Memory Feature
+### <a id="windows-memory"></a> Question 1: How to Enable the Memory and Knowledge Base Features
 
 The effectiveness of memory feature depends on the scale of the LLM used.
 
-The memory feature relies on Milvus. On Windows, we recommend installing via Docker. See steps below.
+The memory and knowledge base features rely on Milvus. On Windows, we recommend installing via Docker. See steps below.
 
 #### 1. Install Docker Desktop
 Docker Desktop on Windows requires virtualization.
@@ -326,13 +326,13 @@ Docker Desktop on Windows requires virtualization.
   ./standalone.bat stop
   ```
 
-#### 3. Obtain an embedding model for memory
+#### 3. Obtain the embedding model
 
-The memory feature requires an embedding model. The steps below use Huawei Cloud as an example.
+The memory and knowledge base features require an embedding model. The steps below use Huawei Cloud as an example.
 
 * Click <a href="https://console.huaweicloud.com/modelarts/?locale=zh-cn&region=cn-southwest-2#/model-studio/square" target="_blank" rel="nofollow noopener noreferrer">this link</a> to open the ModelArts Model Square. 
 
-* Click “Vector Models” and find the BGE-M3 model.
+* For memory feature, click "Vector Models" and find the BGE-M3 model. For knowledge base feature, select a model according to your scenario.
 
   ![Find the embedding model](../images/find_embed.png)
 

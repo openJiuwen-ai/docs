@@ -14,11 +14,11 @@ openJiuwen Studio Model Management supports the following actions: adding models
 
 1. Log in to the openJiuwen platform;
 2. Navigate to the **Model Management** module in the left sidebar;
-3. Select the model type to add (LLM Model or Embedding Model);
+3. Select the model type to add (LLM Model or Embedding Model);<br>
    ![image](./images/ScreenShot_2026-01-06_160916_247.png)
-4. Click the **Add Model** button in the top-right corner of the page;
+4. Click the **Add Model** button in the top-right corner of the page;<br>
    ![image](./images/ScreenShot_2026-01-06_161039_711.png)
-5. In the configuration dialog box, set the relevant parameters;
+5. In the configuration dialog box, set the relevant parameters;<br>
    ![image](./images/ScreenShot_2026-01-06_162753_988.png)
 
    **Parameter Descriptions**
@@ -72,9 +72,9 @@ When configuration updates are needed (e.g., API Key rotation, parameter tuning)
 
 ## Steps
 
-1. ​**Enter Edit Mode**: Locate the target model in the list and click the **Settings** icon (gear) in the **Actions** column.
+1. ​**Enter Edit Mode**: Locate the target model in the list and click the **Settings** icon (gear) in the **Actions** column.<br>
    ![image](./images/687fdf42-ab03-4cdd-80b8-d86597c39718.png)
-2. ​**Modify Parameters**: Adjust parameters such as Model Name, API Key, Timeout, Temperature, or Top-p as needed. (Note: Core parameters like "Model ID" may be read-only depending on platform restrictions).
+2. ​**Modify Parameters**: Adjust parameters such as Model Name, API Key, Timeout, Temperature, or Top-p as needed. (Note: Core parameters like "Model ID" may be read-only depending on platform restrictions).<br>
    ![image](./images/edit_model.png)
 3. ​**Save Changes**: Click **Save**. The system will automatically validate the configuration and display an "Edit successful" message.
 
@@ -90,7 +90,7 @@ You can temporarily revoke usage permissions for a model by disabling it, or res
 
 ## Steps
 
-1. ​**Toggle Status**: In the **Actions** column, click the **Disable** icon (cross) or **Enable** icon (checkmark, visible when disabled).
+1. ​**Toggle Status**: In the **Actions** column, click the **Disable** icon (cross) or **Enable** icon (checkmark, visible when disabled).<br>
    ![image](./images/a97c93a5-ef1a-4303-9d86-14840d3078f1.png)
 2. ​**Confirm Action**: Click **Confirm** in the pop-up prompt.
 3. ​**Status Explanation**:
@@ -112,7 +112,7 @@ If a model is no longer needed, you can permanently remove its configuration. Th
 
 ## Steps
 
-1. ​**Initiate Deletion**: Click the **Delete** icon (trash can) in the **Actions** column.
+1. ​**Initiate Deletion**: Click the **Delete** icon (trash can) in the **Actions** column.<br>
    ![image](./images/7bc646d7-f26d-4f95-898b-ae06a497da55.png)
 2. ​**Confirm Deletion**: Verify the model name in the prompt and click **Confirm Delete**.
 3. ​**Feedback**: The system will display "Delete successful," and the model will be removed from the list.

@@ -107,7 +107,7 @@ Before the formal installation, complete the dependency installation, then proce
 
 ### 5. Milvus (Optional Component)
 
-openJiuwen’s memory feature depends on Milvus. If you want to try the memory feature, refer to [How to Enable the Memory Feature](#linux-memory) to complete Milvus installation and configuration. If you just want a quick deployment and try the basic openJiuwen functions, you can skip this step.
+openJiuwen's memory and knowledge base features depend on Milvus. If you want to try the memory and knowledge base features, refer to [How to Enable the Memory and Knowledge Base Features](#linux-memory) to complete Milvus installation and configuration. If you just want a quick deployment and try the basic openJiuwen functions, you can skip this step.
 
 ## III. Installing openJiuwen
 
@@ -185,7 +185,7 @@ openJiuwen’s memory feature depends on Milvus. If you want to try the memory f
    EMBED_MAX_RETRIES=1
    ```
 
-  See the table below for variable descriptions. If you want to enable the memory feature, refer to [How to Enable the Memory Feature](#linux-memory).
+  See the table below for variable descriptions. If you want to enable the memory and knowledge base features, refer to [How to Enable the Memory and Knowledge Base Features](#linux-memory).
 
    | Variable Name                               | Description                                                             | Example                                                                      |
    |-----------------------------------------|-------------------------------------------------------------------------|------------------------------------------------------------------------------|
@@ -255,11 +255,11 @@ openJiuwen’s memory feature depends on Milvus. If you want to try the memory f
 
 ## IV. Frequently Asked Questions (FAQ)
 
-### <a id="linux-memory"></a> Question 1: How to Enable the Memory Feature
+### <a id="linux-memory"></a> Question 1: How to Enable the Memory and Knowledge Base Features
 
 The effectiveness of the memory feature is related to the parameter scale of the large language model.
 
-The memory feature depends on Milvus. See below for the installation steps.
+The memory and knowledge base features depend on Milvus. See below for the installation steps.
 
 #### 1. Start Milvus
 
@@ -301,13 +301,13 @@ The memory feature depends on Milvus. See below for the installation steps.
   bash standalone_embed.sh stop
   ```
 
-#### 2. Obtain the embedding model required for the memory feature
+#### 2. Obtain the embedding model
 
-The memory feature relies on an embedding model. The following steps use Huawei Cloud as an example.
+The memory and knowledge base features rely on an embedding model. The following steps use Huawei Cloud as an example.
 
 - Click the <a href="https://console.huaweicloud.com/modelarts/?locale=zh-cn&region=cn-southwest-2#/model-studio/square" target="_blank" rel="nofollow noopener noreferrer">link</a> to enter ModelArts Model Square.
 
-- Click “Embedding Models” and find the BGE-M3 model.
+- For memory feature, click "Embedding Models" and find the BGE-M3 model. For knowledge base feature, select a model according to your scenario.
 
   ![Find embedding model](../images/find_embed.png)
 

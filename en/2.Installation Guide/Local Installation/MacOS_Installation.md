@@ -95,7 +95,7 @@ Before proceeding with the main installation, you must first install the require
 
 ### 5. Milvus (Optional Component) 
 
-The memory feature of openJiuwen depends on Milvus. If you would like to use the memory feature, refer to [How to Enable the Memory Feature](#macos-memory) to complete the Milvus installation and configuration. If you only need a quick deployment to experience the basic features of openJiuwen, you can skip this step.
+The memory and knowledge base features of openJiuwen depend on Milvus. If you would like to use the memory and knowledge base features, refer to [How to Enable the Memory and Knowledge Base Features](#macos-memory) to complete the Milvus installation and configuration. If you only need a quick deployment to experience the basic features of openJiuwen, you can skip this step.
 
 ## III. openJiuwen Installation
 
@@ -179,7 +179,7 @@ The memory feature of openJiuwen depends on Milvus. If you would like to use the
    EMBED_MAX_RETRIES=1
    ```
 
-  The descriptions of the variables are shown in the table below. If you need to enable the memory feature, refer to [How to Enable the Memory Feature](#macos-memory).
+  The descriptions of the variables are shown in the table below. If you need to enable the memory and knowledge base features, refer to [How to Enable the Memory and Knowledge Base Features](#macos-memory).
 
    | Variable Name                                   | Description                                                               | Example                                                                      |
    |---------------------------------------|--------------------------------------------------------------------|---------------------------------------------------------------------------|
@@ -253,11 +253,11 @@ The memory feature of openJiuwen depends on Milvus. If you would like to use the
 
 ## IV. Frequently Asked Questions (FAQ) 
 
-### <a id="macos-memory"></a> Question 1: How to Enable the Memory Feature
+### <a id="macos-memory"></a> Question 1: How to Enable the Memory and Knowledge Base Features
 
 The effectiveness of the memory feature depends on the number of parameters of the LLM.
 
-The memory feature relies on Milvus. On macOS, it is recommended to install Milvus using Docker. The detailed steps are described below: 
+The memory and knowledge base features rely on Milvus. On macOS, it is recommended to install Milvus using Docker. The detailed steps are described below: 
 
 #### 1. Install Docker Desktop
 
@@ -312,13 +312,13 @@ The memory feature relies on Milvus. On macOS, it is recommended to install Milv
   bash standalone_embed.sh stop
   ```
 
-#### 3. Obtain the Embedding Model for the Memory Feature
+#### 3. Obtain the Embedding Model
 
-The memory feature relies on an embedding model. The following steps uses Huawei Cloud as an example to illustrate how to obtain an embedding model.
+The memory and knowledge base features rely on an embedding model. The following steps uses Huawei Cloud as an example to illustrate how to obtain an embedding model.
 
 * Click <a href="https://console.huaweicloud.com/modelarts/?locale=zh-cn&region=cn-southwest-2#/model-studio/square" target="_blank" rel="nofollow noopener noreferrer">this link</a> to enter the ModelArts Model Square.  
 
-* Click "向量模型" (Embedding model), Locate the BGE-M3 model.
+* For memory feature, click "向量模型" (Embedding model) and locate the BGE-M3 model. For knowledge base feature, select a model according to your scenario.
 
   ![Locate the embedding model](../images/find_embed.png)
 
