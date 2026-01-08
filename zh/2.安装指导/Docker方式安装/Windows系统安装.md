@@ -50,9 +50,9 @@ Window 上运行 Docker Desktop 依赖虚拟化功能。
 
 * 单击版本下载链接，下载对应版本包至本地。
 
-  x86_64 架构下载链接：<a href="https://openjiuwen-ci.obs.cn-north-4.myhuaweicloud.com/agentstudio/deployTool_v0.1.1_amd64.tar" target="_blank" rel="nofollow noopener noreferrer">openJiuwen v0.1.1</a>
+  x86_64 架构下载链接：<a href="https://openjiuwen-ci.obs.cn-north-4.myhuaweicloud.com/agentstudio/deployTool_0.1.2_amd64.zip" target="_blank" rel="nofollow noopener noreferrer">openJiuwen v0.1.2</a>
 
-  arm 架构下载链接：<a href="https://openjiuwen-ci.obs.cn-north-4.myhuaweicloud.com/agentstudio/deployTool_v0.1.1_arm64.tar" target="_blank" rel="nofollow noopener noreferrer">openJiuwen v0.1.1</a>
+  arm 架构下载链接：<a href="https://openjiuwen-ci.obs.cn-north-4.myhuaweicloud.com/agentstudio/deployTool_0.1.2_arm64.zip" target="_blank" rel="nofollow noopener noreferrer">openJiuwen v0.1.2</a>
 
 ### 2. Docker Desktop 设置 Virtual file shares
 

@@ -42,9 +42,9 @@ Ensure your machine meets the following requirements:
 
 * Click the download link corresponding to your local machine to download the release package:
 
-  x86_64 architecture download link: <a href="https://openjiuwen-ci.obs.cn-north-4.myhuaweicloud.com/agentstudio/deployTool_v0.1.1_amd64.tar" target="_blank" rel="nofollow noopener noreferrer">openJiuwen v0.1.1</a>
+  x86_64 architecture download link: <a href="https://openjiuwen-ci.obs.cn-north-4.myhuaweicloud.com/agentstudio/deployTool_0.1.2_amd64.zip" target="_blank" rel="nofollow noopener noreferrer">openJiuwen v0.1.2</a>
 
-  arm architecture download link: <a href="https://openjiuwen-ci.obs.cn-north-4.myhuaweicloud.com/agentstudio/deployTool_v0.1.1_arm64.tar" target="_blank" rel="nofollow noopener noreferrer">openJiuwen v0.1.1</a>
+  arm architecture download link: <a href="https://openjiuwen-ci.obs.cn-north-4.myhuaweicloud.com/agentstudio/deployTool_0.1.2_arm64.zip" target="_blank" rel="nofollow noopener noreferrer">openJiuwen v0.1.2</a>
 
 ### 2. Start openJiuwen
 

@@ -31,27 +31,39 @@
 
 ### 1. 下载版本包（若已获取版本包跳过此步骤）
 
-* 运行以下命令下载版本包：
+* 根据机器架构下载版本包：
 
-  ```
-  # 下载 x86_64 架构版本包：
-  wget https://openjiuwen-ci.obs.cn-north-4.myhuaweicloud.com/agentstudio/deployTool_v0.1.1_amd64.tar
+  - 下载 x86_64 架构版本包
+    ```
+    wget https://openjiuwen-ci.obs.cn-north-4.myhuaweicloud.com/agentstudio/deployTool_0.1.2_amd64.zip
+    ```
 
-  # 下载 arm 架构版本包：
-  wget https://openjiuwen-ci.obs.cn-north-4.myhuaweicloud.com/agentstudio/deployTool_v0.1.1_arm64.tar
-  ```
+  - 下载 arm 架构版本包：
+    ```
+    wget https://openjiuwen-ci.obs.cn-north-4.myhuaweicloud.com/agentstudio/deployTool_0.1.2_arm64.zip
+    ```
 
 ### 2. 启动 openJiuwen
 
 * 将版本包放至安装目录。
 
-* 解压该版本包（将 xxx64 换为对应的机器架构）。
-
+* 安装 unzip 工具
   ```bash
-  tar -xf deployTool_v0.1.1_xxx64.tar
+  sudo apt update && sudo apt install unzip -y
   ```
 
-* 进入 *deployTool_v0.1.1_xxx64* 目录，输入以下命令确认 Docker 已启动：
+* 解压对应的架构版本包。
+  - 解压 x86_64 架构版本包
+    ```
+    unzip deployTool_0.1.2_amd64.zip
+    ```
+
+  - 解压 arm 架构版本包
+    ```
+    unzip deployTool_0.1.2_arm64.zip
+    ```
+
+* 进入 *deployTool_0.1.2_xxx64* 目录，输入以下命令确认 Docker 已启动：
 
   ```bash
   sudo systemctl start docker
