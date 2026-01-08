@@ -9,9 +9,6 @@ async def start(self) -> bool
 ```
 Start the Runner.
 
-**Returns**:
-
-- **bool**, whether the start succeeded. True means success, False means failure.
 
 **Example**:
 ```python
@@ -19,9 +16,7 @@ Start the Runner.
 >>>
 >>> from openjiuwen.core.runner.runner import Runner
 >>> 
->>> result=asyncio.run(Runner.start())
->>> print(result)
-True
+>>> asyncio.run(Runner.start())
 ```
 
 ### stop
@@ -306,7 +301,7 @@ Run an Agent in streaming mode and return a generator.
 ...             print(chunk)
 ... 
 >>> asyncio.run(run_workflow())
-type='workflow_final' index=0 payload={'output': WorkflowOutput(result={'output': {'result': 'haha'}}, state=<WorkflowExecutionState.COMPLETED: 'COMPLETED'>), 'result_type': 'answer'}
+type='workflow_final' index=0 payload={'output': {'result': 'haha'}}
 >>> 
 >>> # Invoke by ID; register the agent first
 >>> Runner.add_agent("agent_id", agent)
@@ -317,7 +312,7 @@ type='workflow_final' index=0 payload={'output': WorkflowOutput(result={'output'
 ...             print(chunk)
 ... 
 >>> asyncio.run(run_workflow())
-type='workflow_final' index=0 payload={'output': WorkflowOutput(result={'output': {'result': 'haha'}}, state=<WorkflowExecutionState.COMPLETED: 'COMPLETED'>), 'result_type': 'answer'}
+type='workflow_final' index=0 payload={'output': {'result': 'haha'}}
 
 ```
 
@@ -1100,11 +1095,8 @@ Output: type='tracer_workflow' payload={'traceId': '78e2562a-dbbe-48a4-b9ef-6be6
 Output: type='tracer_workflow' payload={'traceId': '78e2562a-dbbe-48a4-b9ef-6be622f6df69', 'startTime': datetime.datetime(2025, 12, 9, 15, 34, 41, 169679), 'endTime': datetime.datetime(2025, 12, 9, 15, 34, 44, 750914), 'inputs': {'query': 'Transfer 500 yuan to Zhang San'}, 'outputs': {'amount': 500}, 'error': None, 'invokeId': 'questioner', 'parentInvokeId': 'start', 'executionId': '78e2562a-dbbe-48a4-b9ef-6be622f6df69', 'onInvokeData': [], 'componentId': '', 'componentName': '', 'componentType': 'questioner', 'loopNodeId': None, 'loopIndex': None, 'status': 'finish', 'parentNodeId': ''}
 Output: type='tracer_workflow' payload={'traceId': '78e2562a-dbbe-48a4-b9ef-6be622f6df69', 'startTime': datetime.datetime(2025, 12, 9, 15, 34, 44, 752452), 'endTime': None, 'inputs': {'amount': 500}, 'outputs': None, 'error': None, 'invokeId': 'end', 'parentInvokeId': 'questioner', 'executionId': '78e2562a-dbbe-48a4-b9ef-6be622f6df69', 'onInvokeData': [], 'componentId': '', 'componentName': '', 'componentType': 'end', 'loopNodeId': None, 'loopIndex': None, 'status': 'start', 'parentNodeId': ''}
 Output: type='tracer_workflow' payload={'traceId': '78e2562a-dbbe-48a4-b9ef-6be622f6df69', 'startTime': datetime.datetime(2025, 12, 9, 15, 34, 44, 752452), 'endTime': datetime.datetime(2025, 12, 9, 15, 34, 44, 752861), 'inputs': {'amount': 500}, 'outputs': {'responseContent': 'Transfer Service completed: 500'}, 'error': None, 'invokeId': 'end', 'parentInvokeId': 'questioner', 'executionId': '78e2562a-dbbe-48a4-b9ef-6be622f6df69', 'onInvokeData': [], 'componentId': '', 'componentName': '', 'componentType': 'end', 'loopNodeId': None, 'loopIndex': None, 'status': 'finish', 'parentNodeId': ''}
-Output: type='end node stream' index=0 payload={'answer': 'Transfer Service completed: 500'}
 Output: type='tracer_workflow' payload={'traceId': '78e2562a-dbbe-48a4-b9ef-6be622f6df69', 'startTime': datetime.datetime(2025, 12, 9, 15, 34, 41, 167805), 'endTime': datetime.datetime(2025, 12, 9, 15, 34, 44, 754020), 'inputs': {'query': 'Transfer 500 yuan to Zhang San'}, 'outputs': {'responseContent': 'Transfer Service completed: 500'}, 'error': None, 'invokeId': 'transfer_flow', 'parentInvokeId': None, 'executionId': '78e2562a-dbbe-48a4-b9ef-6be622f6df69', 'onInvokeData': [], 'componentId': '', 'componentName': '', 'componentType': 'transfer_flow', 'loopNodeId': None, 'loopIndex': None, 'status': 'finish', 'parentNodeId': ''}
-Output: type='tracer_agent' payload={'traceId': '78e2562a-dbbe-48a4-b9ef-6be622f6df69', 'startTime': datetime.datetime(2025, 12, 9, 15, 34, 41, 167499), 'endTime': datetime.datetime(2025, 12, 9, 15, 34, 44, 766519), 'inputs': {'inputs': {'query': 'Transfer 500 yuan to Zhang San'}}, 'outputs': {'outputs': [{'type': 'end node stream', 'index': 0, 'payload': {'answer': 'Transfer Service completed: 500'}}, {'type': 'workflow_final', 'index': 0, 'payload': {'responseContent': 'Transfer Service completed: 500'}}]}, 'error': None, 'invokeId': '3f309daf-b9cb-40ca-b918-4aa738e534fd', 'parentInvokeId': 'b8127943-24af-4f89-8097-18cb3caf2e2f', 'childInvokes': [], 'invokeType': 'workflow', 'name': 'Transfer Service', 'elapsedTime': '3.60s', 'metaData': {'class_name': 'Transfer Service', 'type': 'workflow', 'metadata': {'name': 'Transfer Service', 'id': 'transfer_flow', 'version': '1.0', 'description': 'Handle user transfer requests, supporting transfers to specified accounts'}}}
 Output: type='workflow_final' index=0 payload={'output': WorkflowOutput(result={'responseContent': 'Transfer Service completed: 500'}, state=<WorkflowExecutionState.COMPLETED: 'COMPLETED'>), 'result_type': 'answer'}
-
 ```
 
 ### release

@@ -172,22 +172,14 @@ class openjiuwen.core.component.questioner_comp.QuestionerComponent(questioner_c
 ...     result = await workflow.invoke({"query": "2025年8月1日的上海", "conversation_id": "c123"}, WorkflowRuntime())
 ...     print(f"{result}")
 ...     # 由于提问器组件的输入已经能够支撑提问器一次性提取参数完整，且未触发追问和用户反馈的交互过程，所以输出结果如下：
-...     # {
-...     #      "question": "",
-...     #      "user_response": "",
-...     #      "location": "上海",
-...     #      "date": "2025-08-01"
-...     # }
+...     # result={'output': {'output': '上海'}} state=<WorkflowExecutionState.COMPLETED: 'COMPLETED'>
 ... 
 ...     session_id = "test_questioner"
 ...     workflow_runtime = TaskRuntime(trace_id=session_id).create_workflow_runtime()  # 基于TaskRuntime，创建一个对应该session id的工作流Runtime
 ...     result = await workflow.invoke({"query": "时间是2025年8月1日", "conversation_id": "c123"}, workflow_runtime)
 ...     print(f"{result}")
 ...     # 工作流输出结果，主动向用户追问，注意此时的状态state为需要用户反馈，输出内容为追问用户的问题：
-...     # result = WorkflowOutput(
-...     #              state=WorkflowExecutionState.INPUT_REQUIRED,
-...     #              result=[OutputSchema(type="__interaction__", index=0, payload=InteractionOutput(id='questioner', value='请您提供地点相关的信息'))]
-...     #          )
+...     # result=[OutputSchema(type='__interaction__', index=0, payload=InteractionOutput(id='questioner', value='请您提供地点相关的信息'))] state=<WorkflowExecutionState.INPUT_REQUIRED: 'INPUT_REQUIRED'>
 ... 
 ...     # 用户反馈追问的地点信息`"地点是杭州"`后，继续执行工作流
 ...     user_input = InteractiveInput()
@@ -204,12 +196,7 @@ class openjiuwen.core.component.questioner_comp.QuestionerComponent(questioner_c
 >>>
 >>>
 >>> # 提问器组件此次调用过程中的输出结果为：
-{
-     "question": "请您提供地点信息",
-     "user_response": "地点是杭州",
-     "location": "杭州",
-     "date": "2025-08-01"
-}
+result={'output': {'output': '杭州'}} state=<WorkflowExecutionState.COMPLETED: 'COMPLETED'>
 
 >>> 当用户输入是无关信息时（例如"帮我订机票"）
 >>> user_input.update(interrupted_component_id, "帮我订机票")

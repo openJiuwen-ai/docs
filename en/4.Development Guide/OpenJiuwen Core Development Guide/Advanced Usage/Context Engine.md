@@ -311,7 +311,6 @@ Below is a complete code example using the Context Engine:
 import os
 import asyncio
 from datetime import datetime
-from openjiuwen.agent.common.schema import PluginSchema
 from openjiuwen.agent.react_agent import create_react_agent_config, ReActAgent
 from openjiuwen.core.component.common.configs.model_config import ModelConfig
 from openjiuwen.core.utils.llm.base import BaseModelInfo
@@ -366,7 +365,6 @@ def _create_prompt_template():
 
 
 agent_id = "react_agent_123"
-tools_schema = [_create_tool_schema()]
 model_config = _create_model()
 prompt_template = _create_prompt_template()
 
@@ -457,7 +455,7 @@ async def run():
 
     # 6. Statistics
     print("\n6. Context statistics")
-    all_msgs = agent_context.get_messages(100)
+    all_msgs = agent_context.get_messages(-1)
     user_count = len([msg for msg in all_msgs if hasattr(msg, 'role') and msg.role == 'user'])
     ai_count = len([msg for msg in all_msgs if hasattr(msg, 'role') and msg.role == 'assistant'])
     system_count = len([msg for msg in all_msgs if hasattr(msg, 'role') and msg.role == 'system'])

@@ -196,12 +196,7 @@ When using this component, the following constraints apply:
 ...     print(f"{result}")
 ...     # Since the Questioner input is sufficient for extracting all parameters in one pass,
 ...     # and no follow-up or user-feedback interaction is triggered, the output is:
-...     # {
-...     #      "question": "",
-...     #      "user_response": "",
-...     #      "location": "Shanghai",
-...     #      "date": "2025-08-01"
-...     # }
+...     # result={'output': {'output': 'Shanghai'}} state=<WorkflowExecutionState.COMPLETED: 'COMPLETED'>
 ... 
 ...     session_id = "test_questioner"
 ...     workflow_runtime = TaskRuntime(trace_id=session_id).create_workflow_runtime()  # Create a WorkflowRuntime for this session id based on TaskRuntime
@@ -209,10 +204,7 @@ When using this component, the following constraints apply:
 ...     print(f"{result}")
 ...     # Workflow output: it proactively asks the user a follow-up question.
 ...     # Note: at this point the state indicates that user input is required, and the output contains the follow-up question:
-...     # result = WorkflowOutput(
-...     #              state=WorkflowExecutionState.INPUT_REQUIRED,
-...     #              result=[OutputSchema(type="__interaction__", index=0, payload=InteractionOutput(id='questioner', value='Please provide location-related information'))]
-...     #          )
+...     # result=[OutputSchema(type='__interaction__', index=0, payload=InteractionOutput(id='questioner', value='请您提供location相关的信息'))] state=<WorkflowExecutionState.INPUT_REQUIRED: 'INPUT_REQUIRED'>
 ... 
 ...     # After the user replies with location information, e.g. "The location is Hangzhou", continue executing the workflow.
 ...     user_input = InteractiveInput()
@@ -229,12 +221,7 @@ When using this component, the following constraints apply:
 >>>
 >>>
 >>> # Output of this invocation of the Questioner component:
-{
-     "question": "Please provide location information",
-     "user_response": "The location is Hangzhou",
-     "location": "Hangzhou",
-     "date": "2025-08-01"
-}
+result={'output': {'output': 'Hangzhou'}} state=<WorkflowExecutionState.COMPLETED: 'COMPLETED'>
 >>> 
 >>> # When the user input is irrelevant (e.g. "Help me book a flight")
 >>> user_input.update(interrupted_component_id, "Help me book a flight")

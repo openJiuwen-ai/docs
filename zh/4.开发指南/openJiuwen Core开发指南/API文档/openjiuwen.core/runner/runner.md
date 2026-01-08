@@ -10,9 +10,6 @@ async def start(self) -> bool
 ```
 启动Runner。
 
-**返回**：
-
-**bool**，启动结果，`True`表示启动成功，`False`表示启动失败。
 
 **样例**：
 ```python
@@ -20,9 +17,7 @@ async def start(self) -> bool
 >>>
 >>> from openjiuwen.core.runner.runner import Runner
 >>> 
->>> result=asyncio.run(Runner.start())
->>> print(result)
-True
+>>> asyncio.run(Runner.start())
 ```
 
 ### stop
@@ -317,7 +312,7 @@ async def run_agent_streaming(self, agent: Union[str, Agent], inputs: Any) -> As
 ...             print(chunk)
 ... 
 >>> asyncio.run(run_workflow())
-type='workflow_final' index=0 payload={'output': WorkflowOutput(result={'output': {'result': '哈哈'}}, state=<WorkflowExecutionState.COMPLETED: 'COMPLETED'>), 'result_type': 'answer'}
+type='workflow_final' index=0 payload={'output': {'result': '哈哈'}}
 >>> 
 >>> # 通过id，调用agent，需要首先将agent注册
 >>> Runner.add_agent("agent_id", agent)
@@ -328,7 +323,7 @@ type='workflow_final' index=0 payload={'output': WorkflowOutput(result={'output'
 ...             print(chunk)
 ... 
 >>> asyncio.run(run_workflow())
-type='workflow_final' index=0 payload={'output': WorkflowOutput(result={'output': {'result': '哈哈'}}, state=<WorkflowExecutionState.COMPLETED: 'COMPLETED'>), 'result_type': 'answer'}
+type='workflow_final' index=0 payload={'output': {'result': '哈哈'}}
 
 ```
 
@@ -1148,11 +1143,8 @@ async def run_agent_group_streaming(self, agent_group: Union[str, AgentGroup], i
 输出结果：type='tracer_workflow' payload={'traceId': '78e2562a-dbbe-48a4-b9ef-6be622f6df69', 'startTime': datetime.datetime(2025, 12, 9, 15, 34, 41, 169679), 'endTime': datetime.datetime(2025, 12, 9, 15, 34, 44, 750914), 'inputs': {'query': '给张三转账500元'}, 'outputs': {'amount': 500}, 'error': None, 'invokeId': 'questioner', 'parentInvokeId': 'start', 'executionId': '78e2562a-dbbe-48a4-b9ef-6be622f6df69', 'onInvokeData': [], 'componentId': '', 'componentName': '', 'componentType': 'questioner', 'loopNodeId': None, 'loopIndex': None, 'status': 'finish', 'parentNodeId': ''}
 输出结果：type='tracer_workflow' payload={'traceId': '78e2562a-dbbe-48a4-b9ef-6be622f6df69', 'startTime': datetime.datetime(2025, 12, 9, 15, 34, 44, 752452), 'endTime': None, 'inputs': {'amount': 500}, 'outputs': None, 'error': None, 'invokeId': 'end', 'parentInvokeId': 'questioner', 'executionId': '78e2562a-dbbe-48a4-b9ef-6be622f6df69', 'onInvokeData': [], 'componentId': '', 'componentName': '', 'componentType': 'end', 'loopNodeId': None, 'loopIndex': None, 'status': 'start', 'parentNodeId': ''}
 输出结果：type='tracer_workflow' payload={'traceId': '78e2562a-dbbe-48a4-b9ef-6be622f6df69', 'startTime': datetime.datetime(2025, 12, 9, 15, 34, 44, 752452), 'endTime': datetime.datetime(2025, 12, 9, 15, 34, 44, 752861), 'inputs': {'amount': 500}, 'outputs': {'responseContent': '转账服务完成: 500'}, 'error': None, 'invokeId': 'end', 'parentInvokeId': 'questioner', 'executionId': '78e2562a-dbbe-48a4-b9ef-6be622f6df69', 'onInvokeData': [], 'componentId': '', 'componentName': '', 'componentType': 'end', 'loopNodeId': None, 'loopIndex': None, 'status': 'finish', 'parentNodeId': ''}
-输出结果：type='end node stream' index=0 payload={'answer': '转账服务完成: 500'}
 输出结果：type='tracer_workflow' payload={'traceId': '78e2562a-dbbe-48a4-b9ef-6be622f6df69', 'startTime': datetime.datetime(2025, 12, 9, 15, 34, 41, 167805), 'endTime': datetime.datetime(2025, 12, 9, 15, 34, 44, 754020), 'inputs': {'query': '给张三转账500元'}, 'outputs': {'responseContent': '转账服务完成: 500'}, 'error': None, 'invokeId': 'transfer_flow', 'parentInvokeId': None, 'executionId': '78e2562a-dbbe-48a4-b9ef-6be622f6df69', 'onInvokeData': [], 'componentId': '', 'componentName': '', 'componentType': 'transfer_flow', 'loopNodeId': None, 'loopIndex': None, 'status': 'finish', 'parentNodeId': ''}
-输出结果：type='tracer_agent' payload={'traceId': '78e2562a-dbbe-48a4-b9ef-6be622f6df69', 'startTime': datetime.datetime(2025, 12, 9, 15, 34, 41, 167499), 'endTime': datetime.datetime(2025, 12, 9, 15, 34, 44, 766519), 'inputs': {'inputs': {'query': '给张三转账500元'}}, 'outputs': {'outputs': [{'type': 'end node stream', 'index': 0, 'payload': {'answer': '转账服务完成: 500'}}, {'type': 'workflow_final', 'index': 0, 'payload': {'responseContent': '转账服务完成: 500'}}]}, 'error': None, 'invokeId': '3f309daf-b9cb-40ca-b918-4aa738e534fd', 'parentInvokeId': 'b8127943-24af-4f89-8097-18cb3caf2e2f', 'childInvokes': [], 'invokeType': 'workflow', 'name': '转账服务', 'elapsedTime': '3.60s', 'metaData': {'class_name': '转账服务', 'type': 'workflow', 'metadata': {'name': '转账服务', 'id': 'transfer_flow', 'version': '1.0', 'description': '处理用户转账请求，支持转账到指定账户'}}}
 输出结果：type='workflow_final' index=0 payload={'output': WorkflowOutput(result={'responseContent': '转账服务完成: 500'}, state=<WorkflowExecutionState.COMPLETED: 'COMPLETED'>), 'result_type': 'answer'}
-
 ```
 
 ### release
