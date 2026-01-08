@@ -233,6 +233,6 @@ print(f"执行状态: {result.state}")
 **Expected Output:**
 
 ```python
-执行结果: {'responseContent': "处理结果: Hello, openJiuwen!, 元数据: {'inputs': {'message': 'Hello, openJiuwen!'}}"}
-执行状态: <WorkflowExecutionState.COMPLETED: 'COMPLETED'>
+执行结果: {'responseContent': "处理结果: Hello, openJiuwen!, 元数据: {'message': 'Hello, openJiuwen!'}"}
+执行状态: WorkflowExecutionState.COMPLETED
 ```

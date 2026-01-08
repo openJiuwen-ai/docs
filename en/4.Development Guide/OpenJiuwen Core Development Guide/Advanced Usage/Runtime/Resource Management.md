@@ -123,6 +123,7 @@ if __name__ == "__main__":
 Use the `add_prompt` interface to add a `Prompt` template instance. You need to specify a unique template name, which can later be used via the `get_prompt` interface to query the added template.
 
 ```python
+from openjiuwen.core.agent.agent import AgentRuntime
 from openjiuwen.core.utils.prompt.template.template import Template
 
 user_prompt = """
@@ -142,6 +143,7 @@ user_prompt = """
     If there is no suitable category, please output {{default_class}}.
     """
 intent_detection_template=Template(name="default",content=[{"role": "user", "content": user_prompt}])
+runtime = AgentRuntime()
 runtime.add_prompt("default_template", intent_detection_template)
 
 print(runtime.get_prompt("default_template").name)
@@ -324,7 +326,7 @@ class CustomComponent(WorkflowComponent, ComponentExecutable):
 
     def _get_model(self, timeout):
         # You need to replace api_base and api_key
-        return ModelFactory().get_model(model_provider="openai", api_key="your path model service", api_base="sk-****************************", max_retrie=1, timeout=timeout)
+        return ModelFactory().get_model(model_provider="openai", api_key="sk-****************************", api_base="your path model service", max_retrie=1, timeout=timeout)
 
     async def invoke(self, inputs: Input, runtime: Runtime, context: Context) -> Output:
         model = self._get_model(10)

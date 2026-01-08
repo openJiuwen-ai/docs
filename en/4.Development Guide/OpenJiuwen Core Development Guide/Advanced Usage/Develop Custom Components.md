@@ -257,6 +257,7 @@ class ComputeExecutor(ComponentExecutable):
 ```python
 from openjiuwen.core.graph.base import Graph
 from openjiuwen.core.graph.executable import Executable
+from openjiuwen.core.component.base import WorkflowComponen
 
 
 class ComputeComponent(WorkflowComponent):
