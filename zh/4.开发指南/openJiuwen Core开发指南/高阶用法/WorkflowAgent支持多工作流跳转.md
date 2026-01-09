@@ -236,6 +236,7 @@ if __name__ == "__main__":
 import asyncio
 
 async def main():
+    conversation_id = "test-jump-recovery-001"
     result2 = await agent.invoke({
         "query": "查看股票",
         "conversation_id": conversation_id
@@ -272,6 +273,7 @@ if __name__ == "__main__":
 import asyncio
 
 async def main():
+    conversation_id = "test-jump-recovery-001"
     result3 = await agent.invoke({
         "query": "查询北京天气",
         "conversation_id": conversation_id
@@ -308,6 +310,7 @@ if __name__ == "__main__":
 import asyncio
 
 async def main():
+    conversation_id = "test-jump-recovery-001"
     result4 = await agent.invoke({
         "query": "查看AAPL股票",
         "conversation_id": conversation_id

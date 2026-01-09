@@ -7,7 +7,7 @@
 | CLASS          | DESCRIPTION                       |
 |----------------|-----------------------------------|
 | [ControllerType](./common/enum.md#class-openjiuwenagentcommonenumcontrollertype) | 定义了控制器的类型。          |
-| [SubTaskType](./common/enum.md#class-openjiuwenagentcommonenumtasktype) | 定义了子任务的类型。          |
+| [TaskType](./common/enum.md#class-openjiuwenagentcommonenumtasktype) | 定义了子任务的类型。          |
 | [TaskStatus](./common/enum.md#class-openjiuwenagentcommonenumtaskstatus) | 定义了任务的执行状态。         |
 | [ReActControllerStatus](./common/enum.md#class-openjiuwenagentcommonenumreactcontrollerstatus) | 定义了ReAct控制器的状态。     |
 | [WorkflowSchema](./common/schema.md#class-openjiuwenagentcommonschemaworkflowschema) | 定义了工作流的元数据和配置信息。 |

@@ -424,7 +424,7 @@ The `End` component is the built-in end component of the openJiuwen workflow, de
   ```python
   # 为工作流增加End节点，并提供渲染模板
   conf = {"responseTemplate": "渲染结果:{{param1}},{{param2}}"}
-  flow.set_end_comp("e", End(conf=conf), stream_inputs_schema={"param1": "${n.param1}", "param2": "${n.param2}"})
+  flow.set_end_comp("e", End(conf=conf), stream_inputs_schema={"param1": "${s.query}", "param2": "${s.content}"})
   ```
   
   For the input stream data of the `End` component, the system will first decompose the template into multiple sub-templates based on slot symbols, then render these sub-templates one by one, and output each rendering result as the `payload` of the streaming data, finally writing to the `responseContent` field. Final result:
@@ -800,13 +800,16 @@ Add the Questioner Component object to the workflow using the `add_workflow_comp
 
 ```python
 from openjiuwen.core.workflow.base import Workflow
+from openjiuwen.core.component.start_comp import Start
 
 workflow = Workflow()
+workflow.set_start_comp("start", Start({"inputs": [{"id": "query", "type": "String", "required": "true", "sourceType": "ref"}]}), inputs_schema={"query": "${query}"})
 workflow.add_workflow_comp(
     "questioner",
     questioner_component,
     inputs_schema={"query": "${start.query}"}
 )
+workflow.add_connection("start", "questioner")
 ```
 
 By calling the `interact` interface of the `Runtime` module inside the Questioner Component, the execution flow of the Questioner is interrupted, and a follow-up question is asked to the user. When a developer orchestrates a workflow containing a Questioner Component, the return value of the workflow includes the follow-up question. Developers can judge whether it is a return result of human-machine interaction through the field `state=WorkflowExecutionState.INPUT_REQUIRED` in the workflow output data structure `WorkflowOutput`.
@@ -820,15 +823,15 @@ from openjiuwen.core.runtime.wrapper import TaskRuntime
 session_id = "test_questioner"
 workflow_runtime = TaskRuntime(trace_id=session_id).create_workflow_runtime()  # 基于TaskRuntime，创建一个对应该session id的工作流Runtime
 workflow_result = asyncio.run(workflow.invoke({"query": "时间是2025年8月1日", "conversation_id": "c123"}, workflow_runtime))
-print(workflow_result)
+print(repr(workflow_result))
 ```
 
 The workflow output result is as follows:
 
 ```python
 WorkflowOutput(
-    state=WorkflowExecutionState.INPUT_REQUIRED,
-    result=[OutputSchema(type="__interaction__", index=0, payload=InteractionOutput(id='questioner', value='请您提供地点相关的信息'))]
+    result=[OutputSchema(type='__interaction__', index=0, payload=InteractionOutput(id='questioner', value='请您提供地点相关的信息'))], 
+    state=<WorkflowExecutionState.INPUT_REQUIRED: 'INPUT_REQUIRED'>
 )
 ```
 

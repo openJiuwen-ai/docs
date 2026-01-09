@@ -394,7 +394,6 @@ add_tools(self, tools: List[Tool])
   ...         dict(role="system", content=system_prompt.format(build_current_date()))
   ...     ]
   >>> 
-  >>> tools_schema = [_create_tool_schema()]
   >>> model_config = _create_model()
   >>> prompt_template = _create_prompt_template()
   >>> 
@@ -406,7 +405,7 @@ add_tools(self, tools: List[Tool])
   ...     prompt_template=prompt_template
   ... )
   >>> 
-  >>> react_agent: ReActAgent = create_react_agent(react_agent_config)
+  >>> react_agent: ReActAgent = ReActAgent(react_agent_config)
   >>> # 绑定工具
   >>> react_agent.add_tools([_create_tool()])
   ```
@@ -463,7 +462,6 @@ add_tools(self, tools: List[Tool])
   ...         dict(role="system", content=system_prompt)
   ...     ]
   >>> 
-  >>> tools_schema = [_create_function_tool_schema()]
   >>> model_config = _create_model()
   >>> prompt_template = _create_function_prompt_template()
   >>> 

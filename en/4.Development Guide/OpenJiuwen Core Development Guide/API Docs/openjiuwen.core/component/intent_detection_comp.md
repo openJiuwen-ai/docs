@@ -124,7 +124,7 @@ For an intent detection component that has been created successfully, add routin
 ...     # Add the intent detection component object to the workflow via Workflow.add_workflow_comp.
 ...     # Name the component "intent", and in the input schema reference the value of the query field from the start component.
 ...     workflow.set_start_comp("start", start_component, inputs_schema={"query": "${query}"})
-...     workflow.set_end_comp("end", End(), inputs_schema={"output": "${intent.category_name}"})
+...     workflow.set_end_comp("end", End(), inputs_schema={"output": "${intent}"})
 ...     workflow.add_workflow_comp(
 ...              "intent",
 ...              intent_component,
@@ -134,7 +134,7 @@ For an intent detection component that has been created successfully, add routin
 ...     workflow.add_connection("intent", "end")
 ...     result = await workflow.invoke({"query": "Query today's weather in Shanghai", "conversation_id": "c123"}, WorkflowRuntime())
 ...     
-...     print(f"{result}")
+...     print(f"{result.result.get('output', {}).get('output', result.result)}")
 >>> 
 >>> def main():
 ...     asyncio.run(demo_intent_dectection_component())

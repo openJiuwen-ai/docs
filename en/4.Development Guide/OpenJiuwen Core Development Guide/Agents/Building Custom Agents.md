@@ -129,6 +129,19 @@ class MyAgent(BaseAgent):
         return llm_output
 ```
 
+# Implementing the stream Method
+
+The `stream` method enables streaming invocation capability for the agent, returning an asynchronous iterator to support real-time responses. In this example implementation, for simplicity, the method directly reuses the complete processing logic from `invoke`, returning the final result as a single streaming chunk. The implementation is as follows:
+
+```python
+from typing import AsyncIterator, Any
+
+class MyAgent(BaseAgent):
+    async def stream(self, inputs: Dict, runtime: Runtime = None) -> AsyncIterator[Any]:
+        content = await self.invoke(inputs)
+        yield {"type": "answer", "content": content}
+```
+
 # Running the Custom Agent
 
 After the developer completes the relevant implementation of the custom Agent, they can call the `invoke` method to run the custom Agent asynchronously and non-streamingly. The example code is as follows:
@@ -141,6 +154,7 @@ my_agent = MyAgent(my_agent_config)
 
 inputs = {"llm_inputs": "写一个笑话"}
 res = asyncio.run(my_agent.invoke(inputs))
+print(res)
 ```
 
 # Complete Example Code

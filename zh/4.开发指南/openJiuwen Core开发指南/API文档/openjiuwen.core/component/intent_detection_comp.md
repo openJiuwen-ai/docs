@@ -114,7 +114,7 @@ add_branch(condition: Union[str, Callable[[], bool], Condition], target: Union[s
 ...     
 ...     # 通过`Workflow`的`add_workflow_comp`方法将意图识别组件对象添加到工作流中，定义组件名称为"intent"，输入参数中引用了开始组件的query字段的值。
 ...     workflow.set_start_comp("start", start_component, inputs_schema={"query": "${query}"})
-...     workflow.set_end_comp("end", End(), inputs_schema={"output": "${intent.category_name}"})
+...     workflow.set_end_comp("end", End(), inputs_schema={"output": "${intent}"})
 ...     workflow.add_workflow_comp(
 ...              "intent",
 ...              intent_component,
@@ -124,7 +124,7 @@ add_branch(condition: Union[str, Callable[[], bool], Condition], target: Union[s
 ...     workflow.add_connection("intent", "end")
 ...     result = await workflow.invoke({"query": "查询今天上海的天气", "conversation_id": "c123"}, WorkflowRuntime())
 ...     
-...     print(f"{result}")
+...     print(f"{result.result.get('output', {}).get('output', result.result)}")
 >>> 
 >>> def main():
 ...     asyncio.run(demo_intent_dectection_component())

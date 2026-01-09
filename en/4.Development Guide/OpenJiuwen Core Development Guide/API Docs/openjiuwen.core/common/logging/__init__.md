@@ -10,7 +10,7 @@ The default logger provided by openJiuwen is a thin wrapper around Python’s st
 >>> import logging
 >>> 
 >>> from openjiuwen.core.common.logging import logger
->>> logger.setLevel(logging.DEBUG)
+>>> logger.set_level(logging.DEBUG)
 >>> 
 >>> logger.debug(f"Log a DEBUG-level message")
 2025-09-29 03:04:20 | common | default_impl.py | 172 | info |  | DEBUG | Log an INFO-level message

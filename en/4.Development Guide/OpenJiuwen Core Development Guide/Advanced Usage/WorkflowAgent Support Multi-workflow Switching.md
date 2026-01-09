@@ -236,6 +236,7 @@ Expected Output
 import asyncio
 
 async def main():
+    conversation_id = "test-jump-recovery-001"
     result2 = await agent.invoke({
         "query": "View stocks",
         "conversation_id": conversation_id
@@ -272,6 +273,7 @@ Expected Output
 import asyncio
 
 async def main():
+    conversation_id = "test-jump-recovery-001"
     result3 = await agent.invoke({
         "query": "Query Beijing weather",
         "conversation_id": conversation_id
@@ -308,6 +310,7 @@ Expected Output (Completed)
 import asyncio
 
 async def main():
+    conversation_id = "test-jump-recovery-001"
     result4 = await agent.invoke({
         "query": "View AAPL stock",
         "conversation_id": conversation_id

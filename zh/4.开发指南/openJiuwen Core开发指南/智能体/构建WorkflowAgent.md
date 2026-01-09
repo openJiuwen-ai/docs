@@ -226,7 +226,7 @@ from openjiuwen.core.utils.tool.service_api.restful_api import RestfulApi
 def create_plugin_component() -> ToolComponent:
     """创建插件组件，可调用外部 RESTful API。"""
     tool_config = ToolComponentConfig()
-    weather_tool = RestfulApi(
+    weather_plugin = RestfulApi(
         name="WeatherReporter",
         description="天气查询插件",
         params=[
@@ -238,7 +238,7 @@ def create_plugin_component() -> ToolComponent:
         method="GET",
         response=[],
     )
-    return ToolComponent(tool_config).bind_tool(weather_tool)
+    return ToolComponent(tool_config).bind_tool(weather_plugin)
 ```
 
 上述部分介绍了各组件的实例化过程，下面统一介绍将组件注册到工作流：
@@ -277,12 +277,12 @@ flow.add_workflow_comp(
     "plugin",
     plugin,
     inputs_schema={
-        "location": "${questioner.key_fields.location}",
-        "date": "${questioner.key_fields.date}",
+        "location": "${questioner.location}",
+        "date": "${questioner.date}",
         "validated": True,
     },
 )
-flow.set_end_comp("end", end, inputs_schema={"output": "${plugin.result}"})
+flow.set_end_comp("end", end, inputs_schema={"output": "${plugin.data}"})
 ```
 
 ## 连接组件
@@ -343,7 +343,7 @@ workflow_agent.bind_workflows([flow])
 import asyncio
 
 async def test_weather_workflow():
-    result = await workflow_agent.invoke({"query": "上海天气如何"})
+    result = await workflow_agent.invoke({"conversation_id": "12345","query": "上海天气如何"})
     print(f"{result}")
 
 
@@ -475,34 +475,12 @@ def create_plugin_component() -> ToolComponent:
     )
     return ToolComponent(tool_config).bind_tool(weather_plugin)
 
-def create_tool_schema():
-    tool_info = PluginSchema(
-        name='WeatherReporter',
-        description='天气查询插件',
-        inputs={
-            "type": "object",
-            "properties": {
-                "location": {
-                    "type": "string",
-                    "description": "天气查询的地点。\n注意：地点名称必须为英文",
-                    "required": True
-                },
-                "date": {
-                    "type": "string",
-                    "description": "天气查询的时间，格式为YYYY-MM-DD",
-                    "required": True
-                }
-            }
-        }
-    )
-    return tool_info
-
 def bind_agent():
     id = "weather_workflow"
     version = "1.0"
     name = "weather"
     workflow_config = WorkflowConfig(
-        metadata=WorkflowMetadata(name=name, id=id, version=version),
+        metadata=WorkflowMetadata(name=name, id=id, version=version, description="天气查询工作流"),
         workflow_inputs_schema=WorkflowInputsSchema(
             type="object",
             properties={
@@ -571,13 +549,12 @@ def bind_agent():
         description="天气查询工作流",
         inputs={"query": {"type": "string"}},
     )
-    tool_schema = [create_tool_schema()]
+
     agent_config = WorkflowAgentConfig(
         id="weather_agent",
         version="0.1.0",
         description="天气查询agent",
-        workflows=[schema],
-        plugins=tool_schema,
+        workflows=[schema]
     )
 
     workflow_agent = WorkflowAgent(agent_config)
