@@ -162,7 +162,7 @@ add_node(self, node_id: str, node: Executable, *, wait_for_all: bool=False) -> S
 ...     async def invoke(self, inputs: Input, runtime: Runtime, context: Context) -> Output:
 ...         return inputs
 ... 
-...      def to_executable(self) -> Executable:
+...     def to_executable(self) -> Executable:
 ...         return self
 ... 
 >>> class InnerNode(ComponentExecutable):

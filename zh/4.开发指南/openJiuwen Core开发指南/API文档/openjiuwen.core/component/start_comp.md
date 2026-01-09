@@ -92,11 +92,7 @@ class openjiuwen.core.component.start_comp.Start(conf: dict)
 >>> if __name__ == "__main__":
 ...     main()
 >>> # `Start`组件会根据`conf`对于用户的`input`进行格式化，传递给下一个组件，格式化完的结果为：
-{
-    "query": "hello world",
-    "dialogueHistory" :["c", "d"],
-    "conversationHistory": ["a", "b"]
-}
+result={'query': 'hello world', 'dialogueHistory': ['c', 'd'], 'conversationHistory': ['a', 'b']} state=<WorkflowExecutionState.COMPLETED: 'COMPLETED'>
 ```
 
 ## class  openjiuwen.core.component.start_comp.StartInputSchema（预留类）

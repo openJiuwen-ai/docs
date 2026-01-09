@@ -93,11 +93,7 @@ class openjiuwen.core.component.start_comp.Start(conf: dict)
 >>> 
 >>> # The `Start` component formats the user `input` according to `conf` and passes it to the next component.
 >>> # The formatted result is:
-{
-    "query": "hello world",
-    "dialogueHistory": ["c", "d"],
-    "conversationHistory": ["a", "b"]
-}
+result={'query': 'hello world', 'dialogueHistory': ['c', 'd'], 'conversationHistory': ['a', 'b']} state=<WorkflowExecutionState.COMPLETED: 'COMPLETED'>
 ```
 
 ## class openjiuwen.core.component.start_comp.StartInputSchema (Reserved class)

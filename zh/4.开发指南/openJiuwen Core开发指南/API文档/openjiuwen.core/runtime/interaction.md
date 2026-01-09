@@ -229,7 +229,7 @@ class openjiuwen.core.runtime.interaction.interaction.InteractionOutput
 ...
 interactive_node1
 >>>     print(output.result[0].payload.value)
-Do you want to execute the command '{delete all files}'
+Do you want to execute the command 'delete all files'
 ```
 
 > **说明**

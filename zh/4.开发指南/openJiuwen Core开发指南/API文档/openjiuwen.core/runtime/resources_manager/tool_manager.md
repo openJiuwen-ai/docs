@@ -119,14 +119,6 @@ def get_tool(tool_id: str, runtime=None) -> Optional[Tool]
 **样例**:
 
 ```python
->>> # 获取工具实例
->>> tool = tool_mgr.get_tool("test_tool")
->>> print(f"Tool found: {tool is not None}")
->>> if tool:
-...     result = tool.invoke()
-...     print(f"Tool executed: {result}")
-Tool found: True
-Tool executed: {'result': 'Tool executed'}
 >>> from openjiuwen.core.runtime.resources_manager.tool_manager import ToolMgr
 >>> from openjiuwen.core.runtime.resources_manager.tool_manager import Tool
 >>> from openjiuwen.core.runtime.resources_manager.tool_manager import ToolInfo

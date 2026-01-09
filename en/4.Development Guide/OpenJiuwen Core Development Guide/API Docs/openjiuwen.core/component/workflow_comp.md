@@ -76,7 +76,7 @@ class openjiuwen.core.component.workflow_comp.SubWorkflowComponent(sub_workflow:
 ...     sub_workflow_comp,
 ...     inputs_schema={"query": "${start.query}"}
 ... )
->>> main_workflow.set_end_comp("end", End(), inputs_schema={"result": "${sub_workflow_comp.result}"})
+>>> main_workflow.set_end_comp("end", End(), inputs_schema={"result": "${sub_workflow_comp.output.result}"})
 >>> 
 >>> # Configure the main workflow topology: start -> sub_workflow_comp -> end
 >>> main_workflow.add_connection("start", "sub_workflow_comp")
@@ -97,12 +97,5 @@ class openjiuwen.core.component.workflow_comp.SubWorkflowComponent(sub_workflow:
 >>> 
 >>> res = asyncio.run(run_workflow())
 >>> print(f"main workflow with sub workflow run result: {res}")
-main workflow with sub workflow run result: {
-    "result": {
-        "output": {
-            "result": "hello"
-        }
-    },
-    "state": "COMPLETED"
-}
+main workflow with sub workflow run result: result={'output': {'result': 'hello'}} state=<WorkflowExecutionState.COMPLETED: 'COMPLETED'>
 ```

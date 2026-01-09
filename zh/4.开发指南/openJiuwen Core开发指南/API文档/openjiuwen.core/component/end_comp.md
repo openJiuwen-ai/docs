@@ -60,7 +60,7 @@ class openjiuwen.core.component.end_comp.End(conf: Union[EndConfig, dict] = None
 >>> 
 >>> if __name__ == "__main__":
 ...     main()
-{'output': {'param1': '你好', 'param2': '杭州'}}
+result={'output': {'param1': '你好', 'param2': '杭州'}} state=<WorkflowExecutionState.COMPLETED: 'COMPLETED'>
 ```
 ```python
 >>> # 样例2: 演示End组件的响应模板用法
@@ -103,7 +103,7 @@ class openjiuwen.core.component.end_comp.End(conf: Union[EndConfig, dict] = None
 >>> 
 >>> if __name__ == "__main__":
 ...     main()
-{'responseContent': '渲染结果:你好,杭州'}
+result={'responseContent': '渲染结果:你好,杭州'} state=<WorkflowExecutionState.COMPLETED: 'COMPLETED'>
 ```
 
 ## class openjiuwen.core.component.end_comp.EndConfig

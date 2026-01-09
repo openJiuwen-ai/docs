@@ -70,7 +70,7 @@ The `End` component implements the four capabilities of the base component `Comp
 >>> 
 >>> if __name__ == "__main__":
 ...     main()
-{'output': {'param1': 'Hello', 'param2': 'Hangzhou'}}
+result={'output': {'param1': 'Hello', 'param2': 'Hangzhou'}} state=<WorkflowExecutionState.COMPLETED: 'COMPLETED'>
 ```
 
 ```python
@@ -115,6 +115,7 @@ The `End` component implements the four capabilities of the base component `Comp
 >>> if __name__ == "__main__":
 ...     main()
 {'responseContent': 'Rendered result: Hello, Hangzhou'}
+result={'responseContent': 'Rendered result: Hello, Hangzhou'} state=<WorkflowExecutionState.COMPLETED: 'COMPLETED'>
 ```
 
 ## class openjiuwen.core.component.end_comp.EndConfig

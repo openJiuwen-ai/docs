@@ -165,7 +165,37 @@ add_workflow_comp(self, comp_id: str, workflow_comp: Union[Executable, WorkflowC
 ​**样例**​：
 
 ```python
->>> from openjiuwen.core.component.llm_comp import LLMCompConfig
+>>> import os
+>>> from datetime import datetime
+>>> 
+>>> from openjiuwen.core.component.common.configs.model_config import ModelConfig
+>>> from openjiuwen.core.component.llm_comp import LLMCompConfig, LLMComponent
+>>> from openjiuwen.core.utils.llm.base import BaseModelInfo
+>>> 
+>>> API_BASE = os.getenv("API_BASE", "mock://api.openai.com/v1")
+>>> API_KEY = os.getenv("API_KEY", "sk-fake")
+>>> MODEL_NAME = os.getenv("MODEL_NAME", "")
+>>> MODEL_PROVIDER = os.getenv("MODEL_PROVIDER", "")
+>>> os.environ.setdefault("LLM_SSL_VERIFY", "false")  # 关闭SSL校验仅用于本地调试，生产环境请务必打开
+>>> SYSTEM_PROMPT_TEMPLATE = "你是一个query改写的AI助手。今天的日期是{}。"
+>>> 
+>>> def _create_model_config() -> ModelConfig:
+...     """根据环境变量构造模型配置。"""
+...     return ModelConfig(
+...         model_provider=MODEL_PROVIDER,
+...         model_info=BaseModelInfo(
+...             model=MODEL_NAME,
+...             api_base=API_BASE,
+...             api_key=API_KEY,
+...             temperature=0.7,
+...             top_p=0.9,
+...             timeout=120,  # 增加超时时间到120秒，避免网络问题
+...         ),
+...     )
+>>> 
+>>> def build_current_date():
+...     current_datetime = datetime.now()
+...     return current_datetime.strftime("%Y-%m-%d")
 >>> 
 >>> def _create_llm_component() -> LLMComponent:
 ...     """创建 LLM 组件，仅用于抽取结构化字段（location/date）。"""
