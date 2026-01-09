@@ -10,6 +10,7 @@ Below is an introduction based on a `openjiuwen.agent.workflow_agent.WorkflowAge
 Use the `runtime.get_workflow_config` method to obtain the configuration information of a workflow by its workflow ID:
 
 ```python
+# Note: This code snippet depends on full runtime initialization and context configuration, and cannot run independently. Please refer to the complete code example.
 workflow_config = runtime.get_workflow_config(workflow_id="test_weather_agent")
 print(workflow_config.metadata.id)
 print(workflow_config.metadata.name)
@@ -31,6 +32,7 @@ For the full code, refer to the [Complete Example](Configuration%20Management.md
 Use `runtime.get_agent_config` to obtain the Agent configuration:
 
 ```python
+# Note: This code snippet depends on full runtime initialization and context configuration, and cannot run independently. Please refer to the complete code example.
 agent_config = runtime.get_agent_config()
 print(agent_config.id)
 print(agent_config.version)

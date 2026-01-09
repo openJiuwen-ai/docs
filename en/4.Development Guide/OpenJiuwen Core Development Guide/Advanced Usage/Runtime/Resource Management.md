@@ -12,11 +12,14 @@ openJiuwen's `Runtime` provides resource management capabilities, making it easy
 Use the `add_workflow` interface to add a workflow instance. You need to specify a unique workflow name, which can later be used via the `get_workflow` interface to query the added workflow.
 
 ```python
+# Note: This code snippet depends on full runtime initialization and context configuration, and cannot run independently. Please refer to the complete code example.
 from openjiuwen.core.workflow.workflow_config import WorkflowConfig, WorkflowMetadata
 
 workflow1 = _create_workflow(workflow_config=WorkflowConfig(metadata=WorkflowMetadata(id="1", version="1")))
 runtime.add_workflow("1_1", workflow1)
-print(runtime.get_workflow("1_1").config().metadata)
+workflow_1 = await runtime.get_workflow("1_1")
+metadata_1 = workflow_1.config().metadata
+print(metadata_1)
 ```
 
 Output:
@@ -28,14 +31,19 @@ name='' id='1' version='1' description=''
 Use the `add_workflows` interface to batch add workflow instances. Each workflow instance must have a unique name, and you can use the `get_workflow` interface to query it later.
 
 ```python
+# Note: This code snippet depends on full runtime initialization and context configuration, and cannot run independently. Please refer to the complete code example.
 from openjiuwen.core.workflow.workflow_config import WorkflowConfig, WorkflowMetadata
 
 workflow2 = _create_workflow(workflow_config=WorkflowConfig(metadata=WorkflowMetadata(id="2", version="2")))
 workflow3 = _create_workflow(workflow_config=WorkflowConfig(metadata=WorkflowMetadata(id="3", version="3")))
 runtime.add_workflows([("2_2", workflow2), ("3_3", workflow3)])
 
-print(runtime.get_workflow("2_2").config().metadata)
-print(runtime.get_workflow("3_3").config().metadata)
+workflow_2 = await runtime.get_workflow("2_2")
+metadata_2 = workflow_2.config().metadata
+workflow_3 = await runtime.get_workflow("3_3")
+metadata_3 = workflow_3.config().metadata
+print(metadata_2)
+print(metadata_3)
 ```
 
 Returns:
@@ -48,8 +56,10 @@ name='' id='3' version='3' description=''
 Use the `remove_workflow` interface to delete an already added workflow instance by its specified name.
 
 ```python
+# Note: This code snippet depends on full runtime initialization and context configuration, and cannot run independently. Please refer to the complete code example.
 runtime.remove_workflow("2_2")
-print(runtime.get_workflow("2_2"))
+workflow_2 = await runtime.get_workflow("2_2")
+print(workflow_2)
 ```
 
 Output:
@@ -90,18 +100,25 @@ class CustomComponent(WorkflowComponent, ComponentExecutable):
         # Add 1 workflow
         workflow1 = self._create_workflow(workflow_config=WorkflowConfig(metadata=WorkflowMetadata(id="1", version="1")))
         runtime.add_workflow("1_1", workflow1)
-        print(runtime.get_workflow("1_1").config().metadata)
+        workflow_1 = await runtime.get_workflow("1_1")
+        metadata_1 = workflow_1.config().metadata
+        print(metadata_1)
 
         # Batch add workflows
         workflow2 = self._create_workflow(workflow_config=WorkflowConfig(metadata=WorkflowMetadata(id="2", version="2")))
         workflow3 = self._create_workflow(workflow_config=WorkflowConfig(metadata=WorkflowMetadata(id="3", version="3")))
         runtime.add_workflows([("2_2", workflow2), ("3_3", workflow3)])
 
-        print(runtime.get_workflow("2_2").config().metadata)
-        print(runtime.get_workflow("3_3").config().metadata)
+        workflow_2 = await runtime.get_workflow("2_2")
+        metadata_2 = workflow_2.config().metadata
+        workflow_3 = await runtime.get_workflow("3_3")
+        metadata_3 = workflow_3.config().metadata
+        print(metadata_2)
+        print(metadata_3)
 
         runtime.remove_workflow("2_2")
-        print(runtime.get_workflow("2_2"))
+        workflow_2 = await runtime.get_workflow("2_2")
+        print(workflow_2)
 
 flow = Workflow()
 flow.set_start_comp("start", Start())
@@ -261,6 +278,7 @@ if __name__ == "__main__":
 Use the `add_model` interface to add a large model instance. You need to specify a unique instance name, which can later be used via the `get_model` interface to query the added instance.
 
 ```python
+# Note: This code snippet depends on full runtime initialization and context configuration, and cannot run independently. Please refer to the complete code example.
 model = _get_model(10)
 runtime.add_model("model", model)
 saved_model = runtime.get_model("model")
@@ -276,6 +294,7 @@ Saved model: Siliconflow
 Use the `add_models` interface to batch add large model instances. Each large model instance must have a unique name, and you can use the `get_model` interface to query them later.
 
 ```python
+# Note: This code snippet depends on full runtime initialization and context configuration, and cannot run independently. Please refer to the complete code example.
 model1 = _get_model(1)
 model2 = _get_model(2)
 runtime.add_models([("model_1", model1), ("model_2", model2)])
@@ -293,6 +312,7 @@ model_2 exists: True
 Use the `remove_model` interface to delete an already added large model instance by its specified name.
 
 ```python
+# Note: This code snippet depends on full runtime initialization and context configuration, and cannot run independently. Please refer to the complete code example.
 runtime.remove_model("model_1")
 print(f"After removal model_1: {runtime.get_model('model_1')}")
 ```
@@ -363,6 +383,7 @@ Use the `add_tool` interface to add a tool instance. You need to specify a uniqu
 ```python
 from openjiuwen.core.utils.tool.function.function import LocalFunction
 from openjiuwen.core.utils.tool.param import Param
+from openjiuwen.core.agent.agent import AgentRuntime
 
 add_plugin = LocalFunction(
     name="add",
@@ -373,6 +394,7 @@ add_plugin = LocalFunction(
     ],
     func=lambda a, b: a + b
 )
+runtime = AgentRuntime()
 runtime.add_tool("add_plugin", add_plugin)
 
 tool = runtime.get_tool("add_plugin")

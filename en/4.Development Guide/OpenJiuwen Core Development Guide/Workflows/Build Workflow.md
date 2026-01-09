@@ -341,6 +341,7 @@ The output type is specified via the parameter `stream_modes`. This parameter is
 In the `workflow.stream` method, specify `stream_modes=[BaseStreamMode.OUTPUT]` to indicate outputting only standard streaming data defined by the framework:
 
 ```python
+# Simulate executing a workflow for a weather query.
 async for chunk in workflow.stream({"query": "查询上海的天气"}, runtime, stream_modes=[BaseStreamMode.OUTPUT]):
     print(chunk)
 ```
@@ -357,6 +358,7 @@ OutputSchema(type = 'end node stream', index = 1, payload ={ 'answer': 'Check th
 In the `workflow.stream` method, specify `stream_modes=[BaseStreamMode.TRACE]` to indicate outputting only debugging streaming data defined by the framework:
 
 ```python
+# Simulate executing a workflow for a weather query.
 async for chunk in workflow.stream({"query": "查询上海的天气"}, runtime, stream_modes=[BaseStreamMode.TRACE]):
     print(chunk)
 ```
@@ -369,21 +371,15 @@ The output data type is `TraceSchema`. The output is as follows (excerpting the 
 TraceSchema(type = 'tracer_workflow', payload = {
     'traceId': '86b76988-5549-482b-8401-444b2621641e',
     'startTime': datetime.datetime(2025, 8, 22, 14, 39, 9, 678133),
-    'endTime': None,
     'inputs': {
     'final_output': 'Check the weather in Shanghai on 2025-08-22',
     },
-    'outputs': None,
-    'error': None,
     'invokeId': 'end',
     'parentInvokeId': 'llm',
     'executionId': '86b76988-5549-482b-8401-444b2621641e',
-    'onInvokeData': None,
     'componentId': 'end',
     'componentName': '',
     'componentType': 'llm_component',
-    'loopNodeId': None,
-    'loopIndex': None,
     'status': 'start',
     'parentNodeId': ''
 })
@@ -398,18 +394,15 @@ TraceSchema(type = 'tracer_workflow', payload = {
     'outputs': {
     'responseContent': '结果:Check the weather in Shanghai on 2025-08-22'
     },
-    'error': None,
     'invokeId': 'end',
     'parentInvokeId': 'llm',
     'executionId': '86b76988-5549-482b-8401-444b2621641e',
-    'onInvokeData': None,
     'componentId': 'end',
     'componentName': '',
     'componentType': 'llm_component',
-    'loopNodeId': None,
-    'loopIndex': None,
     'status': 'finish',
-    'parentNodeId': ''
+    'parentNodeId': '',
+    'streamOutputs': []
 })
 ...
 ```
@@ -439,6 +432,7 @@ class LLMComponent(WorkflowComponent, ComponentExecutable):
 In the `workflow.stream` method, specify `stream_modes=[BaseStreamMode.CUSTOM]` to indicate outputting only user-defined streaming data:
 
 ```python
+# Simulate executing a workflow for a weather query.
 async for chunk in workflow.stream({"query": "查询上海的天气"}, runtime, stream_modes=[BaseStreamMode.CUSTOM]):
     print(chunk)
 ```

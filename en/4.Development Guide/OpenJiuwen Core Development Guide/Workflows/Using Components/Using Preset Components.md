@@ -424,7 +424,7 @@ The `End` component is the built-in end component of the openJiuwen workflow, de
   ```python
   # 为工作流增加End节点，并提供渲染模板
   conf = {"responseTemplate": "渲染结果:{{param1}},{{param2}}"}
-  flow.set_end_comp("e", End(conf=conf), stream_inputs_schema={"param1": "${s.query}", "param2": "${s.content}"})
+  flow.set_end_comp("e", End(conf=conf), stream_inputs_schema={"param1": "${n.param1}", "param2": "${n.param2}"})
   ```
   
   For the input stream data of the `End` component, the system will first decompose the template into multiple sub-templates based on slot symbols, then render these sub-templates one by one, and output each rendering result as the `payload` of the streaming data, finally writing to the `responseContent` field. Final result:
