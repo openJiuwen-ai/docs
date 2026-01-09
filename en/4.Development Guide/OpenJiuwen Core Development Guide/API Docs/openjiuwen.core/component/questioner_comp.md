@@ -228,6 +228,6 @@ result={'output': {'output': 'Hangzhou'}} state=<WorkflowExecutionState.COMPLETE
 >>> workflow_runtime = TaskRuntime(trace_id=session_id).create_workflow_runtime()  # Keep Runtime state stable for the same session id to resume workflow execution from the breakpoint
 >>> result = await workflow.invoke(user_input, workflow_runtime)
 >>> # If parameter extraction remains incomplete and the max follow-up count has been reached, a JiuWenBaseException is raised:
->>> # Error code: 101074
->>> # Error message: "Questioner component exceed max response."
+>>> # Error code: 100005
+>>> # Error message: "component [questioner] encountered an exception while executing ability [invoke], error detail: Questioner component exceed max response."
 ```

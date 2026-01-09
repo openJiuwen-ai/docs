@@ -14,6 +14,16 @@ Below is an example using a `WorkflowAgent` to illustrate executing an `Agent` v
 
 First, create a WorkflowAgent instance:
 ```python
+from openjiuwen.agent.common.enum import ControllerType
+from openjiuwen.agent.common.schema import WorkflowSchema
+from openjiuwen.agent.config.workflow_config import WorkflowAgentConfig
+from openjiuwen.agent.workflow_agent.workflow_agent import WorkflowAgent
+from openjiuwen.core.component.end_comp import End
+from openjiuwen.core.component.start_comp import Start
+from openjiuwen.core.runner.runner import resource_mgr
+from openjiuwen.core.workflow.base import Workflow
+from openjiuwen.core.workflow.workflow_config import WorkflowConfig, WorkflowMetadata
+
 def create_agent():
    # Create a workflow flow and register it to the resource manager
    flow = Workflow(workflow_config=WorkflowConfig(
@@ -43,6 +53,9 @@ agent = create_agent()
 ```
 Then, call the `run_agent` interface of `Runner` to directly run the WorkflowAgent:
 ```python
+import asyncio
+from openjiuwen.core.runner.runner import Runner
+
 print(asyncio.run(Runner.run_agent(agent=agent, inputs={"conversion_id": "id1", "query": "haha"})))
 ```
 Execution result:
@@ -58,26 +71,18 @@ Below, we construct a simple workflow to introduce the process of executing a `W
 
 First, create a Workflow:
 ```python
+from openjiuwen.core.component.end_comp import End
+from openjiuwen.core.component.start_comp import Start
+from openjiuwen.core.workflow.base import Workflow
+from openjiuwen.core.workflow.workflow_config import WorkflowConfig, WorkflowMetadata
+
 def build_workflow(name, workflow_id, version):
-    workflow_config = WorkflowConfig(
-        metadata=WorkflowMetadata(
-            id=workflow_id,
-            version=version,
-            name=name,
-        )
-    )
-    flow = Workflow(workflow_config=workflow_config)
-    flow.set_start_comp("start", Start(),
-                        inputs_schema={
-                            "query": "${query}"})
-    flow.add_workflow_comp("node_a", Node(),
-                           inputs_schema={
-                               "output": "${start.query}"})
-    flow.set_end_comp("end", End(),
-                      inputs_schema={
-                          "result": "${node_a.output}"})
-    flow.add_connection("start", "node_a")
-    flow.add_connection("node_a", "end")
+    flow = Workflow(workflow_config=WorkflowConfig(
+        metadata=WorkflowMetadata(id=workflow_id, version=version, name=name,
+                                  description="this_is_a_demo")))
+    flow.set_start_comp("start", Start(), inputs_schema={"query": "${query}"})
+    flow.set_end_comp("end", End(), inputs_schema={"result": "${start.query}"})
+    flow.add_connection("start", "end")
     return flow
 
 workflow = build_workflow("test_workflow", "test_workflow", "1")
@@ -85,6 +90,10 @@ workflow = build_workflow("test_workflow", "test_workflow", "1")
 
 Then, call `Runner.run_workflow` to directly execute the `Workflow`:
 ```python
+import asyncio
+from openjiuwen.core.runner.runner import Runner
+from openjiuwen.core.runtime.workflow import WorkflowRuntime
+
 result = asyncio.run(Runner.run_workflow(workflow=workflow, inputs={"query": "query workflow"}, runtime=WorkflowRuntime()))
 print(result)
 ```
@@ -101,6 +110,8 @@ Below, we construct a `LocalFunction` tool for addition to illustrate the proces
 
 First, create a Tool:
 ```python
+from openjiuwen.core.utils.tool.function.function import LocalFunction, Param
+
 # Create a local tool
 add_plugin = LocalFunction(
     name="add",
@@ -114,6 +125,9 @@ add_plugin = LocalFunction(
 ```
 Then, use `Runner.run_tool` to execute the tool:
 ```python
+import asyncio
+from openjiuwen.core.runner.runner import Runner
+
 print(asyncio.run(Runner.run_tool(tool=add_plugin, inputs={'a':1, 'b':2})))
 ```
 Finally, execution result:
@@ -130,6 +144,25 @@ Below, we use a `HierarchicalGroup` for banking services as an example to show h
 First, create three `WorkflowAgent`s for transfer service, balance inquiry, and wealth management, then create a `HierarchicalGroup`, and bind the three `WorkflowAgent`s to it.
 
 ```python
+import os
+
+from openjiuwen.agent.config.workflow_config import WorkflowAgentConfig
+from openjiuwen.agent.workflow_agent.workflow_agent import WorkflowAgent
+from openjiuwen.core.component.end_comp import End
+from openjiuwen.core.component.start_comp import Start
+from openjiuwen.core.workflow.base import Workflow
+from openjiuwen.core.workflow.workflow_config import WorkflowConfig, WorkflowMetadata
+from openjiuwen.core.component.common.configs.model_config import ModelConfig
+from openjiuwen.core.utils.llm.base import BaseModelInfo
+from openjiuwen.core.component.questioner_comp import QuestionerComponent, QuestionerConfig, FieldInfo
+from openjiuwen.agent.config.base import AgentConfig
+from openjiuwen.agent_group.hierarchical_group.agents.main_controller import HierarchicalMainController
+from openjiuwen.core.agent.agent import ControllerAgent
+from openjiuwen.agent_group.hierarchical_group import (
+    HierarchicalGroup,
+    HierarchicalGroupConfig
+)
+
 API_BASE = os.getenv("API_BASE", "your api base")
 API_KEY = os.getenv("API_KEY", "your api key")
 MODEL_NAME = os.getenv("MODEL_NAME", "")
@@ -294,11 +327,6 @@ invest_agent = _create_workflow_agent(
     workflow=invest_workflow
 )
 
-from openjiuwen.agent_group.hierarchical_group import (
-    HierarchicalGroup,
-    HierarchicalGroupConfig
-)
-
 config = HierarchicalGroupConfig(
     group_id="financial_group",
     leader_agent_id="main_controller"
@@ -324,6 +352,9 @@ hierarchical_group.add_agent("invest_agent", invest_agent)
 Then, start Runner and execute the AgentGroup.
 
 ```python
+import asyncio
+from openjiuwen.core.runner.runner import Runner
+from openjiuwen.core.agent.message.message import Message
 
 asyncio.run(Runner.start())
 

@@ -203,6 +203,6 @@ result={'output': {'output': '杭州'}} state=<WorkflowExecutionState.COMPLETED:
 >>> workflow_runtime = TaskRuntime(trace_id=session_id).create_workflow_runtime()  # 基于TaskRuntime保证同一session id时，Runtime中的状态维持不变，从而实现工作流的断点继续执行
 >>> result = await workflow.invoke(user_input, workflow_runtime)
 >>> # 参数提取不完整，如已达到最大追问轮数，则抛出异常JiuWenBaseException
-错误码为101074
-错误信息为"Questioner component exceed max response."
+错误码为100005
+错误信息为"component [questioner] encountered an exception while executing ability [invoke], error detail: Questioner component exceed max response."
 ```
