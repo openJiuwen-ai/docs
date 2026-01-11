@@ -77,7 +77,7 @@ Do you want to execute the command 'delete all files'?
 > **说明**
 >
 > - output为工作流输出，详细见[工作流输出介绍](../../openjiuwen.core/workflow/base.md)。
-> - 工作流首次输出是`Do you want to execute the command '{delete all files}'`，此时output里的result为列表，列表中每个元素为流式输出的元素，详细见[流式输出介绍](../../../../openJiuwen%20Core开发指南/高阶用法/Runtime/流式输出.md)；payload中的内容为中断输出，详细见[中断输出介绍](#class-openjiuwencoreruntimeinteractioninteractioninteractionoutput)。
+> - 工作流首次输出是`Do you want to execute the command '{delete all files}'`，此时output里的result为列表，列表中每个元素为流式输出的元素，详细见[流式输出介绍](../../../../agent-core开发指南/高阶用法/Runtime/流式输出.md)；payload中的内容为中断输出，详细见[中断输出介绍](#class-openjiuwencoreruntimeinteractioninteractioninteractionoutput)。
 > - 通过`InteractiveInput`构造用户交互输入后，再次输出是`是的`，此时output里的result为结束组件的输出，详细见[结束组件介绍](../component/end_comp.md#class-openjiuwencorecomponentend_compend)。
 
 ### update
@@ -167,7 +167,7 @@ Do you want to execute the command 'delete all files'?
 > **说明**
 >
 > - 其中output为工作流输出，详细见[工作流输出介绍](../../openjiuwen.core/workflow/base.md)。
-> - 工作流首次输出包含`interactive_node1`、`Do you want to execute the command 'delete all files'?`、`interactive_node2`、`Do you want to execute the command 'kill all processes'?`，此时output的result为列表，列表中每个元素为流式输出的元素，详细见[流式输出介绍](../../../../openJiuwen%20Core开发指南/高阶用法/Runtime/流式输出.md)；payload中的内容为中断输出，详细见[中断输出介绍](#class-openjiuwencoreruntimeinteractioninteractioninteractionoutput)。
+> - 工作流首次输出包含`interactive_node1`、`Do you want to execute the command 'delete all files'?`、`interactive_node2`、`Do you want to execute the command 'kill all processes'?`，此时output的result为列表，列表中每个元素为流式输出的元素，详细见[流式输出介绍](../../../../agent-core开发指南/高阶用法/Runtime/流式输出.md)；payload中的内容为中断输出，详细见[中断输出介绍](#class-openjiuwencoreruntimeinteractioninteractioninteractionoutput)。
 > - 通过`InteractiveInput`构造用户交互输入后，再次输出为`{'result1': 'Yes', 'result2': 'No'}`，此时output的result为结束组件的输出，详细见[结束组件介绍](../component/end_comp.md#class-openjiuwencorecomponentend_compend)。
 
 ## class openjiuwen.core.runtime.interaction.interaction.InteractionOutput
@@ -235,4 +235,4 @@ Do you want to execute the command 'delete all files'
 > **说明**
 >
 > - 其中output为工作流输出，详细见[工作流输出介绍](../../openjiuwen.core/workflow/base.md)。
-> - 工作流输出包含`interactive_node1`、`Do you want to execute the command '{delete all files}'`，此时output的result为列表，列表中每个元素为流式输出的元素，详细见[流式输出介绍](../../../../openJiuwen%20Core开发指南/高阶用法/Runtime/流式输出.md)；payload中的内容为中断输出，即本章介绍的`InteractionOutput`。
+> - 工作流输出包含`interactive_node1`、`Do you want to execute the command '{delete all files}'`，此时output的result为列表，列表中每个元素为流式输出的元素，详细见[流式输出介绍](../../../../agent-core开发指南/高阶用法/Runtime/流式输出.md)；payload中的内容为中断输出，即本章介绍的`InteractionOutput`。
