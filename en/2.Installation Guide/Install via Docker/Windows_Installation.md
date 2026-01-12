@@ -15,24 +15,24 @@ Make sure your machine meets the following requirements:
   * Docker: Docker Desktop is recommended. See below for installation steps
 
 ### Install Docker Desktop
-Docker Desktop on Windows depends on virtualization.
+It is recommended to use WSL 2 (Windows Subsystem for Linux 2) as the virtualization backend when running Docker Desktop on Windows. Compared with LinuxKit, it offers better compatibility and lower resource consumption, and can avoid the known zombie container bugs.
 
-**1. Enable virtualization**
+**1. Enable WSL 2**
 
-* Press Win+R → enter `optionalfeatures.exe` to open the “Windows Features” window;
+For eligible Windows systems (Windows 10 version 2004 or later <Build 19041 or higher> or Windows 11), simply running the command `wsl --install` allows one-click configuration, download, and installation of the default Linux distribution.
 
-* Check **all sub-options** under “Hyper-V” → click “OK”:
+Open PowerShell in administrator mode, run the following command, and then restart your computer.
 
-  > **Note**: If there is no “Hyper-V” option, refer to the <a href="https://docs.docker.com/desktop/setup/install/windows-install/" target="_blank" rel="nofollow noopener noreferrer">official guide</a> to install Docker Desktop.
+```
+wsl --install
+```
 
-  <img src="../images/Windows-Hyper-V.png" width="600"/>
-* Restart your computer after installation;
-* After restarting, **please confirm again that the Hyper-V options remain checked**.
+Older Windows versions do not support the full automation of this one-click command and may require additional manual steps. For detailed instructions, refer to the official documentation: <a href="https://learn.microsoft.com/en-us/windows/wsl/install" target="_blank" rel="nofollow noopener noreferrer">Install Linux on Windows with WSL</a>.
 
 **2. Install Docker Desktop**
 
 * Download: Go to the <a href="https://www.docker.com/products/docker-desktop/" target="_blank" rel="nofollow noopener noreferrer">Docker website</a> to download the Windows installer (for x86 machines, choose the AMD64 version);
-* Run the installer: **Uncheck the “Use WSL 2 instead of Hyper-V” option** and follow the wizard to complete installation:
+* Run the installer: **Check the “Use WSL 2 instead of Hyper-V” option** and follow the wizard to complete installation:
 
   <img src="../images/Docker_on_Hyper-V.png" width="600"/>
 * Restart your computer after installation;
@@ -151,3 +151,15 @@ Run the following command to stop openJiuwen:
 ```
 ./service.sh down
 ```
+
+### Question 4: How to avoid the Error `tried to kill container, but did not receive an exit event`
+
+When the backend container fails to restart or even get deleted, and it encounters the following error:
+
+```
+Error response from daemon: Cannot restart container 6e0fa44910e0: tried to kill container, but did not receive an exit event
+```
+
+This indicates that the process corresponding to the container has entered the D state (uninterruptible sleep state). This is a common issue with the LinuxKit kernel, a lightweight, minimalist Linux virtual kernel developed by Docker in its early days for Windows and macOS platforms.This kernel lacks robust process resource management and recycling mechanisms, and does not implement a self-healing logic for processes in D state. Once a process enters D state, it will become permanently unresponsive, and the kernel is unable to perform effective management on it. In addition, the kernel features extremely low I/O forwarding efficiency. When performing host file read/write operations or network interactions, it will inherently significantly increase the probability of processes entering D state.In the event of such a scenario, the affected process will continuously occupy PID resources. Neither the kill -9 command nor the docker rm command can terminate or remove the container. The only viable solution to restore the normal operation of backend containers is to restart the entire virtual machine (i.e., restart Docker Desktop).
+
+To fundamentally avoid such issues, it is recommended to use WSL 2 as the virtualization backend for Docker on Windows. Built on a full-fledged Linux kernel, WSL 2 provides more sophisticated handling logic and comprehensive resource recycling mechanisms for Linux processes in D state. Even if a process occasionally enters D state, the WSL 2 kernel will automatically trigger kernel-level resource recycling within 30–60 seconds, forcefully waking the blocked process from D state and preventing permanent process zombification. This represents the optimal operation mode for Docker Desktop on Windows.

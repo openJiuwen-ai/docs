@@ -15,24 +15,24 @@
   * Docker：推荐使用 Docker Desktop 进行安装，安装方法详见下文
 
 ### 安装Docker Desktop
-Window 上运行 Docker Desktop 依赖虚拟化功能。
+Windows 上运行 Docker Desktop 推荐使用 WSL 2（Windows Subsystem for Linux 2） 作为虚拟化后端，相比 LinuxKit 兼容性更好、资源占用更低，且能避免 已知 的僵尸容器的 Bug。
 
-**1. 启用虚拟化功能**
+**1. 启用 WSL 2**
 
-* 按下 `Win+R` → 输入 `optionalfeatures.exe` 打开「Windows 功能」窗口；
+对于符合条件的 Windows 系统（Windows 10 版本 2004 及更高版本<内部版本 19041 及更高版本>或 Windows 11），仅运行 `wsl --install`就能一键配置、下载并安装默认的 Linux 发行版。
 
-* 勾选「Hyper-V」下的 **所有子选项** → 点击「确定」：
+在管理员模式下打开 PowerShell，输入如下命令，然后重新启动计算机。
 
-  > **说明**：若无「Hyper-V」选项，请参考 <a href="https://docs.docker.com/desktop/setup/install/windows-install/" target="_blank" rel="nofollow noopener noreferrer"> 官方指导</a> 安装 Docker Desktop。
+```
+wsl --install
+```
 
-  <img src="../images/Windows-Hyper-V.png" width="600"/>
-* 安装完成后，请重启电脑；
-* 重启后，**请再次确认上述 Hyper-V 选项已勾选**。
+而旧版本 Windows 不支持这个一键命令的完整自动化功能，可能需要补充操作，具体请参考<a href="https://learn.microsoft.com/zh-cn/windows/wsl/install" target="_blank" rel="nofollow noopener noreferrer"> 如何使用 WSL 在 Windows 上安装 Linux</a>
 
 **2. 安装 Docker Desktop**
 
 * 下载：前往 <a href="https://www.docker.com/products/docker-desktop/" target="_blank" rel="nofollow noopener noreferrer"> Docker 官网</a> 下载 Windows 版本安装包（X86 机器请选择 AMD64 版本）；
-* 运行安装包：​**取消勾选​「Use WSL 2 instead of Hyper-V」选项**，跟随向导完成安装：
+* 运行安装包：​**勾选​「Use WSL 2 instead of Hyper-V」选项**，跟随向导完成安装：
 
   <img src="../images/Docker_on_Hyper-V.png" width="600"/>
 * 安装完成后，请重启电脑；
@@ -157,3 +157,12 @@ Window 上运行 Docker Desktop 依赖虚拟化功能。
 ```
 ./service.sh down
 ```
+
+### 问题四：遇到 tried to kill container, but did not receive an exit event 错误，如何处理
+
+当你的后端容器，无法重启，甚至无法删除，报如下错误：
+Error response from daemon: Cannot restart container 6e0fa44910e0: tried to kill container, but did not receive an exit event
+
+这是容器对应的进程进入了 D 状态（不可中断睡眠状态）。这是 Linux Kit 内核的常见问题，该内核是 Docker 早期为 Windows/macOS 开发的轻量化极简 Linux 虚拟内核，缺乏完善的进程资源管理及回收机制，未实现 D 状态进程的自愈逻辑。进程一旦进入 D 状态，将陷入永久僵死状态，内核无法对其进行有效管理；加之该内核的 IO 转发效率极低，在执行宿主机文件读写或网络交互操作时，本身就会显著提升进程进入 D 状态的概率。一旦出现此类情况，该进程将持续占用 PID 资源，kill -9 命令无法终止，docker rm 命令亦无法移除容器，仅能通过重启整个虚拟机（即重启 Docker Desktop）使后端容器恢复正常。
+
+为从根本上规避此类问题，建议采用 WSL 2 作为 Windows Docker 的虚拟化后端，其基于完整 Linux 内核，对于 Linux 进程的 D 状态有更完善的处理逻辑和更完备的资源回收机制，即使进程偶尔进入 D 状态，WSL 2 内核会在 30~60 秒内自动触发内核级资源回收，强制把 D 状态进程从阻塞中唤醒，不会让进程永久僵死。这是 Docker Desktop 在 Windows 上的最优运行模式。
