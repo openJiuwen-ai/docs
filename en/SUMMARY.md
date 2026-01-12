@@ -3,6 +3,7 @@
 - [1. Product Overview](1.%20Product%20Overview.md)
 - [2. Installation Guide](2.Installation%20Guide)
   - [Quick Installation Guide](2.Installation%20Guide/Quick%20Installation%20Guide.md)
+  - [Upgrade Guide](2.Installation%20Guide/Upgrade%20Guide.md)
   - [Install via Docker](2.Installation%20Guide/Install%20via%20Docker/README.md)
     - [Windows Installation](2.Installation%20Guide/Install%20via%20Docker/Windows_Installation.md)
     - [Linux Installation](2.Installation%20Guide/Install%20via%20Docker/Linux_Installation.md)

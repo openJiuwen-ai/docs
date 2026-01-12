@@ -1,8 +1,9 @@
-﻿# Summary
+# Summary
 
 - [1.产品简介](1.产品简介.md)
 - [2.安装指导](2.安装指导/README.md)
   - [快速指引](2.安装指导/快速指引.md)
+  - [升级指导](2.安装指导/升级指导.md)
   - [Docker方式安装](2.安装指导/Docker方式安装/README.md)
     - [Windows系统安装](2.安装指导/Docker方式安装/Windows系统安装.md)
     - [Linux系统安装](2.安装指导/Docker方式安装/Linux系统安装.md)
