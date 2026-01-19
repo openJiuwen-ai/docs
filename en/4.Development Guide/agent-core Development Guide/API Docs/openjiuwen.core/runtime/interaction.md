@@ -77,7 +77,7 @@ Yes
 Notes
 
 - output is the workflow output. For details, see [Workflow output overview](../../openjiuwen.core/workflow/base.md).
-- The first workflow output is `Do you want to execute the command '{delete all files}'?`. At this time, output.result is a list, and each element is a streaming output chunk. For details, see [Streaming output overview](../../../../OpenJiuwen%20Core%20Development%20Guide/Advanced%20Usage/Runtime/Streaming%20Output.md). The payload contains the interaction output. For details, see [Interaction output overview](#class-openjiuwencoreruntimeinteractioninteractioninteractionoutput).
+- The first workflow output is `Do you want to execute the command '{delete all files}'?`. At this time, output.result is a list, and each element is a streaming output chunk. For details, see [Streaming output overview](../../../../agent-core%20Development%20Guide/Advanced%20Usage/Runtime/Streaming%20Output.md). The payload contains the interaction output. For details, see [Interaction output overview](#class-openjiuwencoreruntimeinteractioninteractioninteractionoutput).
 - After constructing user input with InteractiveInput, the output becomes `Yes`. At this time, output.result comes from the end component. For details, see [End component overview](../component/end_comp.md#class-openjiuwencorecomponentend_compend).
 
 ### update
@@ -168,7 +168,7 @@ Do you want to execute the command 'delete all files'?
 Notes
 
 - Here, output is the workflow output. For details, see [Workflow output overview](../../openjiuwen.core/workflow/base.md).
-- The first workflow output contains `interactive_node1`, `Do you want to execute the command 'delete all files'?`, `interactive_node2`, and `Do you want to execute the command 'kill all processes'?`. At this time, output.result is a list, and each element is a streaming output chunk. For details, see [Streaming output overview](../../../../OpenJiuwen%20Core%20Development%20Guide/Advanced%20Usage/Runtime/Streaming%20Output.md). The payload contains the interaction output. For details, see [Interaction output overview](#class-openjiuwencoreruntimeinteractioninteractioninteractionoutput).
+- The first workflow output contains `interactive_node1`, `Do you want to execute the command 'delete all files'?`, `interactive_node2`, and `Do you want to execute the command 'kill all processes'?`. At this time, output.result is a list, and each element is a streaming output chunk. For details, see [Streaming output overview](../../../../agent-core%20Development%20Guide/Advanced%20Usage/Runtime/Streaming%20Output.md). The payload contains the interaction output. For details, see [Interaction output overview](#class-openjiuwencoreruntimeinteractioninteractioninteractionoutput).
 - After constructing the user inputs with InteractiveInput, the output becomes `{'result1': 'Yes', 'result2': 'No'}`. At this time, output.result comes from the end component. For details, see [End component overview](../component/end_comp.md#class-openjiuwencorecomponentend_compend).
 
 ## class openjiuwen.core.runtime.interaction.interaction.InteractionOutput
@@ -236,4 +236,4 @@ Do you want to execute the command 'delete all files'
 Notes
 
 - Here, output is the workflow output. For details, see [Workflow output overview](../../openjiuwen.core/workflow/base.md).
-- The workflow output contains `interactive_node1` and `Do you want to execute the command '{delete all files}'`. At this time, output.result is a list, and each element is a streaming output chunk. For details, see [Streaming output overview](../../../../OpenJiuwen%20Core%20Development%20Guide/Advanced%20Usage/Runtime/Streaming%20Output.md). The payload contains the interaction output, i.e., the `InteractionOutput` described in this section.
+- The workflow output contains `interactive_node1` and `Do you want to execute the command '{delete all files}'`. At this time, output.result is a list, and each element is a streaming output chunk. For details, see [Streaming output overview](../../../../agent-core%20Development%20Guide/Advanced%20Usage/Runtime/Streaming%20Output.md). The payload contains the interaction output, i.e., the `InteractionOutput` described in this section.
