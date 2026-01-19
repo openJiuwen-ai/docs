@@ -21,11 +21,15 @@ It is recommended to use WSL 2 (Windows Subsystem for Linux 2) as the virtualiza
 
 For eligible Windows systems (Windows 10 version 2004 or later <Build 19041 or higher> or Windows 11), simply running the command `wsl --install` allows one-click configuration, download, and installation of the default Linux distribution.
 
-Open PowerShell in administrator mode, run the following command, and then restart your computer.
+* Press Windows + S and type PowerShell to search.
 
-```
-wsl --install
-```
+* In the search results, right-click Windows PowerShell and select Run as administrator.
+
+* Run the following command in PowerShell, then restart your computer.
+
+  ```
+  wsl --install
+  ```
 
 Older Windows versions do not support the full automation of this one-click command and may require additional manual steps. For detailed instructions, refer to the official documentation: <a href="https://learn.microsoft.com/en-us/windows/wsl/install" target="_blank" rel="nofollow noopener noreferrer">Install Linux on Windows with WSL</a>.
 
@@ -34,7 +38,7 @@ Older Windows versions do not support the full automation of this one-click comm
 * Download: Go to the <a href="https://www.docker.com/products/docker-desktop/" target="_blank" rel="nofollow noopener noreferrer">Docker website</a> to download the Windows installer (for x86 machines, choose the AMD64 version);
 * Run the installer: **Check the “Use WSL 2 instead of Hyper-V” option** and follow the wizard to complete installation:
 
-  <img src="../images/Docker_on_Hyper-V.png" width="600"/>
+  <img src="../images/docker_desktop_on_wsl.png" width="600"/>
 * Restart your computer after installation;
 * After restarting, open Docker Desktop and wait for it to finish loading (the first launch may take 5–10 minutes);
 * Once Docker Desktop starts, for a trial you can click “Continue without signing in” on the welcome screen; for long-term use, refer to the <a href="https://docs.docker.com/desktop/setup/sign-in" target="_blank" rel="nofollow noopener noreferrer">official guide</a>.

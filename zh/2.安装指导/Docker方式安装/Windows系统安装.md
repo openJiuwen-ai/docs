@@ -15,17 +15,21 @@
   * Docker：推荐使用 Docker Desktop 进行安装，安装方法详见下文
 
 ### 安装Docker Desktop
-Windows 上运行 Docker Desktop 推荐使用 WSL 2（Windows Subsystem for Linux 2） 作为虚拟化后端，相比 LinuxKit 兼容性更好、资源占用更低，且能避免 已知 的僵尸容器的 Bug。
+Windows 上运行 Docker Desktop 推荐使用 WSL 2（Windows Subsystem for Linux 2） 作为虚拟化后端，相比 LinuxKit 兼容性更好、资源占用更低，且能避免已知的僵尸容器 Bug。
 
 **1. 启用 WSL 2**
 
 对于符合条件的 Windows 系统（Windows 10 版本 2004 及更高版本<内部版本 19041 及更高版本>或 Windows 11），仅运行 `wsl --install`就能一键配置、下载并安装默认的 Linux 发行版。
 
-在管理员模式下打开 PowerShell，输入如下命令，然后重新启动计算机。
+* 按下 Windows + S，输入 PowerShell 进行搜索。
 
-```
-wsl --install
-```
+* 在搜索结果中，右键点击 Windows PowerShell，选择 以管理员身份运行。
+
+* 在 PowerShell 执行如下命令，然后重新启动计算机。
+
+  ```
+  wsl --install
+  ```
 
 而旧版本 Windows 不支持这个一键命令的完整自动化功能，可能需要补充操作，具体请参考<a href="https://learn.microsoft.com/zh-cn/windows/wsl/install" target="_blank" rel="nofollow noopener noreferrer"> 如何使用 WSL 在 Windows 上安装 Linux</a>
 
@@ -34,7 +38,7 @@ wsl --install
 * 下载：前往 <a href="https://www.docker.com/products/docker-desktop/" target="_blank" rel="nofollow noopener noreferrer"> Docker 官网</a> 下载 Windows 版本安装包（X86 机器请选择 AMD64 版本）；
 * 运行安装包：​**勾选​「Use WSL 2 instead of Hyper-V」选项**，跟随向导完成安装：
 
-  <img src="../images/Docker_on_Hyper-V.png" width="600"/>
+  <img src="../images/docker_desktop_on_wsl.png" width="600"/>
 * 安装完成后，请重启电脑；
 * 重启后，打开 Docker Desktop，等待加载完成（首次启动可能需要 5 ~ 10 分钟）；
 * Docker Desktop 启动后，若临时试用，可点击欢迎界面的 `Continue without signing in` 直接进入；长期使用请参考 <a href="https://docs.docker.com/desktop/setup/sign-in" target="_blank" rel="nofollow noopener noreferrer"> 官方指导</a>。

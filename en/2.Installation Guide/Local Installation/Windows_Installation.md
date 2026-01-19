@@ -250,31 +250,35 @@ The effectiveness of memory feature depends on the scale of the LLM used.
 The memory and knowledge base features rely on Milvus. On Windows, we recommend installing via Docker. See steps below.
 
 #### 1. Install Docker Desktop
-Docker Desktop on Windows requires virtualization.
+It is recommended to use WSL 2 (Windows Subsystem for Linux 2) as the virtualization backend when running Docker Desktop on Windows. Compared with LinuxKit, it offers better compatibility and lower resource consumption, and can avoid the known zombie container bugs.
 
-**1.1 Enable virtualization**
+**1.1 Enable WSL 2**
 
-* Press Win+R → enter `optionalfeatures.exe` to open the Windows Features dialog.
+For eligible Windows systems (Windows 10 version 2004 or later <Build 19041 or higher> or Windows 11), simply running the command `wsl --install` allows one-click configuration, download, and installation of the default Linux distribution.
 
-* Check **all sub-options** under Hyper-V → click OK:
+* Press Windows + S and type PowerShell to search.
 
-  > **Note**: If Hyper-V is not available, follow the <a href="https://docs.docker.com/desktop/setup/install/windows-install/" target="_blank" rel="nofollow noopener noreferrer">official guide</a> to install Docker Desktop.
+* In the search results, right-click Windows PowerShell and select Run as administrator.
 
-  <img src="../images/Windows-Hyper-V.png" width="600"/>
-* Restart your computer after installation.
-* After reboot, **verify the Hyper-V options remain checked**.
+* Run the following command in PowerShell, then restart your computer.
+
+  ```
+  wsl --install
+  ```
+
+Older Windows versions do not support the full automation of this one-click command and may require additional manual steps. For detailed instructions, refer to the official documentation: <a href="https://learn.microsoft.com/en-us/windows/wsl/install" target="_blank" rel="nofollow noopener noreferrer">Install Linux on Windows with WSL</a>.
 
 **1.2 Install Docker Desktop**
 
-* Download: Go to the <a href="https://www.docker.com/products/docker-desktop/" target="_blank" rel="nofollow noopener noreferrer">Docker website</a> and download the Windows installer (choose AMD64 for x86 machines).
-* Run the installer: **Uncheck “Use WSL 2 instead of Hyper-V”**, and follow the wizard:
+* Download: Go to the <a href="https://www.docker.com/products/docker-desktop/" target="_blank" rel="nofollow noopener noreferrer">Docker website</a> to download the Windows installer (for x86 machines, choose the AMD64 version);
+* Run the installer: **Check the “Use WSL 2 instead of Hyper-V” option** and follow the wizard to complete installation:
 
-  <img src="../images/Docker_on_Hyper-V.png" width="600"/>
-* Restart your computer after installation.
-* After reboot, open Docker Desktop and wait for it to initialize (first launch may take 5–10 minutes).
-* Once started, you can click `Continue without signing in` for a trial. For long-term use, see the <a href="https://docs.docker.com/desktop/setup/sign-in" target="_blank" rel="nofollow noopener noreferrer">official sign-in guide</a>.
+  <img src="../images/docker_desktop_on_wsl.png" width="600"/>
+* Restart your computer after installation;
+* After restarting, open Docker Desktop and wait for it to finish loading (the first launch may take 5–10 minutes);
+* Once Docker Desktop starts, for a trial you can click “Continue without signing in” on the welcome screen; for long-term use, refer to the <a href="https://docs.docker.com/desktop/setup/sign-in" target="_blank" rel="nofollow noopener noreferrer">official guide</a>.
 
-* Docker Desktop is now installed.
+* Docker Desktop installation is now complete.
 
 > Note: If you encounter errors during installation, refer to the <a href="https://docs.docker.com/desktop/setup/install/windows-install/" target="_blank" rel="nofollow noopener noreferrer">Docker Desktop official installation guide</a>.
 
