@@ -151,7 +151,7 @@
 
 openEuler 环境中，Docker 部署时创建线程会收到 seccomp(Secure Computing Model)内核安全机制的限制。
 
-请参考 <a href="  https://docs.openeuler.openatom.cn/zh/docs/24.03_LTS/docs/Container/%E5%AE%89%E5%85%A8%E7%89%B9%E6%80%A7.html" target="_blank" rel="nofollow noopener noreferrer"> 官方指导</a>，调整相应的 seccomp 安全策略，对应的 docker-compose 部署文件是 openJiuwen 安装目录下：*conf/docker-jiuwen.template.yml* 文件。
+请参考 <a href="https://docs.openeuler.openatom.cn/zh/docs/24.03_LTS/docs/Container/%E5%AE%89%E5%85%A8%E7%89%B9%E6%80%A7.html" target="_blank" rel="nofollow noopener noreferrer"> 官方指导</a>，调整相应的 seccomp 安全策略，对应的 docker-compose 部署文件是 openJiuwen 安装目录下：*conf/docker-jiuwen.template.yml* 文件。
 
 ### 问题四：openJiuwen 包含的 Docker 镜像清单
 

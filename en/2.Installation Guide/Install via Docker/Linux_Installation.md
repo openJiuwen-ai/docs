@@ -146,7 +146,7 @@ The memory feature depends on an embedding model. The following steps use Huawei
 
 On openEuler, Docker deployment may be restricted by the kernel security mechanism seccomp (Secure Computing Model) when creating threads.
 
-Please refer to the <a href="  https://docs.openeuler.openatom.cn/zh/docs/24.03_LTS/docs/Container/%E5%AE%89%E5%85%A8%E7%89%B9%E6%80%A7.html" target="_blank" rel="nofollow noopener noreferrer">official guide</a> to adjust the corresponding seccomp security policy. The docker-compose deployment file is *conf/docker-jiuwen.template.yml* in the openJiuwen installation directory.
+Please refer to the <a href="https://docs.openeuler.openatom.cn/zh/docs/24.03_LTS/docs/Container/%E5%AE%89%E5%85%A8%E7%89%B9%E6%80%A7.html" target="_blank" rel="nofollow noopener noreferrer">official guide</a> to adjust the corresponding seccomp security policy. The docker-compose deployment file is *conf/docker-jiuwen.template.yml* in the openJiuwen installation directory.
 
 ### Question 4: Docker image list included with openJiuwen
 
