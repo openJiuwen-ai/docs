@@ -330,6 +330,12 @@ Older Windows versions do not support the full automation of this one-click comm
   ./standalone.bat stop
   ```
 
+* If the following error message appears when using memory or knowledge base after startup:
+    ```text
+    ""Milvus connection failed: <MilvusException: (code=2, message=Fail connecting to server on milvus-standalone:19530, illegal connection params or server unavailable)>"
+    ```
+    You need to modify the MILVUS_HOST configuration in the .env file to match the IP address used to start the Milvus service.
+
 #### 3. Obtain the embedding model
 
 The memory and knowledge base features require an embedding model. The steps below use Huawei Cloud as an example.

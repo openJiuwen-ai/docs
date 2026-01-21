@@ -301,6 +301,12 @@ The memory and knowledge base features depend on Milvus. See below for the insta
   bash standalone_embed.sh stop
   ```
 
+- If the following error message appears when using memory or knowledge base after startup:
+    ```text
+    ""Milvus connection failed: <MilvusException: (code=2, message=Fail connecting to server on milvus-standalone:19530, illegal connection params or server unavailable)>"
+    ```
+    You need to modify the MILVUS_HOST configuration in the .env file to match the IP address used to start the Milvus service.
+
 #### 2. Obtain the embedding model
 
 The memory and knowledge base features rely on an embedding model. The following steps use Huawei Cloud as an example.

@@ -312,6 +312,12 @@ The memory and knowledge base features rely on Milvus. On macOS, it is recommend
   bash standalone_embed.sh stop
   ```
 
+* If the following error message appears when using memory or knowledge base after startup:
+    ```text
+    ""Milvus connection failed: <MilvusException: (code=2, message=Fail connecting to server on milvus-standalone:19530, illegal connection params or server unavailable)>"
+    ```
+    You need to modify the MILVUS_HOST configuration in the .env file to match the IP address used to start the Milvus service.
+
 #### 3. Obtain the Embedding Model
 
 The memory and knowledge base features rely on an embedding model. The following steps uses Huawei Cloud as an example to illustrate how to obtain an embedding model.

@@ -331,6 +331,12 @@ Windows 上运行 Docker Desktop 推荐使用 WSL 2（Windows Subsystem for Linu
   ./standalone.bat stop
   ```
 
+* 若启动之后使用记忆或知识库时出现如下报错信息
+    ```text
+    ""Milvus 连接失败: <MilvusException: (code=2, message=Fail connecting to server on milvus-standalone:19530, illegal connection params or server unavailable)>"
+    ```
+    需修改.env中的MILVUS_HOST配置，与启动Milvus服务的IP保持一致
+
 #### 3. 获取向量模型
 
 记忆及知识库功能的运行依赖向量模型，以下流程以华为云为例，介绍向量模型的获取步骤。
