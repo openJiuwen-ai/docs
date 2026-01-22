@@ -104,11 +104,11 @@ The memory feature depends on an embedding model. The following steps use Huawei
 
 * Click <a href="https://console.huaweicloud.com/modelarts/?locale=zh-cn&region=cn-southwest-2#/model-studio/square" target="_blank" rel="nofollow noopener noreferrer">this link</a> to enter ModelArts Model Square.
 
-* Click “Vector Models” and find the BGE-M3 model.
+* To experience the memory feature, please click on "向量模型" (Embedding model) and select a vector model according to your needs. The following content uses BGE-M3 as an example.
 
   ![Find the embedding model](../images/find_embed.png)
 
-* After finding the BGE-M3 model, click Inference to go to the model info page.
+* After locating the suitable model, click "推理调用" (Inference Call) to enter the model information acquisition page.
 
   ![Get api_base and model_name](../images/embed_api_base_and_model_name.png)
 

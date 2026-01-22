@@ -96,11 +96,11 @@
 
 * 点击<a href="https://console.huaweicloud.com/modelarts/?locale=zh-cn&region=cn-southwest-2#/model-studio/square" target="_blank" rel="nofollow noopener noreferrer"> 链接</a> 进入模型广场。 
 
-* 点击 “向量模型”，找到 BGE-M3 模型。
+* 体验记忆功能请点击 “向量模型”，可根据需要自行选择向量模型，以下内容以 BGE-M3 为例。
 
   ![找到embedd模型](../images/find_embed.png)
 
-* 找到 BGE-M3 模型后点击推理调用，进入模型信息获取界面。
+* 找到合适的向量模型后点击推理调用，进入模型信息获取界面。
 
   ![获取api_base和model_name](../images/embed_api_base_and_model_name.png)
 

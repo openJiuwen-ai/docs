@@ -324,11 +324,11 @@ The memory and knowledge base features rely on an embedding model. The following
 
 * Click <a href="https://console.huaweicloud.com/modelarts/?locale=zh-cn&region=cn-southwest-2#/model-studio/square" target="_blank" rel="nofollow noopener noreferrer">this link</a> to enter the ModelArts Model Square.  
 
-* For memory feature, click "向量模型" (Embedding model) and locate the BGE-M3 model. For knowledge base feature, select a model according to your scenario.
+* To experience the memory feature and knowledge base feature, please click on "向量模型" (Embedding model) and select a vector model according to your needs. The following content uses BGE-M3 as an example.
 
   ![Locate the embedding model](../images/find_embed.png)
 
-* After locating the BGE-M3 model, click 推理调用 (Inference Call) to enter the model information acquisition page.
+* After locating the suitable model, click "推理调用" (Inference Call) to enter the model information acquisition page.
 
   ![Obtain api_base and model_name](../images/embed_api_base_and_model_name.png)
 
