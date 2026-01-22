@@ -137,11 +137,29 @@ Windows 上运行 Docker Desktop 推荐使用 WSL 2（Windows Subsystem for Linu
 
 * 配置完成后启动 openJiuwen 平台即可使用记忆功能。
 
-* 若是在启动 openJiuwen 之后启用记忆功能，请在 *.env* 中添加 embedding 相关的信息；配置完成后，重新启动 openJiuwen 平台使配置生效即可使用记忆功能：
+* 若是在启动 openJiuwen 之后启用记忆功能，直接修改根目录的` .env `文件不会立即生效，因为运行中的容器读取的是 `.envs/ `目录下的特定实例文件。请按照以下步骤操作：
 
+  由于可能同时运行了多个环境，请通过正在使用的**服务端口号**（例如`3006`）来查找对应的环境后缀：
+  ```powershell
+  # 请将 :3006 替换为实际访问的端口号
+  docker ps -a | findstr :3006
+  # 输出示例: ... 0.0.0.0:3006->8000/tcp ... jiuwen-backend-uz7jb
+  # (其中 jiuwen-backend-uz7jb 中的 uz7jb 即为后缀)
   ```
-  ./service.sh up
+  进入 `.envs` 目录，找到对应后缀的配置文件（例如 `env.uz7jb`）：
+
+  ```powershell
+  cd .envs
+  dir
+  # 编辑对应的文件（例如 `env.uz7jb`）
   ```
+  请在 *env.uz7jb*（请将 uz7jb 替换为实际的后缀） 中添加 embedding 相关的信息；配置完成后，使用启动脚本指定该配置文件进行重启，使配置生效：
+  ```powershell
+  # 回到项目根目录执行（需要在 Git Bash 或支持 .sh 的终端中运行）
+  cd ..
+  ./service.sh up -f .envs/env.uz7jb
+  ```
+
 
 > **注意**：在配置 *EMBEDDING_MODEL_DIMENTION* 之后启用了记忆，请不要再次修改，否则记忆功能会无法使用。embedding模型的其他配置也不建议修改，可能会影响效果。
 

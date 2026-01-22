@@ -134,10 +134,28 @@ The memory feature depends on an embedding model. The following steps use Huawei
 
 - After configuration, start the openJiuwen platform to use the memory feature.
 
-- If enabling the memory feature after openJiuwen has already started, add the embedding-related information to .env; After configuring, restart the openJiuwen platform to apply the settings:
 
+- To enable the memory function after starting openJiuwen, directly modifying the `.env` file in the root directory will not take effect immediately. Running containers read from specific instance files in the `.envs/` directory. Follow the steps below:
+
+  For multiple environment deployments, identify the corresponding environment suffix using the **service port** currently in use (e.g., `3006`):
+  ```bash
+  # Replace :3006 with the actual access port
+  docker ps -a | grep :3006
+  # Output example: ... 0.0.0.0:3006->8000/tcp ... jiuwen-backend-uz7jb
+  # (Where uz7jb in jiuwen-backend-uz7jb is the suffix)
   ```
-  ./service.sh up
+  Enter the `.envs` directory and find the configuration file with the corresponding suffix (e.g., `env.uz7jb`):
+
+  ```bash
+  cd .envs
+  ls
+  # Edit the corresponding file (e.g., `env.uz7jb`)
+  ```
+  Add embedding-related information in *env.uz7jb* (replace uz7jb with the actual suffix); after configuration is complete, restart using the service script specifying this configuration file to apply changes:
+  ```bash
+  # Return to the project root directory to execute
+  cd ..
+  ./service.sh up -f .envs/env.uz7jb
   ```
 
 > **Note**: After configuring EMBEDDING_MODEL_DIMENTION and enabling the memory feature, do not modify it again, otherwise the memory feature will not work. It is also not recommended to modify other embedding model configurations, as they may affect quality.
