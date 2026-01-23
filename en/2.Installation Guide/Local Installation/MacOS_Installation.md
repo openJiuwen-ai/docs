@@ -177,25 +177,35 @@ The memory and knowledge base features of openJiuwen depend on Milvus. If you wo
    EMBED_API_KEY=""
    EMBED_TIMEOUT=5
    EMBED_MAX_RETRIES=1
+
+   # Code sandbox configuration (example, please see [Question 2: How to Enable the Sandbox Feature] to learn more)
+   CODE_SANDBOX_URL=http://localhost:8188/run
+
+   # Plugin server configuration (example, please see [Question 3: How to Enable the Plugin Server] to learn more)
+   VITE_PLUGIN_SERVICE_URL=http://localhost:8185
+   VITE_PLUGIN_CONFIG_PATH=/config.json
    ```
 
   The descriptions of the variables are shown in the table below. If you need to enable the memory and knowledge base features, refer to [How to Enable the Memory and Knowledge Base Features](#macos-memory).
 
-   | Variable Name                                   | Description                                                               | Example                                                                      |
-   |---------------------------------------|--------------------------------------------------------------------|---------------------------------------------------------------------------|
-   |**DB_HOST**                           | Database host address                                                           | `localhost`                                                               |
-   | **DB_PORT**                           | Database port                                                            | `3306`                                                                    |
-   | **DB_USER**                           | Database username                                                            | `your_user_name`                                                             |
-   | **DB_PASSWORD**                       | Database password                                                             | `your_password`                                                         |
-   | **MILVUS_HOST**                 | Host address of the Milvus service                                                | `127.0.0.1`                                                                    |
-   | **MILVUS_PORT**                 | Port of the Milvus service                                                | `19530`                                                                    |
-   | **MILVUS_COLLECTION_NAME**                | Databse name used by Milvus                                                | `memory_vector`                                                                    
-   | **EMBEDDING_MODEL_DIMENTION**         | Dimension of the embedding model, determined by the model specified in EMBED_MODEL_NAME              | `1024`                                                                    |                  
-   | **EMBED_API_BASE**                    | API endpoint of the embedding model                                                  | `https://example.com/embedding_model`            |            
-   | **EMBED_MODEL_NAME**                  | Name of the embedding model                                                             | `text-embedding-model`                                                       |
-   | **EMBED_API_KEY**                     | API key for the embedding model (replace with your own)                                                 | `sk-xxx`                                                                  |
-   | **EMBED_TIMEOUT**                     | Maximum wait time for embedding requests                                                       | `5`                                                                     |
-   | **EMBED_MAX_RETRIES**                 | Maximum number of retries when an embedding request fails.                                                | `1`                                                                    |
+   | Variable Name               | Description                                                               | Example                                                                      |
+   |-----------------------------|--------------------------------------------------------------------|---------------------------------------------------------------------------|
+   | **DB_HOST**                 | Database host address                                                           | `localhost`                                                               |
+   | **DB_PORT**                 | Database port                                                            | `3306`                                                                    |
+   | **DB_USER**                 | Database username                                                            | `your_user_name`                                                             |
+   | **DB_PASSWORD**             | Database password                                                             | `your_password`                                                         |
+   | **MILVUS_HOST**             | Host address of the Milvus service                                                | `127.0.0.1`                                                                    |
+   | **MILVUS_PORT**             | Port of the Milvus service                                                | `19530`                                                                    |
+   | **MILVUS_COLLECTION_NAME**  | Databse name used by Milvus                                                | `memory_vector`                                                                    
+   | **EMBEDDING_MODEL_DIMENTION** | Dimension of the embedding model, determined by the model specified in EMBED_MODEL_NAME              | `1024`                                                                    |                  
+   | **EMBED_API_BASE**          | API endpoint of the embedding model                                                  | `https://example.com/embedding_model`            |            
+   | **EMBED_MODEL_NAME**        | Name of the embedding model                                                             | `text-embedding-model`                                                       |
+   | **EMBED_API_KEY**           | API key for the embedding model (replace with your own)                                                 | `sk-xxx`                                                                  |
+   | **EMBED_TIMEOUT**           | Maximum wait time for embedding requests                                                       | `5`                                                                     |
+   | **EMBED_MAX_RETRIES**       | Maximum number of retries when an embedding request fails.                                                | `1`                                                                    |
+   | **CODE_SANDBOX_URL**        | Code Sandbox url                                            | `http://localhost:8188/run`                                                                    |
+   | **VITE_PLUGIN_SERVICE_URL** | Plugin Server url                                           | `http://localhost:8185`                                                                    |
+   | **VITE_PLUGIN_CONFIG_PATH**    | Plugin configuration file path for web                      | `/config.json`                                                                    |
 
 * Open a "Terminal". In the source code root directory, run the following commands to start the backend service. Please wait patiently: 
    
@@ -220,7 +230,7 @@ The memory and knowledge base features of openJiuwen depend on Milvus. If you wo
 
   After a successful startup, the message "Application startup complete" will be displayed. 
 
-  > **Tip**: If you need to configure plugins, the sandbox service must be enabled. Refer to [How to Enable the Sandbox Feature](#macos-sandbox) to complete the sandbox service configuration. 
+  > **Tip**: If you need to enable code node or code plugin tool that require the code sandbox service, refer to [How to Enable the Sandbox Feature](#macos-sandbox) to complete the sandbox setup. And if you need to enable plugins that require the plugin server, which refer to [How to Enable the Plugin Server](#macos-plugin).
 
 
 * Open another "Terminal", and in the root directory of the source code run the following command to install frontend dependencies:  
@@ -340,7 +350,7 @@ The memory and knowledge base features rely on an embedding model. The following
 
 ### <a id="macos-sandbox"></a> Question 2: How to Enable the Sandbox Feature
 
-To configure plugins, the sandbox service must be enabled. Perform the following steps:
+If you need to enable code node or code plugin tool, the sandbox service is required, do the following:
 
 1. Refer to the `sandbox_server/python_server/.env.example` file and create a `.env` file in the `sandbox_server/python_server` directory. Example: 
 
@@ -349,7 +359,7 @@ To configure plugins, the sandbox service must be enabled. Perform the following
    PORT=5001
    ```
 
-   Then, start the sandbox Python service by running the `sandbox_server/python_server/kernel.py` script. `HOST` and `PORT` specify the IP address and port on which the sandbox Python service runs. 
+   Then, start the sandbox Python service by running the `sandbox_server/python_server/openjiuwen_sandbox_pyserver/kernel.py` script. `HOST` and `PORT` specify the IP address and port on which the sandbox Python service runs. 
 
 2. Start the sandbox JavaScript service by running the `sandbox_server/js_server/kernel.js` script. The IP address and port for the JS service are defined as follows: 
 
@@ -369,9 +379,19 @@ To configure plugins, the sandbox service must be enabled. Perform the following
    JS_SANDBOX_URL=http://localhost:5002/run
    ```
 
-   `PYTHON_SANDBOX_URL` and `JS_SANDBOX_URL` are the URLs of the Python and JS services started in the previous steps. Then, start the sandbox gateway service by running the `sandbox_server/gateway/server.py` script. 
+   `PYTHON_SANDBOX_URL` and `JS_SANDBOX_URL` are the URLs of the Python and JS services started in the previous steps. Then, start the sandbox gateway service by running the `sandbox_server/gateway/openjiuwen_sandbox_gateway/server.py` script. 
 
-### <a id="macos-greenlet"></a> Question 3: How to Resolve "No Module named 'greenlet'" When Starting the Backend
+4. After running the sandbox service, please configure sandbox's url in `.env`, such as: `CODE_SANDBOX_URL=http://localhost:8188/run`.
+
+### <a id="macos-plugin"></a> Question 3: How to Enable the Plugin Server
+
+If you need plugins, the plugin server is required, please do the following:
+
+1. Refer to `plugin_server/openjiuwen_plugin_server` files, create plugin services as you need. Then start the plugin server by running the script `plugin_server/openjiuwen_plugin_server/run_restful.py`.
+
+2. After running the plugin server, please configure plugin server's url in `.env`, such as: `VITE_PLUGIN_SERVICE_URL=http://localhost:8185`.
+
+### <a id="macos-greenlet"></a> Question 4: How to Resolve "No Module named 'greenlet'" When Starting the Backend
 
 On some Macs with Apple Silicon chips, Python may have compatibility issues, and the greenlet package may be missing from the standard environment. You can resolve this as follows:
 
@@ -384,7 +404,7 @@ On some Macs with Apple Silicon chips, Python may have compatibility issues, and
   source .venv/bin/activate
   ```
 
-### <a id="macos-special-char"></a> Question 4: Special Character Escaping Table
+### <a id="macos-special-char"></a> Question 5: Special Character Escaping Table
 
 | Character   | URL Encoding | Character   | URL Encoding | Character   | URL Encoding | Character   | URL Encoding | Character   | URL Encoding |
 |--------|---------|--------|---------|--------|---------|--------|---------|--------|---------|
@@ -393,7 +413,7 @@ On some Macs with Apple Silicon chips, Python may have compatibility issues, and
 | :      | %3A    | ;      | %3B     | <   | %3C     | =      | %3D     | >   | %3E     |
 | ?      | %3F    | @      | %40     | \      | %5C     | \|     | %7C     | -      | -       |
 
-### Question 5: Why does local installation default to HTTP instead of HTTPS?
+### Question 6: Why does local installation default to HTTP instead of HTTPS?
 
 In local installation mode, the system defaults to HTTP for communication. This design choice is primarily based on the fact that local environments are typically used for development and testing, and avoiding mandatory TLS certificate setup helps reduce the initial usage barrier.
 
