@@ -213,8 +213,8 @@ Before proceeding with the main installation, you must first install the require
    | **EMBED_API_BASE**          | API endpoint of the embedding model                                                  | `https://example.com/embedding_model`            |            
    | **EMBED_MODEL_NAME**        | Name of the embedding model                                                             | `text-embedding-model`                                                       |
    | **EMBED_API_KEY**           | API key for the embedding model (replace with your own)                                                 | `sk-xxx`                                                                  |
-   | **EMBED_TIMEOUT**           | Maximum wait time for embedding requests                                                       | `5`                                                                     |
-   | **EMBED_MAX_RETRIES**       | Maximum number of retries when an embedding request fails.                                                | `1`                                                                    |
+   | **EMBED_TIMEOUT**           | Maximum wait time for embedding requests(unit: second), default value `60`              | `5`                                                                     |
+   | **EMBED_MAX_RETRIES**       | Maximum number of retries when an embedding request fails, default value `3`            | `1`                                                                    |
    | **CODE_SANDBOX_URL**        | Code Sandbox url                                            | `http://localhost:8188/run`                                                                    |
    | **VITE_PLUGIN_SERVICE_URL** | Plugin Server url                                           | `http://localhost:8185`                                                                    |
    | **VITE_PLUGIN_CONFIG_PATH**    | Plugin configuration file path for web                      | `/config.json`                                                                    |

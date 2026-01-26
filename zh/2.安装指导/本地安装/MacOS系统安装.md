@@ -209,8 +209,8 @@
    | **EMBED_API_BASE**                    | 嵌入模型的接口地址                                                  | `https://example.com/embedding_model`            |            
    | **EMBED_MODEL_NAME**                  | 嵌入模型的名称                                                             | `text-embedding-model`                                                       |
    | **EMBED_API_KEY**                     | 嵌入模型的API密钥，换成自己的                                                 | `sk-xxx`                                                                  |
-   | **EMBED_TIMEOUT**                     | 嵌入模型的最大等待时间                                                       | `5`                                                                     |
-   | **EMBED_MAX_RETRIES**                 | 嵌入模型请求失败时的最大重试次数                                                | `1`                                                                    |
+   | **EMBED_TIMEOUT**                     | 嵌入模型的最大等待时间（单位秒），默认值`60`             | `5`                                                                     |
+   | **EMBED_MAX_RETRIES**                 | 嵌入模型请求失败时的最大重试次数，默认值`3`              | `1`                                                                    |
    | **CODE_SANDBOX_URL**                 | 代码沙箱服务地址                          | `http://localhost:8188/run`                                                                    |
    | **VITE_PLUGIN_SERVICE_URL**                 | 插件服务地址                            | `http://localhost:8185`                                                                    |
    | **VITE_PLUGIN_CONFIG_PATH**                 | 前端使用的插件服务配置文件                     | `/config.json`                                                                    |

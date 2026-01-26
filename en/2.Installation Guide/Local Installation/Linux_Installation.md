@@ -220,8 +220,8 @@ Before the formal installation, complete the dependency installation, then proce
    | **EMBED_API_BASE**               | Endpoint URL for the embedding model                        | `https://example.com/embedding_model`                                        |
    | **EMBED_MODEL_NAME**             | Embedding model name                                        | `text-embedding-model`                                                       |
    | **EMBED_API_KEY**                | API key for the embedding model                             | `sk-xxx`                                                                     |
-   | **EMBED_TIMEOUT**                | Max timeout for embedding model requests                    | `5`                                                                          |
-   | **EMBED_MAX_RETRIES**            | Max retry count for embedding model requests                | `1`                                                                          |
+   | **EMBED_TIMEOUT**                | Max timeout for embedding model requests(unit: second), default value `60` | `5`                                                                          |
+   | **EMBED_MAX_RETRIES**            | Max retry count for embedding model requests, default value `3`            | `1`                                                                          |
    | **CODE_SANDBOX_URL**             | Code Sandbox url                                            | `http://localhost:8188/run`                                                                    |
    | **VITE_PLUGIN_SERVICE_URL**      | Plugin Server url                                           | `http://localhost:8185`                                                                    |
    | **VITE_PLUGIN_CONFIG_PATH**      | Plugin configuration file path for web                      | `/config.json`                                                                    |

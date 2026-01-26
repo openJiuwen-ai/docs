@@ -208,8 +208,8 @@ Before proceeding with the full installation, install the dependencies below, th
    | **EMBED_API_BASE**            | Embedding model API base URL                                        | `https://example.com/embedding_model`                                          |
    | **EMBED_MODEL_NAME**          | Embedding model name                                                | `text-embedding-model`                                                         |
    | **EMBED_API_KEY**             | Embedding model API key                                             | `sk-xxx`                                                                       |
-   | **EMBED_TIMEOUT**             | Embedding model request timeout (seconds)                           | `5`                                                                            |
-   | **EMBED_MAX_RETRIES**         | Max retries on embedding model request failure                      | `1`                                                                            |
+   | **EMBED_TIMEOUT**             | Embedding model request timeout (seconds), default value `60`     | `5`                                                                            |
+   | **EMBED_MAX_RETRIES**         | Max retries on embedding model request failure, default value `3` | `1`                                                                            |
    | **CODE_SANDBOX_URL**             | Code Sandbox url                                            | `http://localhost:8188/run`                                                                    |
    | **VITE_PLUGIN_SERVICE_URL**      | Plugin Server url                                           | `http://localhost:8185`                                                                    |
    | **VITE_PLUGIN_CONFIG_PATH**      | Plugin configuration file path for web                      | `/config.json`                                                                    |
