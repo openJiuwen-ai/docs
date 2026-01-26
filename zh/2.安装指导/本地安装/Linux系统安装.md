@@ -71,11 +71,17 @@
 
 ### 4. 安装 MySQL（可选组件）
 
-* **说明**：`.env.example` 默认使用 SQLite，只需保持 `DB_TYPE` 为 `sqlite` 即可直接启动后端服务，无需额外安装或配置；若需使用 MySQL，请将 `.env.example` 中的 `DB_TYPE` 改为 `mysql`，并按照下列步骤完成 MySQL 的安装与配置。
-
 * **SQLite vs MySQL**：
   * SQLite 无需额外安装和配置，适合开发和测试环境，但功能受限（如不支持高并发写入、无用户权限管理等）。
   * MySQL 功能更完善，能够满足复杂场景的需求，因此在实际工程和生产环境中更推荐使用。
+
+#### 4.1 SQLite
+
+* **说明**：默认使用 SQLite，只需 `.env.example` 保持 `DB_TYPE` 为 `sqlite` 即可直接启动后端服务，无需额外安装或配置。
+
+#### 4.2 MySQL
+
+* **说明**：若需使用 MySQL，请将 `.env.example` 中的 `DB_TYPE` 改为 `mysql`，并按照下列步骤完成 MySQL 的安装与配置。
 
 * 运行以下命令安装 MySQL：
 

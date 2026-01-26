@@ -70,11 +70,17 @@ Before the formal installation, complete the dependency installation, then proce
 
 ### 4. Install MySQL (Optional Component)
 
-* **Note**: `.env.example` defaults to SQLite. Simply keep `DB_TYPE` as `sqlite` to start the backend service directly—no additional installation or configuration is required. If you prefer to use MySQL, change `DB_TYPE` in `.env.example` to `mysql` and follow the steps below to install and configure MySQL.
-
 * **SQLite vs MySQL**:
   * SQLite requires no extra setup and is suitable for development and testing, but it has limitations (e.g., no support for concurrent writes, no user permission management).
   * MySQL offers more robust features and is better suited for complex scenarios, making it the recommended choice for real-world projects and production environments.
+
+#### 4.1 SQLite
+
+* **Note**: SQLite is used by default. Simply keep `DB_TYPE` as `sqlite` in `.env.example` to start the backend service directly—no additional installation or configuration is required.
+
+#### 4.2 MySQL
+
+* **Note**: If you prefer to use MySQL, change `DB_TYPE` in `.env.example` to `mysql` and follow the steps below to install and configure MySQL.
 
 - Run the following commands to install MySQL:
 
