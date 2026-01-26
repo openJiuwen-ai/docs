@@ -71,8 +71,41 @@ Make sure your machine meets the following requirements:
   ```
   > **Note**: If the output shows “inactive”, refer to the <a href="https://docs.docker.com/engine/install/" target="_blank" rel="nofollow noopener noreferrer">Docker official installation guide</a> and the <a href="https://docs.docker.com/compose/install/" target="_blank" rel="nofollow noopener noreferrer">Docker Compose official installation guide</a>.
 
-  > **Note**: If you need to enable the memory feature, refer to [How to Enable the Memory Feature](#docker-linux-memory) for configuration.
+- enable the memory feature (optional)
 
+  After enabling the memory function, the intelligent agent can automatically retain memory information such as conversation history and user personalized preferences, and supports users to view and delete memory content. During the interaction process, users do not need to repeatedly explain key information, and the intelligent agent's response logic can be more coherent, providing a better interaction experience.
+  
+  If you do not intend to enable the memory function, please skip this section directly; if you need to enable the memory function later, please refer to [If the memory function was not enabled in the early stage of openJiuwen, how can it be activated later](#docker-linux-memory)
+
+  - The memory feature depends on an embedding model. The following steps use Huawei Cloud as an example to obtain an embedding model.
+
+    - Click <a href="https://console.huaweicloud.com/modelarts/?locale=zh-cn&region=cn-southwest-2#/model-studio/square" target="_blank" rel="nofollow noopener noreferrer">this link</a> to go to the ModelArts Model Square.
+
+    - To experience the memory feature, please click on "向量模型" (Embedding model) and select a vector model according to your needs. The following content uses BGE-M3 as an example.
+
+      ![Find the embedding model](../images/find_embed.png)
+
+    - After locating the suitable model, click "推理调用" (Inference Call) to enter the model information acquisition page.
+
+      ![Get api_base and model_name](../images/embed_api_base_and_model_name.png)
+
+    - Record the API address (corresponds to EMBED_API_BASE) and the model parameter (corresponds to EMBED_MODEL_NAME).
+
+    - Click “API Key Management” and follow the official instructions to obtain an API Key (corresponds to EMBED_API_KEY).
+
+  - After obtaining the embedding model information, configure it in the openJiuwen installation directory as follows:
+
+  - If this is the first time starting the openJiuwen platform, add the embedding-related information to .env.custom:
+
+    | Variable Name | Description |
+    | --- | --- |
+    | **EMBED_API_BASE** | The endpoint of the embedding model |
+    | **EMBED_MODEL_NAME** | The name of the embedding model |
+    | **EMBEDDING_MODEL_DIMENTION** | The dimension of the embedding model, determined by the selected EMBED_MODEL_NAME |
+    | **EMBED_API_KEY** | The API key for the embedding model |
+    | **EMBED_TIMEOUT** | The maximum wait time for embedding model requests(unit: second), default value `60` |
+    | **EMBED_MAX_RETRIES** | The maximum number of retries when an embedding model request fails, default value `3` |
+  
 - Run the following command to start openJiuwen:
 
   ```bash
@@ -99,7 +132,7 @@ Make sure your machine meets the following requirements:
 
 The current version milvus 2.6.2 requires the AVX instruction set in the CPU. If it’s not available, milvus will exit automatically. You can check the CPU flags via `lscpu | grep Flags`.
 
-### <a id="docker-linux-memory"></a>Question 2: How to enable the memory feature
+### <a id="docker-linux-memory"></a>Question 2: If the memory function was not enabled in the early stage of openJiuwen, how can it be activated later.
 
 The effectiveness of the memory feature depends on the parameter scale of the large language model.
 
@@ -125,15 +158,12 @@ The memory feature depends on an embedding model. The following steps use Huawei
 
   | Variable Name | Description |
   | --- | --- |
-  | **EMBEDDING_MODEL_DIMENTION** | The dimension of the embedding model, determined by the selected EMBED_MODEL_NAME |
   | **EMBED_API_BASE** | The endpoint of the embedding model |
   | **EMBED_MODEL_NAME** | The name of the embedding model |
+  | **EMBEDDING_MODEL_DIMENTION** | The dimension of the embedding model, determined by the selected EMBED_MODEL_NAME |
   | **EMBED_API_KEY** | The API key for the embedding model |
-  | **EMBED_TIMEOUT** | The maximum wait time for embedding model requests |
-  | **EMBED_MAX_RETRIES** | The maximum number of retries when an embedding model request fails |
-
-- After configuration, start the openJiuwen platform to use the memory feature.
-
+  | **EMBED_TIMEOUT** | The maximum wait time for embedding model requests(unit: second), default value `60` |
+  | **EMBED_MAX_RETRIES** | The maximum number of retries when an embedding model request fails, default value `3` |
 
 - To enable the memory function after starting openJiuwen, directly modifying the `.env` file in the root directory will not take effect immediately. Running containers read from specific instance files in the `.envs/` directory. Follow the steps below:
 
