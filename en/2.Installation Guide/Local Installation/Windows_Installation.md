@@ -92,7 +92,11 @@ Before proceeding with the full installation, install the dependencies below, th
 
 ### 5. Milvus (Optional)
 
-The memory and knowledge base features of openJiuwen rely on Milvus. If you want to try memory and knowledge base features, see [How to Enable the Memory and Knowledge Base Features](#windows-memory) to install and configure Milvus. If you only want a quick deployment to try basic features, you can skip this step.
+* **Note**：`.env.example` uses Chroma by default. Simply keep `INDEX_MANAGER_TYPE` set to `chroma` to directly start the backend service without additional installation or configuration. If you need to use Milvus, please change `INDEX_MANAGER_TYPE` in `.env.example` to `milvus` and refer to [How to enable memory and knowledge base features](#windows-memory) to complete the installation and configuration of Milvus.
+
+* **Chroma vs Milvus**：
+  * Chroma requires no additional installation and boasts a simple configuration. All you need to do is obtain the vector model, making it ideal for quick experimentation and suitable for development and testing environments. For obtaining the vector model, refer to [How to Obtain the Vector Model](#windows-embed-model).
+  * Milvus has more comprehensive functions and can meet the needs of complex scenarios, so it is more recommended for use in practical engineering and production environments.
 
 ## III. Install openJiuwen
 
@@ -159,6 +163,12 @@ The memory and knowledge base features of openJiuwen rely on Milvus. If you want
    DB_PORT=3306
    DB_USER=your_user_name
    DB_PASSWORD=your_password
+  
+   # Vector index type configuration (example, optional values: chroma, milvus, default: chroma)
+   INDEX_MANAGER_TYPE=chroma
+  
+   # Memory data storage path (example, default value: memory-data, can be modified according to actual situation)
+   MEMORY_DATA_PATH=memory-data
 
    # Milvus config (example)
    MILVUS_HOST=127.0.0.1
@@ -181,7 +191,7 @@ The memory and knowledge base features of openJiuwen rely on Milvus. If you want
    VITE_PLUGIN_CONFIG_PATH=/config.json
    ```
 
-  See the table below for variable descriptions. To enable the memory and knowledge base features, refer to [How to Enable the Memory and Knowledge Base Features](#windows-memory).
+   For variable descriptions, please refer to the table below. If you choose to enable the memory function for Milvus, please refer to [How to Enable the Memory and Knowledge Base Functions](#windows-memory). If you choose to enable the memory function for Chroma, you only need to obtain the vector model. For details, please refer to [How to Obtain the Vector Model](#windows-embed-model).
  
    | Variable Name             | Description                                                         | Example                                                                       |
    |---------------------------|---------------------------------------------------------------------|--------------------------------------------------------------------------------|
@@ -189,6 +199,8 @@ The memory and knowledge base features of openJiuwen rely on Milvus. If you want
    | **DB_PORT**                   | Database port                                                       | `3306`                                                                         |
    | **DB_USER**                   | Database username                                                   | `your_user_name`                                                               |
    | **DB_PASSWORD**               | Database password                                                   | `your_password`                                                                |
+   | **INDEX_MANAGER_TYPE**        | Vector index type configuration, default value: chroma            | `chroma`                              |
+   | **MEMORY_DATA_PATH**          | Memory data storage path, default value: memory-data              | `memory-data`                         |
    | **MILVUS_HOST**               | Milvus service host                                                 | `127.0.0.1`                                                                    |
    | **MILVUS_PORT**               | Milvus service port                                                 | `19530`                                                                        |
    | **MILVUS_COLLECTION_NAME**    | Milvus collection name                                              | `memory_vector`                                                                |
@@ -257,7 +269,7 @@ Copy the *access URL* from above into your browser’s address bar and press Ent
 
 The effectiveness of memory feature depends on the scale of the LLM used.
 
-The memory and knowledge base features rely on Milvus. On Windows, we recommend installing via Docker. See steps below.
+The memory and knowledge base function supports two vector databases: Chroma and Milvus. If Milvus is chosen, Docker is recommended for installation on Windows systems. Specific installation steps are provided below.
 
 #### 1. Install Docker Desktop
 It is recommended to use WSL 2 (Windows Subsystem for Linux 2) as the virtualization backend when running Docker Desktop on Windows. Compared with LinuxKit, it offers better compatibility and lower resource consumption, and can avoid the known zombie container bugs.
@@ -346,6 +358,7 @@ Older Windows versions do not support the full automation of this one-click comm
     ```
     You need to modify the MILVUS_HOST configuration in the .env file to match the IP address used to start the Milvus service.
 
+<a id="windows-embed-model"></a>
 #### 3. Obtain the embedding model
 
 The memory and knowledge base features require an embedding model. The steps below use Huawei Cloud as an example.

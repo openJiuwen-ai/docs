@@ -107,7 +107,12 @@ Before the formal installation, complete the dependency installation, then proce
 
 ### 5. Milvus (Optional Component)
 
-openJiuwen's memory and knowledge base features depend on Milvus. If you want to try the memory and knowledge base features, refer to [How to Enable the Memory and Knowledge Base Features](#linux-memory) to complete Milvus installation and configuration. If you just want a quick deployment and try the basic openJiuwen functions, you can skip this step.
+* **Note**：`.env.example` uses Chroma by default. Simply keep `INDEX_MANAGER_TYPE` set to `chroma` to directly start the backend service without additional installation or configuration. If you need to use Milvus, please change `INDEX_MANAGER_TYPE` in `.env.example` to `milvus` and refer to [How to enable memory and knowledge base features](#linux-memory) to complete the installation and configuration of Milvus.
+
+* **Chroma vs Milvus**：
+  * Chroma requires no additional installation and boasts a simple configuration. All you need to do is obtain the vector model, making it ideal for quick experimentation and suitable for development and testing environments. For obtaining the vector model, refer to [How to Obtain the Vector Model](#linux-embed-model).
+  * Milvus has more comprehensive functions and can meet the needs of complex scenarios, so it is more recommended for use in practical engineering and production environments.
+
 
 ## III. Installing openJiuwen
 
@@ -170,6 +175,12 @@ openJiuwen's memory and knowledge base features depend on Milvus. If you want to
    DB_PORT=3306
    DB_USER=your_user_name
    DB_PASSWORD=your_password
+  
+   # Vector index type configuration (example, optional values: chroma, milvus, default: chroma)
+   INDEX_MANAGER_TYPE=chroma
+  
+   # Memory data storage path (example, default value: memory-data, can be modified according to actual situation)
+   MEMORY_DATA_PATH=memory-data
 
   # Milvus configuration (example)
    MILVUS_HOST=127.0.0.1
@@ -192,7 +203,7 @@ openJiuwen's memory and knowledge base features depend on Milvus. If you want to
    VITE_PLUGIN_CONFIG_PATH=/config.json
    ```
 
-  See the table below for variable descriptions. If you want to enable the memory and knowledge base features, refer to [How to Enable the Memory and Knowledge Base Features](#linux-memory).
+  For variable descriptions, please refer to the table below. If you choose to enable the memory function for Milvus, please refer to [How to Enable the Memory and Knowledge Base Functions](#linux-memory). If you choose to enable the memory function for Chroma, you only need to obtain the vector model. For details, please refer to [How to Obtain the Vector Model](#linux-embed-model).
 
    | Variable Name                | Description                                                 | Example                                                                      |
    |------------------------------|-------------------------------------------------------------|------------------------------------------------------------------------------|
@@ -200,6 +211,8 @@ openJiuwen's memory and knowledge base features depend on Milvus. If you want to
    | **DB_PORT**                      | Database port                                               | `3306`                                                                       |
    | **DB_USER**                      | Database username                                           | `your_user_name`                                                             |
    | **DB_PASSWORD**                  | Database password                                           | `your_password`                                                              |
+   | **INDEX_MANAGER_TYPE**        | Vector index type configuration, default value: chroma      | `chroma`                              |
+   | **MEMORY_DATA_PATH**          | Memory data storage path, default value: memory-data        | `memory-data`                         |
    | **MILVUS_HOST**                  | Milvus service host                                         | `127.0.0.1`                                                                  |
    | **MILVUS_PORT**                  | Milvus service port                                         | `19530`                                                                      |
    | **MILVUS_COLLECTION_NAME**       | Milvus collection name                                      | `memory_vector`                                                              |
@@ -269,7 +282,7 @@ openJiuwen's memory and knowledge base features depend on Milvus. If you want to
 
 The effectiveness of the memory feature is related to the parameter scale of the large language model.
 
-The memory and knowledge base features depend on Milvus. See below for the installation steps.
+The memory and knowledge base function supports two vector databases: Chroma and Milvus. If Milvus is chosen, refer to the following text for specific installation steps.
 
 #### 1. Start Milvus
 
@@ -317,6 +330,7 @@ The memory and knowledge base features depend on Milvus. See below for the insta
     ```
     You need to modify the MILVUS_HOST configuration in the .env file to match the IP address used to start the Milvus service.
 
+ <a id="linux-embed-model"></a>
 #### 2. Obtain the embedding model
 
 The memory and knowledge base features rely on an embedding model. The following steps use Huawei Cloud as an example.

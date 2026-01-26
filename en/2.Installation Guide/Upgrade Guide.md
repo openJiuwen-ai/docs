@@ -84,7 +84,7 @@ Choose the corresponding version package according to your system architecture:
   https://openjiuwen-ci.obs.cn-north-4.myhuaweicloud.com/agentstudio/deployTool_0.1.2_arm64.zip
   ```
 
-#### 1.2 Start OpenJiuWen Service
+#### 1.2 Start openJiuwen Service
 
 1. Extract the downloaded version package to the installation directory
 2. Enter the extracted directory
