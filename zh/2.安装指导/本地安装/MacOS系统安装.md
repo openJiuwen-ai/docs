@@ -1,4 +1,7 @@
-本指南介绍在 MacOS 系统采用本地方式安装 openJiuwen。
+本指南介绍在 MacOS 系统采用本地方式安装 openJiuwen。本地高级安装提供两种方法：
+
+* **方法一：使用一键安装部署脚本**：自动完成大部分安装和配置工作，简化安装流程，适合快速部署。
+* **方法二：手动安装全部依赖**：需要手动安装和配置所有依赖服务，适合需要灵活调整配置的开发者。
 
 ## 一、环境准备
 
@@ -19,11 +22,75 @@
   * MySQL 8.0及以上
   * Milvus 2.6.2及以上
 
-## 二、安装依赖
+## 二、安装方法
+
+### 方法一：使用一键安装部署脚本
+
+一键安装脚本可以自动完成基础工具检查、代码拉取、环境配置和服务启动等步骤，大幅简化安装流程。
+
+#### 1. 获取安装脚本
+
+* 下载 <a href="https://openjiuwen-ci.obs.cn-north-4.myhuaweicloud.com/agentstudio/setup_scripts/setup_scripts_macos_v2.zip" target="_blank" rel="nofollow noopener noreferrer"> 安装包脚本</a>，安装包脚本包含以下文件：
+  * `setup.sh`：主安装脚本，串联整个安装流程
+  * `check_curl.sh`：检查并安装 curl
+  * `check_git.sh`：检查并安装 Git
+  * `check_nodejs.sh`：检查并安装 Node.js（通过 NVM）
+  * `check_python.sh`：检查并安装 Python 3.11
+  * `fetch_codes.sh`：克隆 agent-studio 代码仓库
+
+#### 2. 运行安装脚本
+
+* 进入脚本目录，赋予执行权限：
+
+  ```bash
+  cd setup_scripts_macos
+  chmod +x *.sh
+  ```
+
+* 运行主安装脚本：
+
+  ```bash
+  # 默认使用 MySQL 数据库
+  ./setup.sh
+
+  # 或指定使用 SQLite 数据库
+  ./setup.sh --db_type=sqlite
+  ```
+
+* 脚本会自动执行以下步骤：
+  1. 检查并安装基础工具（curl、git、nodejs、python）
+  2. 拉取 agent-studio 代码仓库
+  3. 生成 AES 密钥
+  4. 配置 .env 文件（根据 --db_type 参数设置数据库类型）
+  5. 部署后端服务（创建虚拟环境、安装依赖、启动服务）
+  6. 部署前端服务（安装依赖、启动服务）
+
+* 脚本执行完成后，会输出后端和前端服务的PID、日志文件路径、前端页面访问地址，在浏览器中访问输出的前端页面访问地址即可进入openJiuwen界面。
+
+  ![image](../images/一键安装运行完成截图mac.png)
+
+#### 3. 脚本常用参数说明
+
+  ```bash
+  # 查看前后端服务状态和访问地址
+  ./setup.ps1 --status
+  
+  # 停止后端和前端服务
+  ./setup.ps1 --stop
+
+  # 重启后端和前端服务
+  ./setup.ps1 --restart
+
+  # 查看脚本支持的所有参数
+  ./setup.ps1 --help
+  ```
+
+
+### 方法二：手动安装全部依赖
 
 进行正式安装前需先完成依赖的安装，再执行源码获取和安装等后续步骤。
-
-### 1. 安装 Git
+#### 1. 安装依赖
+##### 1.1. 安装 Git
 
 * 在 “终端” 中运行以下命令进行安装：
     ```
@@ -34,12 +101,12 @@
 
 * 安装完成后，在“终端”中输入：`git --version`，若安装成功会输出 git 版本号。
 
-### 2. 安装 Node.js 和 npm
+##### 1.2. 安装 Node.js 和 npm
 
 * 前往 <a href="http://nodejs.cn/download/" target="_blank" rel="nofollow noopener noreferrer"> Node.js官网</a> 下载Node.js 20.0及以上的MacOS安装包，双击安装包按照提示完成安装。
 * 安装完成后，打开 “终端”，分别输入：`node -v` 与 `npm -v`，若安装成功会输出 node 与 npm 版本号。
 
-### 3. 安装 Python 和 uv
+##### 1.3. 安装 Python 和 uv
 
 * 运行以下命令下载并安装pyhon3.11
 
@@ -56,17 +123,17 @@
    ```
 * 输入：`uv --version`，若安装成功会输出 uv 版本号。
 
-### 4. 安装 MySQL（可选组件）
+##### 1.4. 安装 MySQL（可选组件）
 
 * **SQLite vs MySQL**：
   * SQLite 无需额外安装和配置，适合开发和测试环境，但功能受限（如不支持高并发写入、无用户权限管理等）。
   * MySQL 功能更完善，能够满足复杂场景的需求，因此在实际工程和生产环境中更推荐使用。
 
-#### 4.1 SQLite
+###### 1.4.1 SQLite
 
 * **说明**：默认使用 SQLite，只需 `.env.example` 保持 `DB_TYPE` 为 `sqlite` 即可直接启动后端服务，无需额外安装或配置。
 
-#### 4.2 MySQL
+###### 1.4.2 MySQL
 
 * **说明**：若需使用 MySQL，请将 `.env.example` 中的 `DB_TYPE` 改为 `mysql`，并按照下列步骤完成 MySQL 的安装与配置。
 
@@ -96,7 +163,7 @@
   FLUSH PRIVILEGES;
   ```
 
-### 5. Milvus（可选组件）
+##### 1.5. Milvus（可选组件）
 
 * **说明**：`.env.example` 默认使用 Chroma，只需保持 `INDEX_MANAGER_TYPE` 为 `chroma` 即可直接启动后端服务，无需额外安装或配置；若需使用 Milvus，请将 `.env.example` 中的 `INDEX_MANAGER_TYPE` 改为 `milvus`，并参考 [如何启用记忆及知识库功能](#macos-memory) 完成 Milvus 的安装配置。
 
@@ -104,9 +171,9 @@
   * Chroma 无需额外安装，配置简单，只需要获取向量模型，适合快速体验，适合开发和测试环境。 向量模型的获取可参考 [如何获取向量模型](#macos-embed-model)。
   * Milvus 功能更完善，能够满足复杂场景的需求，因此在实际工程和生产环境中更推荐使用。
 
-## 三、openJiuwen 安装
+#### 2. openJiuwen 安装
 
-### 1. 获取源码
+##### 2.1. 获取源码
 
 * 请确认已获取 <a href="https://gitcode.com/org/openJiuwen" target="_blank" rel="nofollow noopener noreferrer"> openJiuwen 代码仓</a> 的访问权限，若无权限请及时申请。
 
@@ -131,7 +198,7 @@
   cd agent-studio
   ```
 
-### 2. 生成 AES 密钥（可选）
+##### 2.2. 生成 AES 密钥（可选）
 
 * 如果不需要对关键字段加密存储，可跳过当前步骤
 * 运行以下命令生成密钥：
@@ -150,7 +217,7 @@
 
 * 注意，AES密钥需要保持稳定，中途更换密钥会导致已加密数据无法解密。
 
-### 3. 启动 openJiuwen
+##### 2.3. 启动 openJiuwen
 
 * 在源码根目录打开 “终端”；
 
@@ -270,13 +337,13 @@
   Network：*网络访问地址*
 
 
-### 4. 访问系统
+##### 2.4. 访问系统
 
   * 若在本地查看，control+单击 *本地访问地址* ，接着单击打开链接，可在本地浏览器查看到 openJiuwen 的界面；或者复制上述 *本地访问地址* 到浏览器地址栏，按下“回车键”将看到 openJiuwen 的界面。
   
   * 若在外部机器查看，复制上述 *网络访问地址* 到浏览器地址栏，按下“回车键”将看到 openJiuwen 的界面。
 
-## 四、常见问题（FAQ）
+## 三、常见问题（FAQ）
 
 <a id="macos-memory"></a>
 ### 问题一：如何启用记忆及知识库功能
