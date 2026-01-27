@@ -706,8 +706,8 @@ add_conversation_messages(user_id: str, group_id: str, messages: list[BaseMessag
 ...	        timeout=int(os.getenv("EMBED_TIMEOUT")),
 ...	        max_retries=int(os.getenv("EMBED_MAX_RETRIES"))
 ...	    )
-...     os.environ["EMBED_SSL_VERIFY"] = "false"
-...     os.environ["EMBED_SSL_CERT"] = "false"
+...     os.environ["EMBEDDING_SSL_VERIFY"] = "false"
+...     os.environ["EMBEDDING_SSL_CERT"] = "false"
 ...     # 创建semantic数据库
 ...     semantic_store = MilvusSemanticStore(
 ...	        milvus_host=os.getenv("MILVUS_HOST"),

@@ -9,7 +9,7 @@ The development process of the Memory Engine consists of two steps:
 
 # Creating a Memory Engine Instance
 
-Obtain a Memory Engine instance via the ```create_mem_engine_instance``` method by passing the appropriate configuration parameters. Configurations include whether to record messages, the maximum length of AI messages used to generate memories, and the size of the historical message window for generating memories. Data storage within the Memory Engine involves `kv_store`, `semantic_store`, and a relational database, which should be registered during initialization. Default implementations are provided under `openjiuwen.core.memory.store.impl`, and custom implementations can be created by inheriting from `openjiuwen.core.memory.store.base_kv_store.BaseKVStore`, `openjiuwen.core.memory.store.base_semantic_store.BaseSemanticStore`, and `openjiuwen.core.memory.store.base_db_store`. The `semantic_store` uses embeddings to compute semantic similarity; users can set up an embedding service or purchase one. In addition to configuring api_key, url, model name, and model dimensions, it is recommended to enable SSL verification by setting EMBED_SSL_VERIFY to true in environment variables and configuring the certificate path in EMBED_SSL_CERT to ensure secure communication.
+Obtain a Memory Engine instance via the ```create_mem_engine_instance``` method by passing the appropriate configuration parameters. Configurations include whether to record messages, the maximum length of AI messages used to generate memories, and the size of the historical message window for generating memories. Data storage within the Memory Engine involves `kv_store`, `semantic_store`, and a relational database, which should be registered during initialization. Default implementations are provided under `openjiuwen.core.memory.store.impl`, and custom implementations can be created by inheriting from `openjiuwen.core.memory.store.base_kv_store.BaseKVStore`, `openjiuwen.core.memory.store.base_semantic_store.BaseSemanticStore`, and `openjiuwen.core.memory.store.base_db_store`. The `semantic_store` uses embeddings to compute semantic similarity; users can set up an embedding service or purchase one. In addition to configuring api_key, url, model name, and model dimensions, it is recommended to enable SSL verification by setting `EMBEDDING_SSL_VERIFY` to `true` in environment variables and configuring the certificate path in `EMBEDDING_SSL_CERT` to ensure secure communication.
 
 Below is an example of creating a Memory Engine instance using the default `DbmKVStore`, `MilvusSemanticStore`, and `DefaultDbStore`.
 
@@ -43,7 +43,7 @@ async def run() -> None:
     os.environ["RESTFUL_SSL_VERIFY"] = "false"
     os.environ["SSRF_PROTECT_ENABLED"] = "false"
     # Embedding-related environment variables
-    os.environ["EMBED_SSL_VERIFY"] = "false"
+    os.environ["EMBEDDING_SSL_VERIFY"] = "false"
     
     base_model_config = ModelConfig(
         model_provider="xxx",
@@ -197,7 +197,7 @@ async def run() -> None:
     os.environ["LLM_SSL_VERIFY"] = "false"
     os.environ["RESTFUL_SSL_VERIFY"] = "false"
     os.environ["SSRF_PROTECT_ENABLED"] = "false"
-    os.environ["EMBED_SSL_VERIFY"] = "false"
+    os.environ["EMBEDDING_SSL_VERIFY"] = "false"
     base_model_config = ModelConfig(
         model_provider="xxx",
         model_info=BaseModelInfo(
