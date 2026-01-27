@@ -20,7 +20,7 @@ If the Service Request URL and request parameter information of a deployed plugi
 
 4. Fill in the plugin information:
    
-   ![添加插件](./images/2e291072-52cb-480e-90be-13341d10074c.png)
+   ![添加插件](./images/create_url_plugin.png)
    
    Configuration for creating a cloud-side plugin is as follows:
    
@@ -28,11 +28,12 @@ If the Service Request URL and request parameter information of a deployed plugi
    |:-----:|:---------------------------- |
    | Plugin Name | The display name of the plugin, used to identify the plugin. |
    | Plugin Description | A description of the plugin's functionality, helping users understand its purpose. |
+   | Plugin Details | Detailed description of the plugin, supports markdown format, helps users understand the plugin's detailed configuration method. |
    | Service URL | The **Base URL** of the service corresponding to the plugin. The plugin will call service interfaces via this URL. |
 
 5. Click the **Create** button to complete the plugin creation.
    
-   ![添加插件](./images/90714182-68b0-4ae3-96e6-349bb8d695ea.png)
+   ![添加插件](./images/create-weather-plugin.png)
 
 6. After creation, find the installed plugin in the installed list and click the **Settings** button to enter the plugin configuration page. To configure tools within the plugin, please refer to the [Add Tools to Plugin](#add-tools-to-plugin) section.
 
@@ -44,7 +45,16 @@ Suppose a user has a deployed weather plugin service with the URL `https://examp
 
 Example of filling in parameters for creating a cloud-side plugin:
 
-![image](./images/4fa3f67e-29ee-40b5-8d51-3e2dd6fa110a.png)
+![image](./images/create-weather-plugin.png)
+
+Example of filling in plugin parameters:
+
+![image](./images/create-plugin-param.png)
+
+Notes:
+- Plugin parameters can set public parameters, such as api-key, which will be automatically added to request parameters when calling the plugin service.
+- Plugin parameters can set non-runtime parameters, which require setting default values. Agents or workflows do not need to fill in input when calling the plugin, and cannot see this parameter, the default value will be used.
+- Required parameters: Plugin parameters can be set as required parameters, which must be filled in when calling the plugin, otherwise an error will be reported.
    
 Example of filling in tool information:
 
@@ -76,11 +86,10 @@ openJiuwen supports manually creating local code plugins. Users can write code d
    |:------:|:--------------------------- |
    | Plugin Name | The display name of the plugin, used to identify the plugin. |
    | Plugin Description | A description of the plugin's functionality, helping users understand its purpose. |
-   | IDE Runtime | The environment in which the plugin runs. Select the appropriate runtime based on the plugin code language and dependencies. |
 
 5. Click the **Create Plugin** button to create the plugin and enter the plugin editing page.
    
-   ![添加插件](./images/3d852de4-c5e6-4555-96fe-1751725bf315.png)
+   ![添加插件](./images/create-code-plugin.png)
 
 6. In the **Tool Settings** under **Configuration Options**, click the **Add Code Tool** button to add a code tool.   
 
@@ -92,25 +101,9 @@ openJiuwen supports manually creating local code plugins. Users can write code d
    |:------:|:--------------------------- |
    | Tool Name | The display name of the tool, used to identify the tool. |
    | Tool Description | A description of the tool's functionality, helping users understand its purpose. |
-   | Language | The language in which the code executes. Currently supports Python and JavaScript. |
+   | IDE Runtime | The language environment in which the code executes, currently supports Python, JavaScript |
 
-   ![image](./images/81956b4a32c10cdfe94d7bc5dd88f6c3.png)
-
-8. After creating the tool, you are automatically redirected to the plugin tool configuration page. Here you can configure basic tool information, set input/output parameters, set execution code, and perform tests.
-
-   ![image](./images/38ff46f2-202c-4d54-ab7a-9ef04867a9b2.png)
-
-### Example
-Suppose a user wants to design a custom calculator plugin to implement custom operator calculations.
-Example of creating a local code plugin:
-
-![image](./images/71795ef3-aa41-4dec-89ae-a502b98f0cbf.png)
-
-Example of tool configuration:
-
-![image](./images/81956b4a32c10cdfe94d7bc5dd88f6c3.png)
-
-After creation is complete, the user can test the tool's effect.
+   ![image](./images/create-code-tool.png)
 
 
 # Run Plugin Service in Background
