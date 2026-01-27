@@ -51,7 +51,7 @@
       - [优化提示词](4.开发指南/agent-studio开发指南/开发提示词/优化提示词.md)
       - [调试提示词](4.开发指南/agent-studio开发指南/开发提示词/调试提示词.md)
       - [管理提示词版本](4.开发指南/agent-studio开发指南/开发提示词/管理提示词版本.md)
-    - [配置插件](4.开发指南/agent-studio开发指南/配置插件.md)
+    - [插件管理](4.开发指南/agent-studio开发指南/插件管理.md)
   - [agent-core开发指南](4.开发指南/agent-core开发指南/README.md)
     - [安全配置](4.开发指南/agent-core开发指南/安全配置.md)
     - [基础功能](4.开发指南/agent-core开发指南/基础功能/README.md)
