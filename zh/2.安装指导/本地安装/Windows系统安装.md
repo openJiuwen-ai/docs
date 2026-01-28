@@ -38,9 +38,9 @@
   * `check_python.ps1`：检查 Python 是否安装
   * `check_mysql.ps1`：检查 MySQL 是否安装
   * `fetch_codes.ps1`：克隆 agent-studio 代码仓库
-  * `user_config.ps1`：用户配置文件（可选，包含代理和 pip 源配置）
+  * `user_config.ps1`：用户配置文件（可选，包含代理、pip源、npm源配置）
 
-#### 2. 配置代理、pip 源和 npm 源（可选）
+#### 2. 配置代理、pip源和npm源（可选）
 
 如果您的网络环境需要通过代理访问外网，或者需要使用自定义的pip源或npm源，可以在 `user_config.ps1` 文件中进行配置：
 
@@ -64,7 +64,7 @@
   * **不需要代理**：保持变量为空即可（脚本会自动跳过代理配置）
   * **需要代理**：填写完整代理地址，例如 `http://127.0.0.1:7890`
   * **带认证的代理**：支持用户名密码，例如 `http://user:pass@proxy.example.com:8080`
-  * **SSL 验证**：`$SSL_VERIFY` 设置为 `true` 或 `false`，`true`表示开启Git的SSL证书验证，`true`为不开启。
+  * **SSL 验证**：`$SSL_VERIFY` 设置为 `true` 或 `false`，`true`表示开启Git的SSL证书验证，`false`为不开启。
 
 * pip 源配置说明：
   * **不需要配置 pip 源**：保持 `$PIP_INDEX_URL` 和 `$PIP_TRUSTED_HOST` 为空即可（脚本会自动跳过 pip 源配置，使用默认源）
@@ -131,7 +131,6 @@
   # 查看脚本支持的所有参数
   .\setup.ps1 -Help
   ```
-
 
 ### 方法二：手动安装全部依赖
 
