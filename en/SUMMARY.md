@@ -51,7 +51,7 @@
       - [Optimizing Prompts](4.Development%20Guide/agent-studio%20Development%20Guide/Development%20Prompt/Optimizing%20Prompts.md)
       - [Debugging Prompts](4.Development%20Guide/agent-studio%20Development%20Guide/Development%20Prompt/Debugging%20Prompts.md)
       - [Managing Prompt Versions](4.Development%20Guide/agent-studio%20Development%20Guide/Development%20Prompt/Managing%20Prompt%20Versions.md)
-    - [Configure Tool](4.Development%20Guide/agent-studio%20Development%20Guide/Configure%20Tool.md)
+    - [Plugin Management](4.Development%20Guide/agent-studio%20Development%20Guide/Plugin%20Management.md)
   - [agent-core Development Guide](4.Development%20Guide/agent-core%20Development%20Guide)
     - [Security Notes](4.Development%20Guide/agent-core%20Development%20Guide/Security%20Notes.md)
     - [Basic Functions](4.Development%20Guide/agent-core%20Development%20Guide/Basic%20Functions/README.md)
