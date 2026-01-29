@@ -40,14 +40,14 @@ Creating an agent is the first step in building an autonomous planning agent. Us
 
    ![image](../images/a27f7898-0ae2-4e92-a6ba-ec3e9e52f25c.png)
 
-# Configure LLM (Required)
+# Configure LLM
 ## Prerequisites
 - Agent has been created
 - The required LLM model has been added in the Model Management page. You can click **Go to Configuration** in **Model Configuration** to jump to the Model Management page for model configuration. openJiuwen supports users to provide and use their own large language models. For how to configure models, please refer to the model configuration related sections.
 
    ![image](../images/6002599b-f322-4040-8a38-5b71fe12cd44.png)
 ## Operation Steps
-### Configure LLM for Agent (Required)
+### Configure LLM for Agent
 
 
 In the agent **Orchestration Configuration** section, users can freely select an appropriate LLM model and configure options such as Temperature, Maximum Output Tokens, Top P, and Timeout.
@@ -220,7 +220,7 @@ Plugins are functional extension modules of agents. By integrating external serv
    In the pop-up plugin selection dialog, select a plugin and click the **Confirm Selection** button to select the plugin to be added.
    
    ![image](../images/b261ca49-241c-49ee-b30b-9ffdfabe2d9a.jpg)
-- Click the **Add New Plugin** button to go to the plugin marketplace to install the required plugins. Refer to the [Add Plugins and Tools](../Configure%20Tool.md) documentation.
+- Click the **Add New Plugin** button to go to the plugin marketplace to install the required plugins. Refer to the [Add Plugins and Tools](../Plugin%20Management.md) documentation.
 
 ## Add Workflow
 
