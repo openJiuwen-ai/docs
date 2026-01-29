@@ -35,12 +35,12 @@ Make sure your machine meets the following requirements:
 
   - Download the x86_64 package:
     ```
-    wget https://openjiuwen-ci.obs.cn-north-4.myhuaweicloud.com/agentstudio/deployTool_0.1.2_amd64.zip
+    wget https://openjiuwen-ci.obs.cn-north-4.myhuaweicloud.com/agentstudio/deployTool_0.1.3_amd64.zip
     ```
 
   - Download the arm package:
     ```
-    wget https://openjiuwen-ci.obs.cn-north-4.myhuaweicloud.com/agentstudio/deployTool_0.1.2_arm64.zip
+    wget https://openjiuwen-ci.obs.cn-north-4.myhuaweicloud.com/agentstudio/deployTool_0.1.3_arm64.zip
     ```
 
 ### 2. Start openJiuwen
@@ -55,15 +55,15 @@ Make sure your machine meets the following requirements:
 - Extract the corresponding architecture version package
   - Extract the x86_64 package
     ```
-    unzip deployTool_0.1.2_amd64
+    unzip deployTool_0.1.3_amd64
     ```
 
   - Extract the arm package
     ```
-    unzip deployTool_0.1.2_arm64
+    unzip deployTool_0.1.3_arm64
     ```
 
-- Enter the *deployTool_0.1.2_xxx64* directory and run the following commands to confirm Docker is running:
+- Enter the *deployTool_0.1.3_xxx64* directory and run the following commands to confirm Docker is running:
 
   ```bash
   sudo systemctl start docker

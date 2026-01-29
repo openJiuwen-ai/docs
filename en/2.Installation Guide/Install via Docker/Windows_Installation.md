@@ -53,9 +53,9 @@ Older Windows versions do not support the full automation of this one-click comm
 
 * Click the download link for the version and save it locally.
 
-  x86_64 architecture link: <a href="https://openjiuwen-ci.obs.cn-north-4.myhuaweicloud.com/agentstudio/deployTool_0.1.2_amd64.zip" target="_blank" rel="nofollow noopener noreferrer">openJiuwen v0.1.2</a>
+  x86_64 architecture link: <a href="https://openjiuwen-ci.obs.cn-north-4.myhuaweicloud.com/agentstudio/deployTool_0.1.3_amd64.zip" target="_blank" rel="nofollow noopener noreferrer">openJiuwen v0.1.3</a>
 
-  arm architecture link: <a href="https://openjiuwen-ci.obs.cn-north-4.myhuaweicloud.com/agentstudio/deployTool_0.1.2_arm64.zip" target="_blank" rel="nofollow noopener noreferrer">openJiuwen v0.1.2</a>
+  arm architecture link: <a href="https://openjiuwen-ci.obs.cn-north-4.myhuaweicloud.com/agentstudio/deployTool_0.1.3_arm64.zip" target="_blank" rel="nofollow noopener noreferrer">openJiuwen v0.1.3</a>
 
 ### 2. Configure Docker Desktop Virtual file shares
 
