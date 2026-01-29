@@ -77,16 +77,16 @@
 
   ```bash
   # 查看前后端服务状态和访问地址
-  ./setup.ps1 --status
+  ./setup.sh --status
   
   # 停止后端和前端服务
-  ./setup.ps1 --stop
+  ./setup.sh --stop
 
   # 重启后端和前端服务
-  ./setup.ps1 --restart
+  ./setup.sh --restart
 
   # 查看脚本支持的所有参数
-  ./setup.ps1 --help
+  ./setup.sh --help
   ```
 
 
