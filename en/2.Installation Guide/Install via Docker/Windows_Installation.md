@@ -36,16 +36,14 @@ Older Windows versions do not support the full automation of this one-click comm
 **2. Install Docker Desktop**
 
 * Download: Go to the <a href="https://www.docker.com/products/docker-desktop/" target="_blank" rel="nofollow noopener noreferrer">Docker website</a> to download the Windows installer (for x86 machines, choose the AMD64 version);
-* Run the installer: **Check the “Use WSL 2 instead of Hyper-V” option** and follow the wizard to complete installation:
-
-  <img src="../images/docker_desktop_on_wsl.png" width="600"/>
+* Run the installer: Select only the “Use WSL 2 instead of Hyper-V” and “Add shortcut to desktop” options, then click “OK” to complete installation;
 * Restart your computer after installation;
 * After restarting, open Docker Desktop and wait for it to finish loading (the first launch may take 5–10 minutes);
 * Once Docker Desktop starts, for a trial you can click “Continue without signing in” on the welcome screen; for long-term use, refer to the <a href="https://docs.docker.com/desktop/setup/sign-in" target="_blank" rel="nofollow noopener noreferrer">official guide</a>.
 
 * Docker Desktop installation is now complete.
 
-> **Note**: If you encounter errors during installation, refer to the <a href="https://docs.docker.com/desktop/setup/install/windows-install/" target="_blank" rel="nofollow noopener noreferrer">Docker Desktop official installation guide</a>.
+> **Note**: If you encounter errors during installation or want to review the official installation steps, refer to the <a href="https://docs.docker.com/desktop/setup/install/windows-install/" target="_blank" rel="nofollow noopener noreferrer">Docker Desktop official installation guide</a>.
 
 ## II. Install openJiuwen
 
@@ -61,11 +59,13 @@ Older Windows versions do not support the full automation of this one-click comm
 
 * Create the openJiuwen installation directory.
 
-* Open Docker Desktop and follow the steps shown. In step 4, enter the openJiuwen installation directory (for example: D:\openJiuwen);
+* Open Docker Desktop and click the ⚙️ icon in the upper-right corner to open settings. 
+
+* In the left-hand sidebar, select “Resources“ to enter the Resources configuration page. 
+
+* Click “File sharing“, type the *openJiuwen installation directory* (e.g., `D:\openJiuwen`) into the text box, and then click the “➕“ button to add it.
 
 * Click “Apply & restart” to restart Docker Desktop.
-
-  <img src="../images/Docker-Desktop-file-share.png" width="600"/>
 
 ### 3. Start openJiuwen
 

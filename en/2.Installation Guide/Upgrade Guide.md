@@ -1,4 +1,6 @@
-# OpenJiuWen Studio 0.1.1 to 0.1.2 Upgrade Guide
+# openJiuwen Studio Upgrade Guide
+
+⚠️ **Upgrade operations are not supported at this time.**
 
 ## Upgrade Note
 

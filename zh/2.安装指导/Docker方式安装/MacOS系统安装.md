@@ -24,9 +24,6 @@
 
 * 下载：访问 <a href="https://www.docker.com/products/docker-desktop/" rel="nofollow">Docker Desktop 官网</a>，点击 “Download for Mac” 获取 .dmg 安装包。；
 * 双击下载的文件，将 **Docker** 图标 拖拽到 Applications 文件夹；
-
-  ![docker1](../images/docker拖拽.png)
-
 * 打开 Launchpad，找到并启动 Docker 应用；
 * 首次运行时，系统会提示输入 macOS 密码以授权安装虚拟机组件，点击 OK 继续；
 * 首次启动需等待 Docker 完成初始化（下载基础镜像，约需几分钟）。

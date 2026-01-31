@@ -24,9 +24,6 @@ Ensure your machine meets the following requirements:
 
 * Download: Visit the <a href="https://www.docker.com/products/docker-desktop/" rel="nofollow">Docker Desktop official website</a>, and click "Download for Mac" to download the .dmg installer.
 * Double-click the installer and drag **Docker** into the Applications folder.
-
-  ![docker1](../images/docker拖拽.png)
-
 * Find and start the Docker application.
 * Upon first opening Docker, the system will prompt you to enter your macOS password to authorize the installation of virtual machine components. Click OK to continue.
 * The first startup will require waiting for Docker to complete initialization. (Downloading base images, which may take a few minutes)
