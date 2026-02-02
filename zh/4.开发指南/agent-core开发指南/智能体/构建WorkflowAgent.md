@@ -40,31 +40,16 @@ pip install -U openjiuwen
 初始化工作流，指定`workflow_config`配置参数：
 
 ```python
-from openjiuwen.core.workflow.workflow_config import WorkflowConfig, WorkflowMetadata, WorkflowInputsSchema
-from openjiuwen.core.workflow.base import Workflow
+from openjiuwen.core.workflow import Workflow, WorkflowCard
+from openjiuwen.core.workflow.workflow_config import WorkflowConfig
 
 # 初始化工作流与上下文
 id = "test_weather_agent"
 version = "1.0"
 name = "weather"
 workflow_config = WorkflowConfig(
-    metadata=WorkflowMetadata(
-        name=name,
-        id=id,
-        version=version,
-        description="天气查询工作流"   
-    ),
-    workflow_inputs_schema = WorkflowInputsSchema(
-        type="object",
-        properties={
-            "query": {
-                "type": "string",
-                "description": "用户输入",
-                "required": True
-            }
-        },
-        required=['query']
-    )
+    card=WorkflowCard(id=id, name=name, version=version,
+                      description="天气查询工作流")
 )
 flow = Workflow(workflow_config=workflow_config)
 ```
@@ -78,7 +63,7 @@ flow = Workflow(workflow_config=workflow_config)
 通过`Start`创建开始组件对象。开始组件作为工作流的开端，定义了工作流的输入参数规范。在本例中，开始组件的入参为固定输入参数`query`，类型为字符串，并且参数值引用自工作流的输入。示例代码如下：
 
 ```python
-from openjiuwen.core.component.start_comp import Start
+from openjiuwen.core.workflow import Start
 
 def create_start_component():
 	return Start({"inputs": [{"id": "query", "type": "String", "required": "true", "sourceType": "ref"}]})
@@ -92,7 +77,7 @@ def create_start_component():
 通过`End`创建结束组件对象。结束组件作为工作流的终止，定义了工作流的输出结果格式。在本示例中，输出结果的格式为输出文本。示例代码如下：
 
 ```python
-from openjiuwen.core.component.end_comp import End
+from openjiuwen.core.workflow import End
 
 def create_end_component():
 	return End({"responseTemplate": "最终结果为：{{output}}"})
@@ -107,10 +92,9 @@ def create_end_component():
 
 ```python
 import os
-from openjiuwen.core.component.common.configs.model_config import ModelConfig
-from openjiuwen.core.component.intent_detection_comp import (
+from openjiuwen.core.foundation.llm import ModelConfig, BaseModelInfo
+from openjiuwen.core.workflow import (
     IntentDetectionComponent, IntentDetectionCompConfig)
-from openjiuwen.core.utils.llm.base import BaseModelInfo
 
 API_BASE = os.getenv("API_BASE", "your api base")
 API_KEY = os.getenv("API_KEY", "your api key")
@@ -159,7 +143,7 @@ def create_intent_detection_component() -> IntentDetectionComponent:
 
 ```python
 from datetime import datetime
-from openjiuwen.core.component.llm_comp import LLMComponent, LLMCompConfig
+from openjiuwen.core.workflow import LLMComponent, LLMCompConfig
 
 def build_current_date():
     current_datetime = datetime.now()
@@ -187,7 +171,7 @@ def create_llm_component() -> LLMComponent:
 通过`QuestionerComponent`构造提问器组件对象，支持从用户输入信息中提取指定参数；若出现参数提取不完整的情况，支持主动提问、收集用户反馈信息。本示例主要使用提问器提取参数的能力，一次性提取完整`location`和`date`字段的值，示例代码如下：
 
 ```python
-from openjiuwen.core.component.questioner_comp import FieldInfo, QuestionerComponent, QuestionerConfig
+from openjiuwen.core.workflow import FieldInfo, QuestionerComponent, QuestionerConfig
 
 def create_questioner_component() -> QuestionerComponent:
     """创建提问器组件。"""
@@ -219,9 +203,9 @@ def create_questioner_component() -> QuestionerComponent:
 通过`ToolComponent`构造插件组件节点，用于调用插件，通过`bind_tool`方法关联实际执行插件逻辑的`Tool`插件对象。本示例用于调用天气组件进行天气查询，示例代码如下：
 
 ```python
-from openjiuwen.core.component.tool_comp import ToolComponent, ToolComponentConfig
-from openjiuwen.core.utils.tool.param import Param
-from openjiuwen.core.utils.tool.service_api.restful_api import RestfulApi
+from openjiuwen.core.workflow import ToolComponent, ToolComponentConfig
+from openjiuwen.core.foundation.tool.param import Param
+from openjiuwen.core.foundation.tool.service_api.restful_api import RestfulApi
 
 def create_plugin_component() -> ToolComponent:
     """创建插件组件，可调用外部 RESTful API。"""
@@ -302,7 +286,7 @@ flow.add_connection("plugin", "end")
 首先通过`WorkflowSchema`创建工作流的描述信息，并指定了工作流输入参数的类型，示例代码如下：
 
 ```python
-from openjiuwen.agent.common.schema import WorkflowSchema
+from openjiuwen.core.single_agent.legacy import WorkflowSchema
 
 schema = WorkflowSchema(
     id=flow.config().metadata.id,
@@ -316,7 +300,7 @@ schema = WorkflowSchema(
 然后通过`WorkflowAgentConfig`的初始化方法创建WorkflowAgentConfig对象，涵盖`WorkflowAgent`相关的描述信息等。示例代码如下：
 
 ```python
-from openjiuwen.agent.config.workflow_config import WorkflowAgentConfig
+from openjiuwen.core.application.workflow_agent import WorkflowAgentConfig
 
 agent_config = WorkflowAgentConfig(
     id="weather_agent",
@@ -329,7 +313,7 @@ agent_config = WorkflowAgentConfig(
 通过`WorkflowAgent`的初始化方法指定相关配置参数信息创建`WorkflowAgent`对象，再通过`bind_workflows`方法绑定工作流对象。示例代码如下：
 
 ```python
-from openjiuwen.agent.workflow_agent.workflow_agent import WorkflowAgent
+from openjiuwen.core.application.workflow_agent import WorkflowAgent
 
 workflow_agent = WorkflowAgent(agent_config)
 workflow_agent.bind_workflows([flow])
@@ -362,22 +346,21 @@ asyncio.run(test_weather_workflow())
 import os
 from datetime import datetime
 
-from openjiuwen.agent.common.schema import WorkflowSchema, PluginSchema
-from openjiuwen.agent.config.workflow_config import WorkflowAgentConfig
-from openjiuwen.agent.workflow_agent.workflow_agent import WorkflowAgent
-from openjiuwen.core.component.end_comp import End
-from openjiuwen.core.component.intent_detection_comp import (
-    IntentDetectionComponent, IntentDetectionCompConfig)
-from openjiuwen.core.component.common.configs.model_config import ModelConfig
-from openjiuwen.core.component.llm_comp import LLMComponent, LLMCompConfig
-from openjiuwen.core.component.questioner_comp import QuestionerComponent, FieldInfo, QuestionerConfig
-from openjiuwen.core.component.start_comp import Start
-from openjiuwen.core.component.tool_comp import ToolComponent, ToolComponentConfig
-from openjiuwen.core.utils.llm.base import BaseModelInfo
-from openjiuwen.core.utils.tool.param import Param
-from openjiuwen.core.utils.tool.service_api.restful_api import RestfulApi
-from openjiuwen.core.workflow.base import Workflow
-from openjiuwen.core.workflow.workflow_config import WorkflowConfig, WorkflowMetadata, WorkflowInputsSchema
+from openjiuwen.core.single_agent.legacy import WorkflowSchema, PluginSchema
+from openjiuwen.core.application.workflow_agent import WorkflowAgentConfig, WorkflowAgent
+from openjiuwen.core.workflow import (
+    Workflow,
+    Start,
+    End,
+    IntentDetectionComponent, IntentDetectionCompConfig,
+    LLMComponent, LLMCompConfig,
+    QuestionerComponent, FieldInfo, QuestionerConfig,
+    ToolComponent, ToolComponentConfig,
+)
+from openjiuwen.core.foundation.llm import ModelConfig, BaseModelInfo
+from openjiuwen.core.foundation.tool.service_api.restful_api import RestfulApi
+from openjiuwen.core.workflow import WorkflowCard
+from openjiuwen.core.workflow.workflow_config import WorkflowConfig
 import asyncio
 
 API_BASE = os.getenv("API_BASE", "your api base")
@@ -480,20 +463,9 @@ def bind_agent():
     version = "1.0"
     name = "weather"
     workflow_config = WorkflowConfig(
-        metadata=WorkflowMetadata(name=name, id=id, version=version, description="天气查询工作流"),
-        workflow_inputs_schema=WorkflowInputsSchema(
-            type="object",
-            properties={
-                "query": {
-                    "type": "string",
-                    "description": "用户输入",
-                    "required": True
-                }
-            },
-            required=['query']
-        )
+        card=WorkflowCard(id=id, name=name, version=version,
+                          description="天气查询工作流")
     )
-
     flow = Workflow(workflow_config=workflow_config)
 
     start = create_start_component()  # 起始组件

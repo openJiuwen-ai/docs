@@ -1,14 +1,13 @@
 # common
 
-openJiuwen的公共模块提供模型配置、异常信息、日志管理等功能。
+openJiuwen 的公共模块提供异常、日志、常量、schema、安全、工具等能力。模型相关配置见 [foundation.llm](./foundation/llm.README.md)（`ModelRequestConfig`、`ModelClientConfig` 等）。
 
 **Classes**：
 
-| CLASS                                                                                                                  | DESCRIPTION      |
-|------------------------------------------------------------------------------------------------------------------------|------------------|
-| [ModelConfig](./common/configs/model_config.md#class-openjiuwencorecomponentcommonconfigsmodel_configmodelconfig)      | 模型配置类。           |
-| [JiuWenBaseException](./common/exception/exception.md#class-openjiuwencorecommonexceptionexceptionjiuwenbaseexception) | openJiuwen的异常基类。 |
-| [StatusCode](common/exception/status_code.md#class-openjiuwencorecommonexceptionstatus_codestatuscode)                 | 错误码信息。           |
-| [logger](./common/logging/__init__.md#openjiuwencorecommonlogginglogger)                                               | 默认日志器。           |
-| [LoggerProtocol](./common/logging/protocol.md#class-openjiuwencorecommonloggingprotocolloggerprotocol)                 | 自定义日志器基类。        |
-| [LogManager](./common/logging/manager.md#class-openjiuwencorecommonloggingmanagerlogmanager)                           | 日志器管理类。          |
+| CLASS | DESCRIPTION |
+|-------|-------------|
+| [JiuWenBaseException](./common/exception/exception.md#class-openjiuwencorecommonexceptionexceptionjiuwenbaseexception) | openJiuwen 异常基类。 |
+| [StatusCode](./common/exception/status_code.md#class-openjiuwencorecommonexceptionstatus_codestatuscode) | 错误码信息。 |
+| [logger](./common/logging/__init__.md#openjiuwencorecommonlogginglogger) | 默认日志器。 |
+| [LoggerProtocol](./common/logging/protocol.md#class-openjiuwencorecommonloggingprotocolloggerprotocol) | 自定义日志器基类。 |
+| [LogManager](./common/logging/manager.md#class-openjiuwencorecommonloggingmanagerlogmanager) | 日志器管理类。 |

@@ -27,9 +27,8 @@
 
 ```python
 import os
-from openjiuwen.agent.config.workflow_config import WorkflowAgentConfig
-from openjiuwen.core.component.common.configs.model_config import ModelConfig
-from openjiuwen.core.utils.llm.base import BaseModelInfo
+from openjiuwen.core.application.workflow_agent import WorkflowAgentConfig
+from openjiuwen.core.foundation.llm import ModelConfig, BaseModelInfo
 
 API_BASE = os.getenv("API_BASE", "your api base")
 API_KEY = os.getenv("API_KEY", "your api key")
@@ -69,7 +68,7 @@ config = WorkflowAgentConfig(
 首先需要创建工作流实例。以下示例创建两个工作流：天气查询工作流和股票查询工作流。
 
 ```python
-from openjiuwen.agent.workflow_agent.workflow_agent import WorkflowAgent
+from openjiuwen.core.application.workflow_agent import WorkflowAgent
 
 agent = WorkflowAgent(config)
 ```
@@ -79,13 +78,12 @@ agent = WorkflowAgent(config)
 使用`add_workflows`方法将工作流实例添加到`WorkflowAgent`中：
 
 ```python
-from openjiuwen.agent.config.workflow_config import WorkflowAgentConfig
-from openjiuwen.agent.workflow_agent.workflow_agent import WorkflowAgent
-from openjiuwen.core.component.end_comp import End
-from openjiuwen.core.component.questioner_comp import QuestionerComponent, QuestionerConfig, FieldInfo
-from openjiuwen.core.component.start_comp import Start
-from openjiuwen.core.workflow.base import Workflow
-from openjiuwen.core.workflow.workflow_config import WorkflowConfig, WorkflowMetadata
+from openjiuwen.core.application.workflow_agent import WorkflowAgentConfig, WorkflowAgent
+from openjiuwen.core.workflow import (
+    End, QuestionerComponent, QuestionerConfig, FieldInfo, Start, Workflow,
+    WorkflowCard,
+)
+from openjiuwen.core.workflow.workflow_config import WorkflowConfig
 
 def _create_start_component():
     return Start({"inputs": [{"id": "query", "type": "String", "required": "true", "sourceType": "ref"}]})
@@ -105,9 +103,9 @@ def _build_questioner_workflow(workflow_id: str, workflow_name: str,
         Workflow: 包含 start -> questioner -> end 的工作流
     """
     workflow_config = WorkflowConfig(
-        metadata=WorkflowMetadata(
-            name=workflow_name,
+        card=WorkflowCard(
             id=workflow_id,
+            name=workflow_name,
             version="1.0",
         )
     )
@@ -342,15 +340,13 @@ import os
 import asyncio
 from datetime import datetime
 
-from openjiuwen.agent.config.workflow_config import WorkflowAgentConfig
-from openjiuwen.agent.workflow_agent.workflow_agent import WorkflowAgent
-from openjiuwen.core.component.common.configs.model_config import ModelConfig
-from openjiuwen.core.component.end_comp import End
-from openjiuwen.core.component.questioner_comp import QuestionerComponent, QuestionerConfig, FieldInfo
-from openjiuwen.core.component.start_comp import Start
-from openjiuwen.core.utils.llm.base import BaseModelInfo
-from openjiuwen.core.workflow.base import Workflow
-from openjiuwen.core.workflow.workflow_config import WorkflowConfig, WorkflowMetadata
+from openjiuwen.core.application.workflow_agent import WorkflowAgentConfig, WorkflowAgent
+from openjiuwen.core.foundation.llm import ModelConfig, BaseModelInfo
+from openjiuwen.core.workflow import (
+    End, QuestionerComponent, QuestionerConfig, FieldInfo, Start, Workflow,
+    WorkflowCard,
+)
+from openjiuwen.core.workflow.workflow_config import WorkflowConfig
 
 API_BASE = os.getenv("API_BASE", "your api base")
 API_KEY = os.getenv("API_KEY", "your api key")
@@ -390,9 +386,9 @@ def _build_prefixed_workflow(workflow_id: str, workflow_name: str, prefix: str) 
     用于测试工作流路由。
     """
     workflow_config = WorkflowConfig(
-        metadata=WorkflowMetadata(
-            name=workflow_name,
+        card=WorkflowCard(
             id=workflow_id,
+            name=workflow_name,
             version="1.0",
         )
     )
@@ -428,9 +424,9 @@ def _build_questioner_workflow(workflow_id: str, workflow_name: str,
         Workflow: 包含 start -> questioner -> end 的工作流
     """
     workflow_config = WorkflowConfig(
-        metadata=WorkflowMetadata(
-            name=workflow_name,
+        card=WorkflowCard(
             id=workflow_id,
+            name=workflow_name,
             version="1.0",
         )
     )

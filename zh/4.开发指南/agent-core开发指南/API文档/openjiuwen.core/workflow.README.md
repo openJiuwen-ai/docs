@@ -6,12 +6,44 @@
 
 | CLASS                                                                                                                                                                | DESCRIPTION                                                         |
 | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| [WorkflowSpec](./workflow/workflow_config.md)                 | 负责工作流结构和组件关系的定义，内部graph结构，不建议用户手动设置。 |
-| [WorkflowMetadata](./workflow/workflow_config.md)         | 工作流元信息数据类，用于描述工作流的基本属性。                      |
-| [ComponentAbility](./workflow/workflow_config.md)         | 工作流组件的能力枚举类。                                            |
-| [WorkflowInputsSchema](./workflow/workflow_config.md) | 工作流工具插件的输入参数结构。                                      |
-| [WorkflowConfig](./workflow/workflow_config.md)             | 配置结构数据类。                                                    |
+| [WorkflowConfig](./workflow/workflow_config.md)             | 工作流配置类（card、spec、workflow_max_nesting_depth）。            |
 | [WorkflowOutput](./workflow/base.md)                        | 工作流执行invoke的输出结果的数据类。                                |
 | [WorkflowChunk](./workflow/base.md)                          | 工作流执行stream返回的数据帧的数据类。                              |
 | [WorkflowExecutionState](./workflow/base.md)        | 工作流执行invoke的执行状态的枚举类。                                |
 | [Workflow](./workflow/base.md)                                    | 工作流类。                                                          |
+| [WorkflowCard](./workflow/base.md)                              | 工作流卡片类。                                                      |
+| [WorkflowComponent](./workflow/components/base.md)              | 自定义工作流组件的抽象基类。                                        |
+| [ComponentExecutable](./workflow/components/base.md)            | 组件可执行接口。                                                    |
+| [ComponentComposable](./workflow/components/base.md)            | 组件可组合接口。                                                    |
+| [ComponentConfig](./workflow/components/base.md)                | 组件配置基类。                                                      |
+| [LLMComponent](./workflow/components/llm_comp.md)               | openJiuwen预置的大模型组件。                                        |
+| [LLMCompConfig](./workflow/components/llm_comp.md)             | 大模型组件配置信息的数据类。                                        |
+| [IntentDetectionComponent](./workflow/components/intent_detection_comp.md) | openJiuwen预置的意图识别组件。                                     |
+| [IntentDetectionCompConfig](./workflow/components/intent_detection_comp.md) | 意图识别组件配置信息的数据类。                                      |
+| [QuestionerComponent](./workflow/components/questioner_comp.md) | openJiuwen预置的提问器组件。                                        |
+| [QuestionerConfig](./workflow/components/questioner_comp.md)   | 提问器组件配置信息的数据类。                                        |
+| [FieldInfo](./workflow/components/questioner_comp.md)           | 提问器组件待提取参数的元数据信息的数据类。                          |
+| [ToolComponent](./workflow/components/tool_comp.md)            | openJiuwen预置的插件组件。                                          |
+| [ToolComponentConfig](./workflow/components/tool_comp.md)      | 插件组件配置信息的数据类。                                          |
+| [Start](./workflow/components/start_comp.md)                   | openJiuwen预置的工作流开始组件。                                    |
+| [End](./workflow/components/end_comp.md)                       | openJiuwen预置的工作流结束组件。                                    |
+| [EndConfig](./workflow/components/end_comp.md)                 | 结束组件配置信息的数据类。                                          |
+| [BranchComponent](./workflow/components/branch_comp.md)         | openJiuwen预置的工作流分支组件。                                    |
+| [LoopComponent](./workflow/components/loop_comp.md)             | 标准循环组件类。                                                    |
+| [LoopGroup](./workflow/components/loop_comp.md)                | 循环体，是构建循环逻辑的基础容器。                                  |
+| [SubWorkflowComponent](./workflow/components/workflow_comp.md) | openJiuwen预置的子工作流组件。                                      |
+| [BranchRouter](./workflow/components/branch_router.md)         | 实现分支路由器的核心类。                                            |
+| [Branch](./workflow/components/branch_router.md)               | 分支类。                                                            |
+| [Condition](./workflow/components/condition/condition.md)      | 条件判断基类。                                                      |
+| [FuncCondition](./workflow/components/condition/condition.md)  | 基于函数的条件判断实现。                                            |
+| [AlwaysTrue](./workflow/components/condition/condition.md)      | 恒成立的条件判断实现。                                              |
+| [ExpressionCondition](./workflow/components/condition/expression.md) | 基于表达式的条件判断实现。                                          |
+| [ArrayCondition](./workflow/components/condition/array.md)     | 数组条件判断实现。                                                  |
+| [NumberCondition](./workflow/components/condition/number.md)    | 数字条件判断实现。                                                  |
+
+**Functions**：
+
+| FUNCTION | DESCRIPTION |
+|----------|-------------|
+| [generate_workflow_key](./workflow/base.md) | 生成工作流键值。 |
+| [create_workflow_session](./workflow/base.md) | 创建工作流会话。 |

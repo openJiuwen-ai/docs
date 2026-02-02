@@ -14,13 +14,13 @@ add_message(message: BaseMessage, tags: Optional[Dict[str, str]] = None)
 
 **参数**：
 
-- **message**([BaseMessage](../../openjiuwen.core/utils/llm/messages.md#class-openjiuwencoreutilsllmmessagesbasemessage))：要添加的单个消息对象，必须是`BaseMessage`类型。
+- **message**([BaseMessage](../foundation/llm.README.md))：要添加的单个消息对象，必须是`BaseMessage`类型。
 - **tags**(Dict[str, str], 可选)：消息标签字典，用于为消息添加元数据信息。元数据信息表示为当前这条Message添加自定义内容，用于自定义模式的筛选和数据隔离。默认值：`None`，表示无标签添加。
 
 **样例**：
 
 ```python
->>> from openjiuwen.core.utils.llm.messages import HumanMessage, AIMessage
+>>> from openjiuwen.core.foundation.llm.messages import HumanMessage, AIMessage
 >>> from openjiuwen.core.context_engine.engine import ContextEngine
 >>> from openjiuwen.core.context_engine.config import ContextEngineConfig
 
@@ -46,13 +46,13 @@ batch_add_messages(messages: List[BaseMessage], tags: Optional[Dict[str, str]] =
 
 **参数**：
 
-- **messages**(List[[BaseMessage](../../openjiuwen.core/utils/llm/messages.md#class-openjiuwencoreutilsllmmessagesbasemessage)])：待添加的消息列表。
+- **messages**(List[[BaseMessage](../foundation/llm.README.md)])：待添加的消息列表。
 - **tags**(Dict[str, str], 可选)：消息标签字典，用于为批量添加的消息添加元数据信息。元数据信息表示为当前这条Message添加自定义内容，用于自定义模式的筛选和数据隔离。默认值：`None`，表示无标签添加。
 
 **样例**：
 
 ```python
->>> from openjiuwen.core.utils.llm.messages import BaseMessage, HumanMessage, AIMessage
+>>> from openjiuwen.core.foundation.llm.messages import BaseMessage, HumanMessage, AIMessage
 >>> from openjiuwen.core.context_engine.engine import ContextEngine
 >>> from openjiuwen.core.context_engine.config import ContextEngineConfig
 >>> 
@@ -81,14 +81,14 @@ get_messages(num: int = -1, tags: Optional[Dict[str, str]] = None) -> List[BaseM
 
 **返回**：
 
-**List[[BaseMessage](../../openjiuwen.core/utils/llm/messages.md#class-openjiuwencoreutilsllmmessagesbasemessage)]**，符合条件的最近的消息列表，最近的消息在最后。
+**List[[BaseMessage](../foundation/llm.README.md)]**，符合条件的最近的消息列表，最近的消息在最后。
 
 **样例**：
 
 ```python
 >>> from openjiuwen.core.context_engine.config import ContextEngineConfig
 >>> from openjiuwen.core.context_engine.engine import ContextEngine 
->>> from openjiuwen.core.utils.llm.messages import HumanMessage, AIMessage, SystemMessage
+>>> from openjiuwen.core.foundation.llm.messages import HumanMessage, AIMessage, SystemMessage
 >>> 
 >>> # 以AgentContext上下文为例
 >>> config = ContextEngineConfig()
@@ -152,12 +152,12 @@ get_latest_message(role: str = None) -> Union[BaseMessage, None]
 
 **返回**：
 
-**Union[[BaseMessage](../../openjiuwen.core/utils/llm/messages.md#class-openjiuwencoreutilsllmmessagesbasemessage), None]**，符合条件的消息对象，如果找不到符合条件的消息则返回 `None`。
+**Union[[BaseMessage](../foundation/llm.README.md), None]**，符合条件的消息对象，如果找不到符合条件的消息则返回 `None`。
 
 **样例**：
 
 ```python
->>> from openjiuwen.core.utils.llm.messages import HumanMessage, AIMessage, SystemMessage
+>>> from openjiuwen.core.foundation.llm.messages import HumanMessage, AIMessage, SystemMessage
 >>> from openjiuwen.core.context_engine.engine import ContextEngine
 >>> from openjiuwen.core.context_engine.config import ContextEngineConfig
 >>> 
@@ -208,13 +208,13 @@ add_message(message: BaseMessage, tags: Optional[Dict[str, str]] = None)
 
 **参数**：
 
-- **message**([BaseMessage](../../openjiuwen.core/utils/llm/messages.md#class-openjiuwencoreutilsllmmessagesbasemessage))：要添加的单个消息对象，必须是`BaseMessage`类型。
+- **message**([BaseMessage](../foundation/llm.README.md))：要添加的单个消息对象，必须是`BaseMessage`类型。
 - **tags**(Dict[str, str], 可选)：消息标签字典，用于为消息添加元数据信息。元数据信息表示为当前这条Message添加自定义内容，用于自定义模式的筛选和数据隔离。默认值：`None`，表示无标签添加。
 
 **样例**：
 
 ```python
->>> from openjiuwen.core.utils.llm.messages import HumanMessage, AIMessage
+>>> from openjiuwen.core.foundation.llm.messages import HumanMessage, AIMessage
 >>> from openjiuwen.core.context_engine.engine import ContextEngine 
 >>> from openjiuwen.core.context_engine.config import ContextEngineConfig
 >>>
@@ -240,13 +240,13 @@ batch_add_messages(messages: List[BaseMessage], tags: Optional[Dict[str, str]] =
 
 **参数**：
 
-- **messages**(List[[BaseMessage](../../openjiuwen.core/utils/llm/messages.md#class-openjiuwencoreutilsllmmessagesbasemessage)])：待添加的消息列表。
+- **messages**(List[[BaseMessage](../foundation/llm.README.md)])：待添加的消息列表。
 - **tags**(Dict[str, str], 可选)：消息标签字典，用于为批量添加的消息添加元数据信息。元数据信息表示为当前这条Message添加自定义内容，用于自定义模式的筛选和数据隔离。默认值：`None`，表示无标签添加。
 
 **样例**：
 
 ```python
->>> from openjiuwen.core.utils.llm.messages import HumanMessage, AIMessage
+>>> from openjiuwen.core.foundation.llm.messages import HumanMessage, AIMessage
 >>> from openjiuwen.core.context_engine.engine import ContextEngine 
 >>> from openjiuwen.core.context_engine.config import ContextEngineConfig
 >>>
@@ -275,14 +275,14 @@ get_messages(num: int, tags: Optional[Dict[str, str]] = None) -> List[BaseMessag
 
 **返回**：
 
-**List[[BaseMessage](../../openjiuwen.core/utils/llm/messages.md#class-openjiuwencoreutilsllmmessagesbasemessage)]**，符合条件的最近的消息列表，最近的消息在最后。
+**List[[BaseMessage](../foundation/llm.README.md)]**，符合条件的最近的消息列表，最近的消息在最后。
 
 **样例**：
 
 ```python
 >>> from openjiuwen.core.context_engine.config import ContextEngineConfig
 >>> from openjiuwen.core.context_engine.engine import ContextEngine 
->>> from openjiuwen.core.utils.llm.messages import HumanMessage, AIMessage, SystemMessage
+>>> from openjiuwen.core.foundation.llm.messages import HumanMessage, AIMessage, SystemMessage
 
 >>> # 以WorkflowContext上下文为例
 >>> config = ContextEngineConfig()
@@ -346,12 +346,12 @@ get_latest_message(role: str = None) -> Union[BaseMessage, None]
 
 **返回**：
 
-**Union[[BaseMessage](../../openjiuwen.core/utils/llm/messages.md#class-openjiuwencoreutilsllmmessagesbasemessage), None]**，符合条件的消息对象，如果找不到符合条件的消息则返回 `None`。
+**Union[[BaseMessage](../foundation/llm.README.md), None]**，符合条件的消息对象，如果找不到符合条件的消息则返回 `None`。
 
 **样例**：
 
 ```python
->>> from openjiuwen.core.utils.llm.messages import HumanMessage, AIMessage, SystemMessage
+>>> from openjiuwen.core.foundation.llm.messages import HumanMessage, AIMessage, SystemMessage
 >>> from openjiuwen.core.context_engine.engine import ContextEngine 
 >>> from openjiuwen.core.context_engine.config import ContextEngineConfig
 >>>

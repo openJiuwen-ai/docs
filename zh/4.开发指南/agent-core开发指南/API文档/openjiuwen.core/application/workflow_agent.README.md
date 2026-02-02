@@ -1,0 +1,11 @@
+# workflow_agent
+
+`openjiuwen.core.application.workflow_agent`提供了WorkflowAgent的应用实现。
+
+**Classes**：
+
+| CLASS | DESCRIPTION |
+|-------|-------------|
+| [WorkflowAgent](./workflow_agent/workflow_controller.md) | WorkflowAgent类。 |
+| [WorkflowController](./workflow_agent/workflow_controller.md) | Workflow控制器类。 |
+| [WorkflowAgentConfig](./workflow_agent/workflow_controller.md) | WorkflowAgent配置类（来自legacy模块）。 |

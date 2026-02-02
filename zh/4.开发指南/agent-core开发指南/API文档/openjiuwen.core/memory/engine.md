@@ -1,1711 +1,731 @@
-# openjiuwen.core.memory.engine
+# openjiuwen.core.memory.long_term_memory
 
-## class openjiuwen.core.memory.engine.MemoryEngine
+## class LongTermMemory
 
 ```python
-class MemoryEngine(config: SysMemConfig, kv_store: BaseKVStore, semantic_store: BaseSemanticStore, db_store: BaseDbStore, **kwargs)
+class openjiuwen.core.memory.long_term_memory.LongTermMemory(metaclass=Singleton)
 ```
 
-记忆引擎类，是BaseMemoryEngine的派生类, 使用前需要先输入初始化配置和记忆存储对象，可通过MemoryEngine对记忆进行管理和操作。
+`LongTermMemory` 是 openJiuwen 0.1.4 中统一的**长期记忆管理引擎**，采用单例模式，负责：
+
+- 管理用户对话消息的持久化与检索；
+- 管理用户变量记忆（如偏好、个人信息等结构化数据）；
+- 管理用户画像（长期记忆，通过 LLM 从对话中提取）；
+- 支持基于 `scope_id` 的多租户隔离；
+- 支持向量检索、分页查询、按条件删除等操作。
+
+对应源码：`openjiuwen.core.memory.long_term_memory.LongTermMemory`。
+
+> **说明**：与旧版 `MemoryEngine(config: SysMemConfig, ...)` 不同，`LongTermMemory` 采用**无参构造 + 分步初始化**的方式：
+> 1. 先调用 `await register_store(...)` 注册底层存储；
+> 2. 再调用 `set_config(MemoryEngineConfig(...))` 设置全局配置；
+> 3. 可选地通过 `set_scope_config(scope_id, MemoryScopeConfig(...))` 为不同业务场景配置独立的模型/向量参数。
+
+### __init__
+
+```python
+def __init__(self) -> None
+```
+
+初始化 `LongTermMemory` 实例（单例模式，多次调用返回同一实例）。
+
+**内部状态初始化**：
+
+- 配置相关：`_sys_mem_config: MemoryEngineConfig | None = None`、`_scope_config: dict[str, MemoryScopeConfig] = {}`；
+- 存储相关：`kv_store / semantic_store / db_store` 均为 `None`，需通过 `register_store` 注册；
+- 管理器相关：`scope_user_mapping_manager / message_manager / user_profile_manager / variable_manager / write_manager / search_manager / generator` 均为 `None`，在 `set_config` 时初始化；
+- LLM 相关：`_base_llm: Tuple[str, Model] | None = None`（在 `set_config` 时设置）；
+- 嵌入模型缓存：`_scope_embedding: dict[str, Embedding] = {}`。
+
+### async register_store
+
+```python
+async def register_store(
+    self,
+    kv_store: BaseKVStore,
+    vector_store: VectorStore | None = None,
+    db_store: BaseDbStore | None = None,
+    embedding_model: Embedding | None = None,
+) -> None
+```
+
+注册底层存储实例，必须在调用 `set_config` 之前完成。
 
 **参数**：
 
-* **config**(SysMemConfig)：记忆引擎初始化配置，默认值：无。
-* **kv_store**(BaseKVStore)：KV存储实例，默认值：无。
-* **semantic_store**(BaseSemanticStore)：语义存储实例，默认值：无。
-* **db_store**(BaseDbStore)：关联DB存储实例，默认值：无。
-* **kwargs**：可变参数，用于传递其他额外的配置参数。
+- `kv_store: BaseKVStore`：**必填**，键值存储实例，用于快速访问结构化数据（如 scope 配置、用户变量等）。若为 `None`，会抛出 `JiuWenBaseException`（`MEMORY_REGISTER_STORE_EXECUTION_ERROR`）。
+- `vector_store: VectorStore | None`：向量存储实例，用于语义相似度检索。若为 `None`，则语义检索功能不可用。
+- `db_store: BaseDbStore | None`：关系型数据库存储实例，用于持久化消息、scope-user 映射等。若为 `None`，则消息持久化功能不可用。
+- `embedding_model: Embedding | None`：全局嵌入模型实例，用于在注册时初始化 `semantic_store` 的嵌入能力。若为 `None`，后续可通过 `set_scope_config` 为不同 scope 配置独立的嵌入模型。
 
-### classmethod register_store
+**行为**：
+
+- 校验 `kv_store` 非空，否则抛出异常；
+- 校验 `vector_store` 类型（若提供）是否为 `VectorStore` 实例，否则抛出异常；
+- 校验 `db_store` 类型（若提供）是否为 `BaseDbStore` 实例，否则抛出异常；
+- 将 `kv_store` 赋值给 `self.kv_store`；
+- 创建 `SemanticStore(vector_store=vector_store)` 并赋值给 `self.semantic_store`；
+- 若 `semantic_store` 存在且 `embedding_model` 非空，调用 `self.semantic_store.initialize_embedding_model(embedding_model)` 初始化嵌入模型；
+- 若 `db_store` 存在，调用 `await create_tables(self.db_store)` 创建必要的数据库表结构。
+
+### set_config
 
 ```python
-register_store(kv_store: BaseKVStore, semantic_store: BaseSemanticStore | None = None, db_store: BaseDbStore | None = None)
+def set_config(self, config: MemoryEngineConfig) -> None
 ```
 
-注册记忆存储对象，MemoryEngine在调用create_mem_engine_instance时，会使用注册的存储对象初始化实例。
+设置全局记忆引擎配置，并初始化内部管理器。
 
 **参数**：
 
-* **kv_store**(BaseKVStore)：KV存储实例。默认值：无。
-* **semantic_store**(BaseSemanticStore )：语义存储实例。默认值：无。
-* **db_store**(BaseDbStore )：关联DB存储实例。默认值：无。
+- `config: MemoryEngineConfig`：全局引擎配置，包含：
+  - `default_model_cfg: ModelRequestConfig`：默认用于生成记忆的大模型请求参数；
+  - `default_model_client_cfg: ModelClientConfig`：默认大模型客户端配置；
+  - `input_msg_max_len: int`：输入消息最大长度（默认 8192）；
+  - `crypto_key: bytes`：AES 加密密钥（长度必须为 32 字节；为空则不加密）。
 
-**样例：**
+**前置条件**：
 
-```python
->>> import asyncio
->>> import os
->>> from sqlalchemy.ext.asyncio import create_async_engine
->>> from openjiuwen.core.memory.embed_models.api import APIEmbedModel
->>> from openjiuwen.core.memory.engine.memory_engine import MemoryEngine
->>> from openjiuwen.core.memory.store.impl.dbm_kv_store import DbmKVStore
->>> from openjiuwen.core.memory.store.impl.default_db_store import DefaultDbStore
->>> from openjiuwen.core.memory.store.impl.milvus_semantic_store import MilvusSemanticStore
->>> 
->>> async def run():
-...     # 创建kv数据库
-...     dbm_test_dir = "test_dbm"
-...     os.makedirs(dbm_test_dir, exist_ok=True)
-...     dbm_kv_path = os.path.join(dbm_test_dir, "testdb")
-...     kv_store = DbmKVStore(dbm_kv_path)
-...     # 创建embedding模型
-...     embed_model = APIEmbedModel(
-...	        model_name=os.getenv("EMBED_MODEL_NAME"),
-...	        base_url=os.getenv("EMBED_API_BASE"),
-...	        api_key=os.getenv("EMBED_API_KEY"),
-...	        timeout=int(os.getenv("EMBED_TIMEOUT")),
-...	        max_retries=int(os.getenv("EMBED_MAX_RETRIES"))
-...	    )
-...     # 创建semantic数据库
-...     semantic_store = MilvusSemanticStore(
-...	        milvus_host=os.getenv("MILVUS_HOST"),
-...	        milvus_port=os.getenv("MILVUS_PORT"),
-...	        collection_name=os.getenv("MILVUS_COLLECTION_NAME"),
-...	        embedding_dims=os.getenv("MILVUS_MODEL_DIMENSION", 1024),
-...	        embed_model=embed_model,
-...	        token=os.getenv("MILVUS_TOKEN", None)
-...	    )
-...     # 创建mysql数据库
-...     db_user = os.getenv("DB_USER")
-...     db_password = os.getenv("DB_PASSWORD")
-...     db_host = os.getenv("DB_HOST")
-...     db_port = os.getenv("DB_PORT")
-...     db_name = os.getenv("DB_NAME")
-...     db_engine_instance = create_async_engine(
-...	    	url=f"mysql+aiomysql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}?charset=utf8mb4",
-...	    	pool_size=20,
-...	    	max_overflow=20
-...	    )
-...     db_store = DefaultDbStore(db_engine_instance)
-...     # kv_store等存储对象的定义参考store.md
-...     MemoryEngine.register_store(
-...	        kv_store=kv_store,
-...	        semantic_store=semantic_store,
-...	        db_store=db_store
-...	    )
-...     # 显式释放连接池，避免loop关闭时再清理，在所有操作后再执行
-...     await db_engine_instance.dispose()
->>> asyncio.run(run())
-注册记忆存储对象
-```
+- 必须已调用 `register_store` 注册 `kv_store`、`semantic_store`、`db_store`，否则会抛出 `JiuWenBaseException`（`MEMORY_SET_CONFIG_EXECUTION_ERROR`）。
 
-### classmethod async create_mem_engine_instance
+**行为**：
+
+1. 将 `config` 保存到 `self._sys_mem_config`；
+2. 创建 `DataIdManager()` 用于生成唯一 id；
+3. 创建 `UserMemStore(self.kv_store)` 用于用户记忆的 KV 存储封装；
+4. 若 `db_store` 存在：
+   - 创建 `SqlDbStore(self.db_store)`；
+   - 创建 `ScopeUserMappingManager(sql_db_store)` 并赋值给 `self.scope_user_mapping_manager`；
+   - 创建 `MessageManager(sql_db_store, data_id_generator, config.crypto_key)` 并赋值给 `self.message_manager`；
+5. 创建 `UserProfileManager(semantic_recall_instance=self.semantic_store, user_mem_store=user_mem_store, data_id_generator=data_id_generator, crypto_key=config.crypto_key)` 并赋值给 `self.user_profile_manager`；
+6. 创建 `VariableManager(self.kv_store, config.crypto_key)` 并赋值给 `self.variable_manager`；
+7. 创建 `WriteManager(managers={MemoryType.USER_PROFILE: user_profile_manager, MemoryType.VARIABLE: variable_manager}, user_mem_store=user_mem_store)` 并赋值给 `self.write_manager`；
+8. 创建 `SearchManager(managers, user_mem_store, config.crypto_key)` 并赋值给 `self.search_manager`；
+9. 创建 `Generator()` 并赋值给 `self.generator`；
+10. 根据 `config.default_model_cfg` 和 `config.default_model_client_cfg` 创建默认 LLM 实例，保存为 `self._base_llm = (model_name, Model(...))`。
+
+### async set_scope_config
 
 ```python
-create_mem_engine_instance(config: SysMemConfig) -> BaseMemoryEngine | None
+async def set_scope_config(
+    self,
+    scope_id: str,
+    memory_scope_config: MemoryScopeConfig,
+) -> bool
 ```
 
-根据系统记忆配置创建记忆引擎单例，依赖register_store函数注册存储对象。
-
-**参数：**
-
-* **config** (SysMemConfig)：记忆引擎系统配置。
-
-**返回：**
-**BaseMemoryEngine | None**，创建成功时返回记忆引擎单例，失败时返回None。
-
-**样例：**
-
-```python
->>> import asyncio
->>> import os
->>> from sqlalchemy.ext.asyncio import create_async_engine
->>> from openjiuwen.core.memory.config.config import SysMemConfig
->>> from openjiuwen.core.memory.embed_models.api import APIEmbedModel
->>> from openjiuwen.core.memory.engine.memory_engine import MemoryEngine
->>> from openjiuwen.core.memory.store.impl.dbm_kv_store import DbmKVStore
->>> from openjiuwen.core.memory.store.impl.default_db_store import DefaultDbStore
->>> from openjiuwen.core.memory.store.impl.milvus_semantic_store import MilvusSemanticStore
->>> 
->>> async def run():
-...     # 创建kv数据库
-...     dbm_test_dir = "test_dbm"
-...     os.makedirs(dbm_test_dir, exist_ok=True)
-...     dbm_kv_path = os.path.join(dbm_test_dir, "testdb")
-...     kv_store = DbmKVStore(dbm_kv_path)
-...     # 创建embedding模型
-...     embed_model = APIEmbedModel(
-...	        model_name=os.getenv("EMBED_MODEL_NAME"),
-...	        base_url=os.getenv("EMBED_API_BASE"),
-...	        api_key=os.getenv("EMBED_API_KEY"),
-...	        timeout=int(os.getenv("EMBED_TIMEOUT")),
-...	        max_retries=int(os.getenv("EMBED_MAX_RETRIES"))
-...	    )
-...     # 创建semantic数据库
-...     semantic_store = MilvusSemanticStore(
-...	        milvus_host=os.getenv("MILVUS_HOST"),
-...	        milvus_port=os.getenv("MILVUS_PORT"),
-...	        collection_name=os.getenv("MILVUS_COLLECTION_NAME"),
-...	        embedding_dims=os.getenv("MILVUS_MODEL_DIMENSION", 1024),
-...	        embed_model=embed_model,
-...	        token=os.getenv("MILVUS_TOKEN", None)
-...	    )
-...     # 创建mysql数据库
-...     db_user = os.getenv("DB_USER")
-...     db_password = os.getenv("DB_PASSWORD")
-...     db_host = os.getenv("DB_HOST")
-...     db_port = os.getenv("DB_PORT")
-...     db_name = os.getenv("DB_NAME")
-...     db_engine_instance = create_async_engine(
-...	    	url=f"mysql+aiomysql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}?charset=utf8mb4",
-...	    	pool_size=20,
-...	    	max_overflow=20
-...	    )
-...     db_store = DefaultDbStore(db_engine_instance)
-...     # kv_store等存储对象的定义参考store.md
-...     MemoryEngine.register_store(
-...	        kv_store=kv_store,
-...	        semantic_store=semantic_store,
-...	        db_store=db_store
-...	    )
-...     memory_engine = await MemoryEngine.create_mem_engine_instance(config=SysMemConfig())
-...     # 显式释放连接池，避免loop关闭时再清理，在所有操作后再执行
-...     await db_engine_instance.dispose()
->>> asyncio.run(run())
-返回根据系统记忆配置创建的记忆引擎单例
-```
-
-### classmethod get_mem_engine_instance
-
-```python
-get_mem_engine_instance(cls) -> BaseMemoryEngine | None
-```
-
-获取记忆引擎单例，该实例需要事先调用create_mem_engine_instance函数进行创建，创建后，可通过get_mem_engine_instance函数在任意位置获取该实例。
-
-**返回：**
-**BaseMemoryEngine**，记忆引擎单例，未创建时返回None。
-
-**样例：**
-
-```python
->>> import asyncio
->>> import os
->>> from sqlalchemy.ext.asyncio import create_async_engine
->>> from openjiuwen.core.memory.config.config import SysMemConfig
->>> from openjiuwen.core.memory.embed_models.api import APIEmbedModel
->>> from openjiuwen.core.memory.engine.memory_engine import MemoryEngine
->>> from openjiuwen.core.memory.store.impl.dbm_kv_store import DbmKVStore
->>> from openjiuwen.core.memory.store.impl.default_db_store import DefaultDbStore
->>> from openjiuwen.core.memory.store.impl.milvus_semantic_store import MilvusSemanticStore
->>> 
->>> async def run():
-...     # 创建kv数据库
-...     dbm_test_dir = "test_dbm"
-...     os.makedirs(dbm_test_dir, exist_ok=True)
-...     dbm_kv_path = os.path.join(dbm_test_dir, "testdb")
-...     kv_store = DbmKVStore(dbm_kv_path)
-...     # 创建embedding模型
-...     embed_model = APIEmbedModel(
-...	        model_name=os.getenv("EMBED_MODEL_NAME"),
-...	        base_url=os.getenv("EMBED_API_BASE"),
-...	        api_key=os.getenv("EMBED_API_KEY"),
-...	        timeout=int(os.getenv("EMBED_TIMEOUT")),
-...	        max_retries=int(os.getenv("EMBED_MAX_RETRIES"))
-...	    )
-...     # 创建semantic数据库
-...     semantic_store = MilvusSemanticStore(
-...	        milvus_host=os.getenv("MILVUS_HOST"),
-...	        milvus_port=os.getenv("MILVUS_PORT"),
-...	        collection_name=os.getenv("MILVUS_COLLECTION_NAME"),
-...	        embedding_dims=os.getenv("MILVUS_MODEL_DIMENSION", 1024),
-...	        embed_model=embed_model,
-...	        token=os.getenv("MILVUS_TOKEN", None)
-...	    )
-...     # 创建mysql数据库
-...     db_user = os.getenv("DB_USER")
-...     db_password = os.getenv("DB_PASSWORD")
-...     db_host = os.getenv("DB_HOST")
-...     db_port = os.getenv("DB_PORT")
-...     db_name = os.getenv("DB_NAME")
-...     db_engine_instance = create_async_engine(
-...	    	url=f"mysql+aiomysql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}?charset=utf8mb4",
-...	    	pool_size=20,
-...	    	max_overflow=20
-...	    )
-...     db_store = DefaultDbStore(db_engine_instance)
-...     # kv_store等存储对象的定义参考store.md
-...     MemoryEngine.register_store(
-...	        kv_store=kv_store,
-...	        semantic_store=semantic_store,
-...	        db_store=db_store
-...	    )
-...     # 只需调用一次create_mem_engine_instance方法，创建memory_engine实例后，通过get_mem_engine_instance获取实例
-...     await MemoryEngine.create_mem_engine_instance(config=SysMemConfig())
-...     memory_engine = MemoryEngine.get_mem_engine_instance()
-...     # 显式释放连接池，避免loop关闭时再清理，在所有操作后再执行
-...     await db_engine_instance.dispose()
->>> asyncio.run(run())
-返回获取的记忆引擎单例
-```
-
-### init_base_llm
-
-```python
-init_base_llm(llm_config: ModelConfig) -> bool
-```
-
-初始化或更新默认LLM客户端。
+为指定 `scope_id` 设置作用域级记忆配置，并持久化到 `kv_store`。
 
 **参数**：
 
-* **llm_config**(ModelConfig)：模型配置信息。默认值：无。
+- `scope_id: str`：作用域标识符，不能包含 `/`，长度不能超过 128 字符；若格式无效，返回 `False` 并记录错误日志。
+- `memory_scope_config: MemoryScopeConfig`：作用域配置，包含：
+  - `model_cfg: ModelRequestConfig | None`：该 scope 下使用的大模型请求配置；
+  - `model_client_cfg: ModelClientConfig | None`：该 scope 下使用的大模型客户端配置；
+  - `embedding_cfg: EmbeddingConfig | None`：该 scope 下使用的嵌入模型配置。
 
-**返回：**
-**bool**，初始化成功返回True，失败返回False。
+**行为**：
 
-**样例：**
+1. 校验 `scope_id` 格式（调用 `_validate_id`），无效则返回 `False`；
+2. 深拷贝 `memory_scope_config` 为 `encrypted_config`；
+3. 若 `encrypted_config.model_client_cfg.api_key` 存在，使用 `BaseMemoryManager.encrypt_memory_if_needed(key=self._sys_mem_config.crypto_key, plaintext=api_key)` 加密后覆盖；
+4. 若 `encrypted_config.embedding_cfg.api_key` 存在，同样加密后覆盖；
+5. 将 `encrypted_config` 存入内存缓存 `self._scope_config[scope_id]`；
+6. 将配置序列化为 JSON（`encrypted_config.model_dump_json(by_alias=True)`），写入 `kv_store`，key 为 `f"{self.SCOPE_CONFIG_KEY}/{scope_id}"`（即 `"memory_scope_config/{scope_id}"`）；
+7. 若 `scope_id` 在 `self._scope_embedding` 缓存中，删除该缓存项（因为配置变更可能导致嵌入模型需要重新创建）；
+8. 返回 `True`。
 
-```python
->>> import asyncio
->>> import os
->>> from sqlalchemy.ext.asyncio import create_async_engine
->>> from openjiuwen.core.component.common.configs.model_config import ModelConfig
->>> from openjiuwen.core.memory.config.config import SysMemConfig
->>> from openjiuwen.core.memory.embed_models.api import APIEmbedModel
->>> from openjiuwen.core.memory.engine.memory_engine import MemoryEngine
->>> from openjiuwen.core.memory.store.impl.dbm_kv_store import DbmKVStore
->>> from openjiuwen.core.memory.store.impl.default_db_store import DefaultDbStore
->>> from openjiuwen.core.memory.store.impl.milvus_semantic_store import MilvusSemanticStore
->>> from openjiuwen.core.utils.llm.base import BaseModelInfo
->>> 
->>> async def run():
-...     # llm相关环境变量和配置
-...     os.environ["LLM_SSL_VERIFY"] = "false"
-...     os.environ["SSRF_PROTECT_ENABLED"] = "false"
-...     # 创建kv数据库
-...     dbm_test_dir = "test_dbm"
-...     os.makedirs(dbm_test_dir, exist_ok=True)
-...     dbm_kv_path = os.path.join(dbm_test_dir, "testdb")
-...     kv_store = DbmKVStore(dbm_kv_path)
-...     # 创建embedding模型
-...     embed_model = APIEmbedModel(
-...	        model_name=os.getenv("EMBED_MODEL_NAME"),
-...	        base_url=os.getenv("EMBED_API_BASE"),
-...	        api_key=os.getenv("EMBED_API_KEY"),
-...	        timeout=int(os.getenv("EMBED_TIMEOUT")),
-...	        max_retries=int(os.getenv("EMBED_MAX_RETRIES"))
-...	    )
-...     # 创建semantic数据库
-...     semantic_store = MilvusSemanticStore(
-...	        milvus_host=os.getenv("MILVUS_HOST"),
-...	        milvus_port=os.getenv("MILVUS_PORT"),
-...	        collection_name=os.getenv("MILVUS_COLLECTION_NAME"),
-...	        embedding_dims=os.getenv("MILVUS_MODEL_DIMENSION", 1024),
-...	        embed_model=embed_model,
-...	        token=os.getenv("MILVUS_TOKEN", None)
-...	    )
-...     # 创建mysql数据库
-...     db_user = os.getenv("DB_USER")
-...     db_password = os.getenv("DB_PASSWORD")
-...     db_host = os.getenv("DB_HOST")
-...     db_port = os.getenv("DB_PORT")
-...     db_name = os.getenv("DB_NAME")
-...     db_engine_instance = create_async_engine(
-...	    	url=f"mysql+aiomysql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}?charset=utf8mb4",
-...	    	pool_size=20,
-...	    	max_overflow=20
-...	    )
-...     db_store = DefaultDbStore(db_engine_instance)
-...     # kv_store等存储对象的定义参考store.md
-...     MemoryEngine.register_store(
-...	        kv_store=kv_store,
-...	        semantic_store=semantic_store,
-...	        db_store=db_store
-...	    )
-...     # 只需调用一次create_mem_engine_instance方法，创建memory_engine实例后，通过get_mem_engine_instance获取实例
-...     await MemoryEngine.create_mem_engine_instance(config=SysMemConfig())
-...
-...     api_base = os.getenv("API_BASE", "your api base")
-...     api_key = os.getenv("API_KEY", "your api key")
-...     model_name = os.getenv("MODEL_NAME", "")
-...     model_provider = os.getenv("MODEL_PROVIDER", "")
-...     
-...     memory_engine = MemoryEngine.get_mem_engine_instance()
-...     # 输入模型配置信息
-...     llm_config = ModelConfig(
-...     	model_provider=model_provider,
-...     	model_info=BaseModelInfo(
-...     		model=model_name,
-...     		api_base=api_base,
-...     		api_key=api_key
-...      	)
-...      )
-...     # 调用init_base_llm方法
-...     result = memory_engine.init_base_llm(
-...     	llm_config=llm_config
-...     )
-...     print(result)
-...     # 显式释放连接池，避免loop关闭时再清理，在所有操作后再执行
-...     await db_engine_instance.dispose()
->>> asyncio.run(run())
-初始化成功返回True，失败返回False。
-```
-
-### set_group_config
+### async get_scope_config
 
 ```python
-set_group_config(group_id: str, config: MemoryConfig) -> bool
+async def get_scope_config(self, scope_id: str) -> MemoryScopeConfig | None
 ```
 
-注册或更新指定群组的记忆配置。
+从 `kv_store` 中读取指定 `scope_id` 的作用域配置，并解密 API key。
 
-**参数：**
+**参数**：
 
-* **group_id** (str)：群组唯一标识，默认值：无。
-* **config** (MemoryConfig)：群组级记忆设置（如窗口大小、话题画像等），默认值：无。
+- `scope_id: str`：作用域标识符。
 
-**返回：**
-**bool**，设置成功返回True，失败返回False。
+**返回**：
 
-**样例：**
+- `MemoryScopeConfig | None`：若配置存在，返回解密后的配置对象；若不存在或 `scope_id` 格式无效，返回 `None`。
+
+**行为**：
+
+1. 校验 `scope_id` 格式，无效则返回 `None`；
+2. 从 `kv_store` 读取 key `f"memory_scope_config/{scope_id}"` 的 JSON 字符串；
+3. 若不存在，返回 `None`；
+4. 使用 `MemoryScopeConfig.model_validate_json(config_json)` 解析为配置对象；
+5. 若 `model_client_cfg.api_key` 存在，使用 `BaseMemoryManager.decrypt_memory_if_needed(...)` 解密后覆盖；
+6. 若 `embedding_cfg.api_key` 存在，同样解密后覆盖；
+7. 返回解密后的配置对象。
+
+### async delete_scope_config
 
 ```python
->>> import asyncio
->>> import os
->>> from sqlalchemy.ext.asyncio import create_async_engine
->>> from openjiuwen.core.memory.config.config import MemoryConfig, SysMemConfig
->>> from openjiuwen.core.memory.embed_models.api import APIEmbedModel
->>> from openjiuwen.core.memory.engine.memory_engine import MemoryEngine
->>> from openjiuwen.core.memory.store.impl.dbm_kv_store import DbmKVStore
->>> from openjiuwen.core.memory.store.impl.default_db_store import DefaultDbStore
->>> from openjiuwen.core.memory.store.impl.milvus_semantic_store import MilvusSemanticStore
->>> 
->>> async def run():
-...     # 创建kv数据库
-...     dbm_test_dir = "test_dbm"
-...     os.makedirs(dbm_test_dir, exist_ok=True)
-...     dbm_kv_path = os.path.join(dbm_test_dir, "testdb")
-...     kv_store = DbmKVStore(dbm_kv_path)
-...     # 创建embedding模型
-...     embed_model = APIEmbedModel(
-...	        model_name=os.getenv("EMBED_MODEL_NAME"),
-...	        base_url=os.getenv("EMBED_API_BASE"),
-...	        api_key=os.getenv("EMBED_API_KEY"),
-...	        timeout=int(os.getenv("EMBED_TIMEOUT")),
-...	        max_retries=int(os.getenv("EMBED_MAX_RETRIES"))
-...	    )
-...     # 创建semantic数据库
-...     semantic_store = MilvusSemanticStore(
-...	        milvus_host=os.getenv("MILVUS_HOST"),
-...	        milvus_port=os.getenv("MILVUS_PORT"),
-...	        collection_name=os.getenv("MILVUS_COLLECTION_NAME"),
-...	        embedding_dims=os.getenv("MILVUS_MODEL_DIMENSION", 1024),
-...	        embed_model=embed_model,
-...	        token=os.getenv("MILVUS_TOKEN", None)
-...	    )
-...     # 创建mysql数据库
-...     db_user = os.getenv("DB_USER")
-...     db_password = os.getenv("DB_PASSWORD")
-...     db_host = os.getenv("DB_HOST")
-...     db_port = os.getenv("DB_PORT")
-...     db_name = os.getenv("DB_NAME")
-...     db_engine_instance = create_async_engine(
-...	    	url=f"mysql+aiomysql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}?charset=utf8mb4",
-...	    	pool_size=20,
-...	    	max_overflow=20
-...	    )
-...     db_store = DefaultDbStore(db_engine_instance)
-...     # kv_store等存储对象的定义参考store.md
-...     MemoryEngine.register_store(
-...	        kv_store=kv_store,
-...	        semantic_store=semantic_store,
-...	        db_store=db_store
-...	    )
-...     # 只需调用一次create_mem_engine_instance方法，创建memory_engine实例后，通过get_mem_engine_instance获取实例
-...     await MemoryEngine.create_mem_engine_instance(config=SysMemConfig())
-...     memory_engine = MemoryEngine.get_mem_engine_instance()
-...     # 输入群组唯一标识和群组级记忆设置
-...     group_id = "group456"
-...     config = MemoryConfig(
-...     	mem_variables={
-...     		"姓名":"用户姓名",
-...     		"职业":"用户职业",
-...     		"居住地":"用户居住地",
-...     		"爱好":"用户爱好"
-...     	},
-...     	enable_long_term_mem=True
-...     )
-...     # 调用set_group_config方法
-...     result = memory_engine.set_group_config(
-...     	group_id=group_id,
-...     	config=config
-...     )
-...     print(result)
-...     # 显式释放连接池，避免loop关闭时再清理，在所有操作后再执行
-...     await db_engine_instance.dispose()
->>> asyncio.run(run())
-注册或更新指定群组的记忆配置，设置成功返回True，输入非法返回False。
+async def delete_scope_config(self, scope_id: str) -> bool
 ```
 
-### set_group_llm
+删除指定 `scope_id` 的作用域配置（从 `kv_store` 和内存缓存中移除）。
+
+**参数**：
+
+- `scope_id: str`：作用域标识符。
+
+**返回**：
+
+- `bool`：删除成功返回 `True`，`scope_id` 格式无效或删除失败返回 `False`。
+
+**行为**：
+
+1. 校验 `scope_id` 格式，无效则返回 `False`；
+2. 从 `kv_store` 删除 key `f"memory_scope_config/{scope_id}"`；
+3. 从内存缓存 `self._scope_config` 中删除 `scope_id`（若存在）；
+4. 从嵌入模型缓存 `self._scope_embedding` 中删除 `scope_id`（若存在）；
+5. 记录调试日志，返回 `True`；若发生异常，记录错误日志并返回 `False`。
+
+### async delete_mem_by_scope
 
 ```python
-set_group_llm(group_id: str, model_name: str, llm: BaseModelClient) -> bool
+async def delete_mem_by_scope(self, scope_id: str) -> bool
 ```
 
-为指定群组分配LLM客户端，用于记忆生成。
+删除指定 `scope_id` 下的所有记忆数据（包括消息、用户画像、变量等）。
 
-**参数：**
+**参数**：
 
-* **group_id** (str)：群组唯一标识，默认值：无。
-* **model_name** (str)：模型名称，默认值：无。
-* **llm** (BaseModelClient)：LLM客户端实例，默认值：无。
+- `scope_id: str`：作用域标识符。
 
-**返回：**
-**bool**，分配成功返回True，失败返回False。
+**返回**：
 
-**样例：**
+- `bool`：删除成功返回 `True`，`scope_id` 格式无效返回 `False`。
+
+**行为**：
+
+1. 校验 `scope_id` 格式，无效则返回 `False`；
+2. 通过 `scope_user_mapping_manager.get_by_scope_id(scope_id)` 获取该 scope 下所有 `user_id` 列表；
+3. 对每个 `user_id`：
+   - 获取分布式锁 `DistributedLock(self.kv_store, f"user/{user_id}")`；
+   - 在锁内调用 `write_manager.delete_mem_by_user_id(scope_id=scope_id, user_id=user_id)` 删除该用户在该 scope 下的所有记忆；
+4. 调用 `scope_user_mapping_manager.delete_by_scope_id(scope_id=scope_id)` 删除 scope-user 映射关系；
+5. 记录调试日志，返回 `True`。
+
+### async add_messages
 
 ```python
->>> import asyncio
->>> import os
->>> from sqlalchemy.ext.asyncio import create_async_engine
->>> from openjiuwen.core.memory.config.config import SysMemConfig
->>> from openjiuwen.core.memory.embed_models.api import APIEmbedModel
->>> from openjiuwen.core.memory.engine.memory_engine import MemoryEngine
->>> from openjiuwen.core.memory.store.impl.dbm_kv_store import DbmKVStore
->>> from openjiuwen.core.memory.store.impl.default_db_store import DefaultDbStore
->>> from openjiuwen.core.memory.store.impl.milvus_semantic_store import MilvusSemanticStore
->>> from openjiuwen.core.utils.llm.model_utils.model_factory import ModelFactory
->>> 
->>> async def run():
-...     # llm相关环境变量和配置
-...     os.environ["LLM_SSL_VERIFY"] = "false"
-...     os.environ["SSRF_PROTECT_ENABLED"] = "false"
-...     # 创建kv数据库
-...     dbm_test_dir = "test_dbm"
-...     os.makedirs(dbm_test_dir, exist_ok=True)
-...     dbm_kv_path = os.path.join(dbm_test_dir, "testdb")
-...     kv_store = DbmKVStore(dbm_kv_path)
-...     # 创建embedding模型
-...     embed_model = APIEmbedModel(
-...	        model_name=os.getenv("EMBED_MODEL_NAME"),
-...	        base_url=os.getenv("EMBED_API_BASE"),
-...	        api_key=os.getenv("EMBED_API_KEY"),
-...	        timeout=int(os.getenv("EMBED_TIMEOUT")),
-...	        max_retries=int(os.getenv("EMBED_MAX_RETRIES"))
-...	    )
-...     # 创建semantic数据库
-...     semantic_store = MilvusSemanticStore(
-...	        milvus_host=os.getenv("MILVUS_HOST"),
-...	        milvus_port=os.getenv("MILVUS_PORT"),
-...	        collection_name=os.getenv("MILVUS_COLLECTION_NAME"),
-...	        embedding_dims=os.getenv("MILVUS_MODEL_DIMENSION", 1024),
-...	        embed_model=embed_model,
-...	        token=os.getenv("MILVUS_TOKEN", None)
-...	    )
-...     # 创建mysql数据库
-...     db_user = os.getenv("DB_USER")
-...     db_password = os.getenv("DB_PASSWORD")
-...     db_host = os.getenv("DB_HOST")
-...     db_port = os.getenv("DB_PORT")
-...     db_name = os.getenv("DB_NAME")
-...     db_engine_instance = create_async_engine(
-...	    	url=f"mysql+aiomysql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}?charset=utf8mb4",
-...	    	pool_size=20,
-...	    	max_overflow=20
-...	    )
-...     db_store = DefaultDbStore(db_engine_instance)
-...     # kv_store等存储对象的定义参考store.md
-...     MemoryEngine.register_store(
-...	        kv_store=kv_store,
-...	        semantic_store=semantic_store,
-...	        db_store=db_store
-...	    )
-...     # 只需调用一次create_mem_engine_instance方法，创建memory_engine实例后，通过get_mem_engine_instance获取实例
-...     await MemoryEngine.create_mem_engine_instance(config=SysMemConfig())
-...
-...     api_base = os.getenv("API_BASE", "your api base")
-...     api_key = os.getenv("API_KEY", "your api key")
-...     model_name = os.getenv("MODEL_NAME", "")
-...     model_provider = os.getenv("MODEL_PROVIDER", "")
-...     
-...     memory_engine = MemoryEngine.get_mem_engine_instance()
-...     
-...     # 输入群组唯一标识、模型名称以及LLM客户端实例
-...     group_id = "group456"
-...     llm = ModelFactory().get_model(
-...     	model_provider=model_provider,
-...     	api_base=api_base,
-...      	api_key=api_key
-...     )
-...     # 调用set_group_llm方法
-...     result = memory_engine.set_group_llm(
-...     	group_id=group_id,
-...     	model_name=model_name, 
-...     	llm=llm
-...     )
-...     print(result)
-...     # 显式释放连接池，避免loop关闭时再清理，在所有操作后再执行
-...     await db_engine_instance.dispose()
->>> asyncio.run(run())
-为指定群组分配用于记忆生成的LLM客户端，分配成功返回True，失败返回False。
+async def add_messages(
+    self,
+    messages: list[BaseMessage],
+    agent_config: AgentMemoryConfig,
+    *,
+    user_id: str = "__default__",
+    scope_id: str = "__default__",
+    session_id: str = "__default__",
+    timestamp: datetime | None = None,
+    gen_mem: bool = True,
+    gen_mem_with_history_msg_num: int = 5,
+) -> None
 ```
 
-### set_group_llm_config
+添加对话消息到记忆引擎，并根据 `agent_config` 生成记忆（用户画像、变量等）。
+
+**参数**：
+
+- `messages: list[BaseMessage]`：要添加的消息列表（通常包含用户消息和 AI 回复）。
+- `agent_config: AgentMemoryConfig`：Agent 记忆策略配置，包含：
+  - `mem_variables: list[Param]`：需要提取的变量记忆配置（变量名、描述、类型等）；
+  - `enable_long_term_mem: bool`：是否开启长期记忆生成（默认 `True`）。
+- `user_id: str`：用户标识符，默认 `"__default__"`。
+- `scope_id: str`：作用域标识符，默认 `"__default__"`；格式无效时直接返回，不抛异常。
+- `session_id: str`：会话标识符，默认 `"__default__"`。
+- `timestamp: datetime | None`：消息时间戳，若为 `None` 则使用当前 UTC 时间。
+- `gen_mem: bool`：是否生成记忆，默认 `True`；为 `False` 时仅保存消息，不触发记忆提取。
+- `gen_mem_with_history_msg_num: int`：生成记忆时参考的历史消息数量，默认 5。
+
+**行为**：
+
+1. 校验 `scope_id` 格式，无效则直接返回；
+2. 调用 `_get_scope_llm(scope_id)` 获取该 scope 的 LLM 实例（优先使用 scope 配置，否则使用全局默认配置）；
+3. 调用 `_set_semantic_store_embedding_model(scope_id)` 设置该 scope 的嵌入模型到 `semantic_store`；
+4. 获取用户级分布式锁 `DistributedLock(self.kv_store, f"user/{user_id}")`；
+5. 在锁内：
+   - 若 LLM 未初始化，记录错误日志并返回；
+   - 调用 `_get_history_messages(user_id, scope_id, session_id, history_window_size=gen_mem_with_history_msg_num)` 获取历史消息；
+   - 调用 `scope_user_mapping_manager.add(user_id=user_id, scope_id=scope_id)` 记录 scope-user 映射；
+   - 若 `timestamp` 为 `None`，使用 `datetime.now(timezone.utc)`；
+   - 遍历 `messages`，为每条消息调用 `message_manager.add(MessageAddRequest(...))` 保存到数据库，并记录最后一条消息的 `msg_id`；
+6. 若 `gen_mem=False`，直接返回；
+7. 调用 `_check_messages(messages)` 校验消息格式（必须包含至少一条用户消息，并截断超长消息）；
+8. 若校验失败，记录调试日志并返回；
+9. 调用 `generator.gen_all_memory(scope_id, user_id, messages, history_messages, session_id, config=agent_config, base_chat_model=llm, message_mem_id=msg_id)` 生成所有记忆单元（用户画像、变量等）；
+10. 调用 `write_manager.add_mem(mem_units=all_memory, llm=llm)` 写入记忆；若失败，抛出 `JiuWenBaseException`（`MEMORY_ADD_MEMORY_EXECUTION_ERROR`）。
+
+### async get_recent_messages
 
 ```python
-set_group_llm_config(group_id: str, llm_config: ModelConfig) -> bool
+async def get_recent_messages(
+    self,
+    user_id: str = "__default__",
+    scope_id: str = "__default__",
+    session_id: str = "__default__",
+    num: int = 10,
+) -> list[BaseMessage]
 ```
 
-为指定群组设置LLM客户端配置，用于记忆生成。
+获取指定用户/scope/会话的最近 N 条消息，按写入顺序返回。
 
-**参数：**
+**参数**：
 
-* **group_id** (str)：群组唯一标识，默认值：无。
-* **llm_config** (ModelConfig)：LLM客户端配置，默认值：无。
+- `user_id: str`：用户标识符，默认 `"__default__"`。
+- `scope_id: str`：作用域标识符，默认 `"__default__"`；格式无效时返回空列表。
+- `session_id: str`：会话标识符，默认 `"__default__"`。
+- `num: int`：要获取的消息数量，默认 10。
 
-**返回：**
-**bool**，分配成功返回True，失败返回False。
+**返回**：
 
-**样例：**
+- `list[BaseMessage]`：消息列表，按写入时间顺序排列；若 `scope_id` 格式无效或 `message_manager` 未初始化，返回空列表。
 
-```python
->>> import asyncio
->>> import os
->>> from sqlalchemy.ext.asyncio import create_async_engine
->>> from openjiuwen.core.component.common.configs.model_config import ModelConfig
->>> from openjiuwen.core.memory.config.config import SysMemConfig
->>> from openjiuwen.core.memory.embed_models.api import APIEmbedModel
->>> from openjiuwen.core.memory.engine.memory_engine import MemoryEngine
->>> from openjiuwen.core.memory.store.impl.dbm_kv_store import DbmKVStore
->>> from openjiuwen.core.memory.store.impl.default_db_store import DefaultDbStore
->>> from openjiuwen.core.memory.store.impl.milvus_semantic_store import MilvusSemanticStore
->>> from openjiuwen.core.utils.llm.base import BaseModelInfo
->>> 
->>> async def run():
-...     # llm相关环境变量和配置
-...     os.environ["LLM_SSL_VERIFY"] = "false"
-...     os.environ["SSRF_PROTECT_ENABLED"] = "false"
-...     # 创建kv数据库
-...     dbm_test_dir = "test_dbm"
-...     os.makedirs(dbm_test_dir, exist_ok=True)
-...     dbm_kv_path = os.path.join(dbm_test_dir, "testdb")
-...     kv_store = DbmKVStore(dbm_kv_path)
-...     # 创建embedding模型
-...     embed_model = APIEmbedModel(
-...	        model_name=os.getenv("EMBED_MODEL_NAME"),
-...	        base_url=os.getenv("EMBED_API_BASE"),
-...	        api_key=os.getenv("EMBED_API_KEY"),
-...	        timeout=int(os.getenv("EMBED_TIMEOUT")),
-...	        max_retries=int(os.getenv("EMBED_MAX_RETRIES"))
-...	    )
-...     # 创建semantic数据库
-...     semantic_store = MilvusSemanticStore(
-...	        milvus_host=os.getenv("MILVUS_HOST"),
-...	        milvus_port=os.getenv("MILVUS_PORT"),
-...	        collection_name=os.getenv("MILVUS_COLLECTION_NAME"),
-...	        embedding_dims=os.getenv("MILVUS_MODEL_DIMENSION", 1024),
-...	        embed_model=embed_model,
-...	        token=os.getenv("MILVUS_TOKEN", None)
-...	    )
-...     # 创建mysql数据库
-...     db_user = os.getenv("DB_USER")
-...     db_password = os.getenv("DB_PASSWORD")
-...     db_host = os.getenv("DB_HOST")
-...     db_port = os.getenv("DB_PORT")
-...     db_name = os.getenv("DB_NAME")
-...     db_engine_instance = create_async_engine(
-...	    	url=f"mysql+aiomysql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}?charset=utf8mb4",
-...	    	pool_size=20,
-...	    	max_overflow=20
-...	    )
-...     db_store = DefaultDbStore(db_engine_instance)
-...     # kv_store等存储对象的定义参考store.md
-...     MemoryEngine.register_store(
-...	        kv_store=kv_store,
-...	        semantic_store=semantic_store,
-...	        db_store=db_store
-...	    )
-...     # 只需调用一次create_mem_engine_instance方法，创建memory_engine实例后，通过get_mem_engine_instance获取实例
-...     await MemoryEngine.create_mem_engine_instance(config=SysMemConfig())
-...
-...     api_base = os.getenv("API_BASE", "your api base")
-...     api_key = os.getenv("API_KEY", "your api key")
-...     model_name = os.getenv("MODEL_NAME", "")
-...     model_provider = os.getenv("MODEL_PROVIDER", "")
-...     
-...     memory_engine = MemoryEngine.get_mem_engine_instance()
-...     # 输入群组唯一标识和LLM客户端配置
-...     group_id = "group456"
-...     llm_config = ModelConfig(
-...     	model_provider=model_provider,
-...     	model_info=BaseModelInfo(
-...      		model=model_name,
-...     		api_base=api_base,
-...     		api_key=api_key
-...     	)
-...     )
-...     # 调用set_group_llm_config方法
-...     result = memory_engine.set_group_llm_config(
-...     	group_id=group_id,
-...     	llm_config=llm_config
-...     )
-...     print(result)
-...     # 显式释放连接池，避免loop关闭时再清理，在所有操作后再执行
-...     await db_engine_instance.dispose()
->>> asyncio.run(run())
-为指定群组设置LLM客户端配置，用于记忆生成，分配成功返回True，失败返回False。
-```
+**行为**：
 
-### async add_conversation_messages
-
-```python
-add_conversation_messages(user_id: str, group_id: str, messages: list[BaseMessage], timestamp: datetime | None = None, session_id: str | None = None) -> str | None
-```
-
-接收一条或多条对话消息并触发记忆生成。
-引擎将依次执行以下动作：
-1. 存储原始消息到历史。
-2. 根据配置提取或者更新用户变量和用户画像。
-3. 返回最后一条消息的记忆ID。
-
-**参数：**
-
-* **user_id** (str)：用户唯一标识，默认值：无。
-* **group_id** (str)：群组唯一标识，默认值：无。
-* **messages** (list[BaseMessage])：非空消息列表，包含一至多条对话消息，默认值：无。
-* **timestamp** (datetime | None)：消息时间戳，缺省取当前时间，默认值：无。
-* **session_id** (str | None)：会话分组键，缺省则为全局消息，默认值：无。
-
-**返回：**
-**str | None**，最后一条添加的消息ID，失败（如空消息）返回"-1"。
-
-**样例：**
-
-```python
->>> import asyncio
->>> import datetime
->>> import os
->>> from sqlalchemy.ext.asyncio import create_async_engine
->>> from openjiuwen.core.component.common.configs.model_config import ModelConfig
->>> from openjiuwen.core.memory.config.config import MemoryConfig, SysMemConfig
->>> from openjiuwen.core.memory.embed_models.api import APIEmbedModel
->>> from openjiuwen.core.memory.engine.memory_engine import MemoryEngine
->>> from openjiuwen.core.memory.store.impl.dbm_kv_store import DbmKVStore
->>> from openjiuwen.core.memory.store.impl.default_db_store import DefaultDbStore
->>> from openjiuwen.core.memory.store.impl.milvus_semantic_store import MilvusSemanticStore
->>> from openjiuwen.core.utils.llm.base import BaseModelInfo
->>> from openjiuwen.core.utils.llm.messages import BaseMessage
->>> 
->>> async def run():
-...     # llm相关环境变量和配置
-...     os.environ["LLM_SSL_VERIFY"] = "false"
-...     os.environ["SSRF_PROTECT_ENABLED"] = "false"
-...     # 创建kv数据库
-...     dbm_test_dir = "test_dbm"
-...     os.makedirs(dbm_test_dir, exist_ok=True)
-...     dbm_kv_path = os.path.join(dbm_test_dir, "testdb")
-...     kv_store = DbmKVStore(dbm_kv_path)
-...     # 创建embedding模型
-...     embed_model = APIEmbedModel(
-...	        model_name=os.getenv("EMBED_MODEL_NAME"),
-...	        base_url=os.getenv("EMBED_API_BASE"),
-...	        api_key=os.getenv("EMBED_API_KEY"),
-...	        timeout=int(os.getenv("EMBED_TIMEOUT")),
-...	        max_retries=int(os.getenv("EMBED_MAX_RETRIES"))
-...	    )
-...     os.environ["EMBEDDING_SSL_VERIFY"] = "false"
-...     os.environ["EMBEDDING_SSL_CERT"] = "false"
-...     # 创建semantic数据库
-...     semantic_store = MilvusSemanticStore(
-...	        milvus_host=os.getenv("MILVUS_HOST"),
-...	        milvus_port=os.getenv("MILVUS_PORT"),
-...	        collection_name=os.getenv("MILVUS_COLLECTION_NAME"),
-...	        embedding_dims=os.getenv("MILVUS_MODEL_DIMENSION", 1024),
-...	        embed_model=embed_model,
-...	        token=os.getenv("MILVUS_TOKEN", None)
-...	    )
-...     # 创建mysql数据库
-...     db_user = os.getenv("DB_USER")
-...     db_password = os.getenv("DB_PASSWORD")
-...     db_host = os.getenv("DB_HOST")
-...     db_port = os.getenv("DB_PORT")
-...     db_name = os.getenv("DB_NAME")
-...     db_engine_instance = create_async_engine(
-...	    	url=f"mysql+aiomysql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}?charset=utf8mb4",
-...	    	pool_size=20,
-...	    	max_overflow=20
-...	    )
-...     db_store = DefaultDbStore(db_engine_instance)
-...     # kv_store等存储对象的定义参考store.md
-...     MemoryEngine.register_store(
-...	        kv_store=kv_store,
-...	        semantic_store=semantic_store,
-...	        db_store=db_store
-...	    )
-...     # 只需调用一次create_mem_engine_instance方法，创建memory_engine实例后，通过get_mem_engine_instance获取实例
-...     await MemoryEngine.create_mem_engine_instance(config=SysMemConfig())
-...
-...     api_base = os.getenv("API_BASE", "your api base")
-...     api_key = os.getenv("API_KEY", "your api key")
-...     model_name = os.getenv("MODEL_NAME", "")
-...     model_provider = os.getenv("MODEL_PROVIDER", "")
-...     
-...     memory_engine = MemoryEngine.get_mem_engine_instance()
-...     # 输入模型配置信息
-...     llm_config = ModelConfig(
-...     	model_provider=model_provider,
-...     	model_info=BaseModelInfo(
-...     		model=model_name,
-...     		api_base=api_base,
-...     		api_key=api_key
-...      	)
-...     )
-...     # 调用init_base_llm方法
-...     result = memory_engine.init_base_llm(
-...     	llm_config=llm_config
-...     )
-...     # 输入群组唯一标识和群组级记忆设置
-...     group_id = "group456"
-...     config = MemoryConfig(
-...     	mem_variables={
-...     		"姓名":"用户姓名",
-...     		"职业":"用户职业",
-...     		"居住地":"用户居住地",
-...     		"爱好":"用户爱好"
-...     	},
-...     	enable_long_term_mem=True
-...     )
-...     # 调用set_group_config方法
-...     result = memory_engine.set_group_config(
-...     	group_id=group_id,
-...     	config=config
-...     )
-...     # 输入用户唯一标识、群组唯一标识、非空消息列表、消息时间戳和会话分组键
-...     user_id = "user123"
-...     messages = [BaseMessage(role="user",
-...     					    content="大家好，我是张明，现居上海")]	
-...     timestamp = datetime.datetime.now()
-...     session_id = "session789"
-...     # 调用add_conversation_messages方法
-...     msg_id = await memory_engine.add_conversation_messages(
-...     	user_id=user_id,
-...     	group_id=group_id,
-...     	messages=messages,
-...     	timestamp=timestamp,
-...     	session_id=session_id,
-...     )
-...     print(msg_id)
-...     # 显式释放连接池，避免loop关闭时再清理，在所有操作后再执行
-...     await db_engine_instance.dispose()
-...     await embed_model.close()
->>> asyncio.run(run())
-输出最后一条添加的消息ID，失败（如空消息）返回"-1"。
-```
+1. 校验 `scope_id` 格式，无效则返回空列表；
+2. 调用 `message_manager.get(user_id, scope_id, session_id, message_len=num)` 获取最近 `num` 条消息（返回 `list[Tuple[BaseMessage, datetime]]`）；
+3. 提取消息部分（忽略时间戳），返回 `[msg for msg, _ in recent_messages_tuple]`。
 
 ### async get_message_by_id
 
 ```python
-get_message_by_id(msg_id: str) -> Tuple[BaseMessage, datetime] | None
+async def get_message_by_id(self, msg_id: str) -> Tuple[BaseMessage, datetime] | None
 ```
 
-根据消息ID获取单条消息及其时间戳。
+根据消息 id 获取单条消息及其创建时间戳。
 
-**参数：**
+**参数**：
 
-* **msg_id** (str)：消息唯一标识。
+- `msg_id: str`：消息唯一标识符。
 
-**返回：**
-**Tuple[BaseMessage, datetime]**，消息对象与时间戳，未找到时返回None。
+**返回**：
 
-**样例：**
-
-```python
->>> import asyncio
->>> import os
->>> from sqlalchemy.ext.asyncio import create_async_engine
->>> from openjiuwen.core.memory.config.config import SysMemConfig
->>> from openjiuwen.core.memory.embed_models.api import APIEmbedModel
->>> from openjiuwen.core.memory.engine.memory_engine import MemoryEngine
->>> from openjiuwen.core.memory.store.impl.dbm_kv_store import DbmKVStore
->>> from openjiuwen.core.memory.store.impl.default_db_store import DefaultDbStore
->>> from openjiuwen.core.memory.store.impl.milvus_semantic_store import MilvusSemanticStore
->>> 
->>> async def run():
-...     # 创建kv数据库
-...     dbm_test_dir = "test_dbm"
-...     os.makedirs(dbm_test_dir, exist_ok=True)
-...     dbm_kv_path = os.path.join(dbm_test_dir, "testdb")
-...     kv_store = DbmKVStore(dbm_kv_path)
-...     # 创建embedding模型
-...     embed_model = APIEmbedModel(
-...	        model_name=os.getenv("EMBED_MODEL_NAME"),
-...	        base_url=os.getenv("EMBED_API_BASE"),
-...	        api_key=os.getenv("EMBED_API_KEY"),
-...	        timeout=int(os.getenv("EMBED_TIMEOUT")),
-...	        max_retries=int(os.getenv("EMBED_MAX_RETRIES"))
-...	    )
-...     # 创建semantic数据库
-...     semantic_store = MilvusSemanticStore(
-...	        milvus_host=os.getenv("MILVUS_HOST"),
-...	        milvus_port=os.getenv("MILVUS_PORT"),
-...	        collection_name=os.getenv("MILVUS_COLLECTION_NAME"),
-...	        embedding_dims=os.getenv("MILVUS_MODEL_DIMENSION", 1024),
-...	        embed_model=embed_model,
-...	        token=os.getenv("MILVUS_TOKEN", None)
-...	    )
-...     # 创建mysql数据库
-...     db_user = os.getenv("DB_USER")
-...     db_password = os.getenv("DB_PASSWORD")
-...     db_host = os.getenv("DB_HOST")
-...     db_port = os.getenv("DB_PORT")
-...     db_name = os.getenv("DB_NAME")
-...     db_engine_instance = create_async_engine(
-...	    	url=f"mysql+aiomysql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}?charset=utf8mb4",
-...	    	pool_size=20,
-...	    	max_overflow=20
-...	    )
-...     db_store = DefaultDbStore(db_engine_instance)
-...     # kv_store等存储对象的定义参考store.md
-...     MemoryEngine.register_store(
-...	        kv_store=kv_store,
-...	        semantic_store=semantic_store,
-...	        db_store=db_store
-...	    )
-...     # 只需调用一次create_mem_engine_instance方法，创建memory_engine实例后，通过get_mem_engine_instance获取实例
-...     await MemoryEngine.create_mem_engine_instance(config=SysMemConfig())
-...     memory_engine = MemoryEngine.get_mem_engine_instance()
-...     # 输入最后一条添加的消息ID
-...     msg_id = "test_message_id"
-...    
-...     # 调用get_message_by_id方法
-...     message_tuple = await memory_engine.get_message_by_id(
-...    		msg_id=msg_id
-...    	)
-...     print(message_tuple)
-...     # 显式释放连接池，避免loop关闭时再清理，在所有操作后再执行
-...     await db_engine_instance.dispose()
->>> asyncio.run(run())
-输出消息对象与时间戳。
-```
+- `Tuple[BaseMessage, datetime] | None`：若消息存在，返回 `(消息对象, 创建时间)`；若 `message_manager` 未初始化或消息不存在，返回 `None`。
 
 ### async delete_mem_by_id
 
 ```python
-delete_mem_by_id(user_id: str, group_id: str, mem_id: str) -> bool
+async def delete_mem_by_id(
+    self,
+    mem_id: str,
+    user_id: str = "__default__",
+    scope_id: str = "__default__",
+) -> None
 ```
 
-按ID删除一条记忆（消息、变量或画像片段）。
+删除指定 id 的记忆条目（用户画像或变量）。
 
-**参数：**
+**参数**：
 
-* **user_id** (str)：用户标识，默认值：无。
-* **group_id** (str)：群组标识，默认值：无。
-* **mem_id** (str)：记忆唯一标识，默认值：无。
+- `mem_id: str`：记忆唯一标识符。
+- `user_id: str`：用户标识符，默认 `"__default__"`。
+- `scope_id: str`：作用域标识符，默认 `"__default__"`；格式无效时直接返回。
 
-**返回：**
-**bool**，已尝试/成功删除返回True（实现可决定是否检查存在性）。
+**行为**：
 
-**样例：**
-
-```python
->>> import asyncio
->>> import os
->>> from sqlalchemy.ext.asyncio import create_async_engine
->>> from openjiuwen.core.memory.config.config import SysMemConfig
->>> from openjiuwen.core.memory.embed_models.api import APIEmbedModel
->>> from openjiuwen.core.memory.engine.memory_engine import MemoryEngine
->>> from openjiuwen.core.memory.store.impl.dbm_kv_store import DbmKVStore
->>> from openjiuwen.core.memory.store.impl.default_db_store import DefaultDbStore
->>> from openjiuwen.core.memory.store.impl.milvus_semantic_store import MilvusSemanticStore
->>> 
->>> async def run():
-...     # 创建kv数据库
-...     dbm_test_dir = "test_dbm"
-...     os.makedirs(dbm_test_dir, exist_ok=True)
-...     dbm_kv_path = os.path.join(dbm_test_dir, "testdb")
-...     kv_store = DbmKVStore(dbm_kv_path)
-...     # 创建embedding模型
-...     embed_model = APIEmbedModel(
-...	        model_name=os.getenv("EMBED_MODEL_NAME"),
-...	        base_url=os.getenv("EMBED_API_BASE"),
-...	        api_key=os.getenv("EMBED_API_KEY"),
-...	        timeout=int(os.getenv("EMBED_TIMEOUT")),
-...	        max_retries=int(os.getenv("EMBED_MAX_RETRIES"))
-...	    )
-...     # 创建semantic数据库
-...     semantic_store = MilvusSemanticStore(
-...	        milvus_host=os.getenv("MILVUS_HOST"),
-...	        milvus_port=os.getenv("MILVUS_PORT"),
-...	        collection_name=os.getenv("MILVUS_COLLECTION_NAME"),
-...	        embedding_dims=os.getenv("MILVUS_MODEL_DIMENSION", 1024),
-...	        embed_model=embed_model,
-...	        token=os.getenv("MILVUS_TOKEN", None)
-...	    )
-...     # 创建mysql数据库
-...     db_user = os.getenv("DB_USER")
-...     db_password = os.getenv("DB_PASSWORD")
-...     db_host = os.getenv("DB_HOST")
-...     db_port = os.getenv("DB_PORT")
-...     db_name = os.getenv("DB_NAME")
-...     db_engine_instance = create_async_engine(
-...	    	url=f"mysql+aiomysql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}?charset=utf8mb4",
-...	    	pool_size=20,
-...	    	max_overflow=20
-...	    )
-...     db_store = DefaultDbStore(db_engine_instance)
-...     # kv_store等存储对象的定义参考store.md
-...     MemoryEngine.register_store(
-...	        kv_store=kv_store,
-...	        semantic_store=semantic_store,
-...	        db_store=db_store
-...	    )
-...     # 只需调用一次create_mem_engine_instance方法，创建memory_engine实例后，通过get_mem_engine_instance获取实例
-...     await MemoryEngine.create_mem_engine_instance(config=SysMemConfig()) 
-...     memory_engine = MemoryEngine.get_mem_engine_instance()
-...     # 输入用户标识、群组标识和记忆唯一标识
-...     user_id = "user123"
-...     group_id = "group456"
-...     mem_id = "mem789"
-...     # 调用delete_mem_by_id方法
-...     result = await memory_engine.delete_mem_by_id(
-...    		user_id=user_id,
-...    		group_id=group_id,
-...    		mem_id=mem_id
-...    	)
-...     print(result)
-...     # 显式释放连接池，避免loop关闭时再清理，在所有操作后再执行
-...     await db_engine_instance.dispose()
->>> asyncio.run(run())
-已尝试/成功删除一条记忆则返回True，失败返回False。
-```
+1. 校验 `scope_id` 格式，无效则返回；
+2. 调用 `_set_semantic_store_embedding_model(scope_id)` 设置嵌入模型；
+3. 获取用户级分布式锁；
+4. 在锁内：若 `write_manager` 未初始化，抛出 `JiuWenBaseException`（`MEMORY_DELETE_MEMORY_EXECUTION_ERROR`）；否则调用 `write_manager.delete_mem_by_id(user_id, scope_id, mem_id)` 删除。
 
 ### async delete_mem_by_user_id
 
 ```python
-delete_mem_by_user_id(user_id: str, group_id: str) -> bool
+async def delete_mem_by_user_id(
+    self,
+    user_id: str = "__default__",
+    scope_id: str = "__default__",
+) -> None
 ```
 
-删除某用户在指定群组内的全部记忆（消息、变量、画像）。
+删除指定用户在某 scope 下的所有类型记忆（用户画像、变量等）。
 
-**参数：**
+**参数**：
 
-* **user_id** (str)：用户标识，默认值：无。
-* **group_id** (str)：群组标识，默认值：无。
+- `user_id: str`：用户标识符，默认 `"__default__"`。
+- `scope_id: str`：作用域标识符，默认 `"__default__"`；格式无效时直接返回。
 
-**返回：**
-**bool**，删除成功返回True。
+**行为**：
 
-**样例：**
-
-```python
->>> import asyncio
->>> import os
->>> from sqlalchemy.ext.asyncio import create_async_engine
->>> from openjiuwen.core.memory.config.config import SysMemConfig
->>> from openjiuwen.core.memory.embed_models.api import APIEmbedModel
->>> from openjiuwen.core.memory.engine.memory_engine import MemoryEngine
->>> from openjiuwen.core.memory.store.impl.dbm_kv_store import DbmKVStore
->>> from openjiuwen.core.memory.store.impl.default_db_store import DefaultDbStore
->>> from openjiuwen.core.memory.store.impl.milvus_semantic_store import MilvusSemanticStore
->>> 
->>> async def run():
-...     # 创建kv数据库
-...     dbm_test_dir = "test_dbm"
-...     os.makedirs(dbm_test_dir, exist_ok=True)
-...     dbm_kv_path = os.path.join(dbm_test_dir, "testdb")
-...     kv_store = DbmKVStore(dbm_kv_path)
-...     # 创建embedding模型
-...     embed_model = APIEmbedModel(
-...	        model_name=os.getenv("EMBED_MODEL_NAME"),
-...	        base_url=os.getenv("EMBED_API_BASE"),
-...	        api_key=os.getenv("EMBED_API_KEY"),
-...	        timeout=int(os.getenv("EMBED_TIMEOUT")),
-...	        max_retries=int(os.getenv("EMBED_MAX_RETRIES"))
-...	    )
-...     # 创建semantic数据库
-...     semantic_store = MilvusSemanticStore(
-...	        milvus_host=os.getenv("MILVUS_HOST"),
-...	        milvus_port=os.getenv("MILVUS_PORT"),
-...	        collection_name=os.getenv("MILVUS_COLLECTION_NAME"),
-...	        embedding_dims=os.getenv("MILVUS_MODEL_DIMENSION", 1024),
-...	        embed_model=embed_model,
-...	        token=os.getenv("MILVUS_TOKEN", None)
-...	    )
-...     # 创建mysql数据库
-...     db_user = os.getenv("DB_USER")
-...     db_password = os.getenv("DB_PASSWORD")
-...     db_host = os.getenv("DB_HOST")
-...     db_port = os.getenv("DB_PORT")
-...     db_name = os.getenv("DB_NAME")
-...     db_engine_instance = create_async_engine(
-...	    	url=f"mysql+aiomysql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}?charset=utf8mb4",
-...	    	pool_size=20,
-...	    	max_overflow=20
-...	    )
-...     db_store = DefaultDbStore(db_engine_instance)
-...     # kv_store等存储对象的定义参考store.md
-...     MemoryEngine.register_store(
-...	        kv_store=kv_store,
-...	        semantic_store=semantic_store,
-...	        db_store=db_store
-...	    )
-...     # 只需调用一次create_mem_engine_instance方法，创建memory_engine实例后，通过get_mem_engine_instance获取实例
-...     await MemoryEngine.create_mem_engine_instance(config=SysMemConfig()) 
-...     memory_engine = MemoryEngine.get_mem_engine_instance()
-...     # 输入用户标识、群组标识
-...     user_id = "user123"
-...     group_id = "group456"
-...     # 调用delete_mem_by_user_id方法
-...     result = await memory_engine.delete_mem_by_user_id(
-...     	user_id=user_id,
-...      	group_id=group_id
-...     )
-...     print(result)
-...     # 显式释放连接池，避免loop关闭时再清理，在所有操作后再执行
-...     await db_engine_instance.dispose()
->>> asyncio.run(run())
-删除成功返回True，失败返回False。
-```
+1. 校验 `scope_id` 格式，无效则返回；
+2. 设置嵌入模型；
+3. 获取用户级分布式锁；
+4. 在锁内：若 `write_manager` 未初始化，抛出异常；否则调用 `write_manager.delete_mem_by_user_id(user_id, scope_id)` 删除该用户在该 scope 下的所有记忆。
 
 ### async update_mem_by_id
 
 ```python
-update_mem_by_id(user_id: str, group_id: str, mem_id: str, memory: str) -> bool
+async def update_mem_by_id(
+    self,
+    mem_id: str,
+    memory: str,
+    user_id: str = "__default__",
+    scope_id: str = "__default__",
+) -> None
 ```
 
-更新指定记忆条目的内容。
+更新指定 id 的记忆内容。
 
-**参数：**
+**参数**：
 
-* **user_id** (str)：用户标识，默认值：无。
-* **group_id** (str)：群组标识，默认值：无。
-* **mem_id** (str)：记忆标识，默认值：无。
-* **memory** (str)：新的字符串内容，默认值：无。
+- `mem_id: str`：记忆唯一标识符。
+- `memory: str`：新的记忆内容。
+- `user_id: str`：用户标识符，默认 `"__default__"`。
+- `scope_id: str`：作用域标识符，默认 `"__default__"`；格式无效时直接返回。
 
-**返回：**
-**bool**，更新成功返回True。
+**行为**：
 
-**样例：**
+1. 校验 `scope_id` 格式，无效则返回；
+2. 设置嵌入模型；
+3. 获取用户级分布式锁；
+4. 在锁内：若 `write_manager` 未初始化，抛出 `JiuWenBaseException`（`MEMORY_UPDATE_MEMORY_EXECUTION_ERROR`）；否则调用 `write_manager.update_mem_by_id(user_id, scope_id, mem_id, memory)` 更新。
+
+### async get_variables
 
 ```python
->>> import asyncio
->>> import os
->>> from sqlalchemy.ext.asyncio import create_async_engine
->>> from openjiuwen.core.memory.config.config import SysMemConfig
->>> from openjiuwen.core.memory.embed_models.api import APIEmbedModel
->>> from openjiuwen.core.memory.engine.memory_engine import MemoryEngine
->>> from openjiuwen.core.memory.store.impl.dbm_kv_store import DbmKVStore
->>> from openjiuwen.core.memory.store.impl.default_db_store import DefaultDbStore
->>> from openjiuwen.core.memory.store.impl.milvus_semantic_store import MilvusSemanticStore
->>> 
->>> async def run():
-...     # 创建kv数据库
-...     dbm_test_dir = "test_dbm"
-...     os.makedirs(dbm_test_dir, exist_ok=True)
-...     dbm_kv_path = os.path.join(dbm_test_dir, "testdb")
-...     kv_store = DbmKVStore(dbm_kv_path)
-...     # 创建embedding模型
-...     embed_model = APIEmbedModel(
-...	        model_name=os.getenv("EMBED_MODEL_NAME"),
-...	        base_url=os.getenv("EMBED_API_BASE"),
-...	        api_key=os.getenv("EMBED_API_KEY"),
-...	        timeout=int(os.getenv("EMBED_TIMEOUT")),
-...	        max_retries=int(os.getenv("EMBED_MAX_RETRIES"))
-...	    )
-...     # 创建semantic数据库
-...     semantic_store = MilvusSemanticStore(
-...	        milvus_host=os.getenv("MILVUS_HOST"),
-...	        milvus_port=os.getenv("MILVUS_PORT"),
-...	        collection_name=os.getenv("MILVUS_COLLECTION_NAME"),
-...	        embedding_dims=os.getenv("MILVUS_MODEL_DIMENSION", 1024),
-...	        embed_model=embed_model,
-...	        token=os.getenv("MILVUS_TOKEN", None)
-...	    )
-...     # 创建mysql数据库
-...     db_user = os.getenv("DB_USER")
-...     db_password = os.getenv("DB_PASSWORD")
-...     db_host = os.getenv("DB_HOST")
-...     db_port = os.getenv("DB_PORT")
-...     db_name = os.getenv("DB_NAME")
-...     db_engine_instance = create_async_engine(
-...	    	url=f"mysql+aiomysql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}?charset=utf8mb4",
-...	    	pool_size=20,
-...	    	max_overflow=20
-...	    )
-...     db_store = DefaultDbStore(db_engine_instance)
-...     # kv_store等存储对象的定义参考store.md
-...     MemoryEngine.register_store(
-...	        kv_store=kv_store,
-...	        semantic_store=semantic_store,
-...	        db_store=db_store
-...	    )
-...     # 只需调用一次create_mem_engine_instance方法，创建memory_engine实例后，通过get_mem_engine_instance获取实例
-...     await MemoryEngine.create_mem_engine_instance(config=SysMemConfig())
-...     memory_engine = MemoryEngine.get_mem_engine_instance()
-...     # 输入用户标识、群组标识、记忆标识以及新的字符串内容
-...     user_id = "user123"
-...     group_id = "group456"
-...     mem_id = "mem789"
-...     memory = "content"
-...     # 调用update_mem_by_id方法
-...     result = await memory_engine.update_mem_by_id(
-...     	user_id=user_id,
-...     	group_id=group_id,
-...     	mem_id=mem_id,
-...     	memory=memory
-...     )
-...     print(result)
-...     # 显式释放连接池，避免loop关闭时再清理，在所有操作后再执行
-...     await db_engine_instance.dispose()
->>> asyncio.run(run())
-更新指定记忆条目的内容，更新成功返回True，失败返回False。
+async def get_variables(
+    self,
+    names: list[str] | str | None = None,
+    user_id: str = "__default__",
+    scope_id: str = "__default__",
+) -> dict[str, str]
 ```
 
-### async get_user_variable
+获取用户变量（一个或多个）。
 
-```python
-get_user_variable(user_id: str, group_id: str, name: str) -> str
-```
+**参数**：
 
-获取用户自定义变量的值。
+- `names: list[str] | str | None`：
+  - 若为 `None`：返回该用户在该 scope 下的所有变量；
+  - 若为 `str`：返回单个变量（`{name: value}`）；
+  - 若为 `list[str]`：返回多个变量（`{name1: value1, name2: value2, ...}`）。
+- `user_id: str`：用户标识符，默认 `"__default__"`。
+- `scope_id: str`：作用域标识符，默认 `"__default__"`；格式无效时返回空字典。
 
-**参数：**
+**返回**：
 
-* **user_id** (str)：用户标识，默认值：无。
-* **group_id** (str)：群组标识，默认值：无。
-* **name** (str)：变量名，默认值：无。
+- `dict[str, str]`：变量名到变量值的映射；若 `scope_id` 格式无效或 `search_manager` 未初始化，返回空字典或抛出异常。
 
-**返回：**
-**str**，变量当前值。
+**行为**：
 
-**样例：**
-
-```python
->>> import asyncio
->>> import os
->>> from sqlalchemy.ext.asyncio import create_async_engine
->>> from openjiuwen.core.memory.config.config import SysMemConfig
->>> from openjiuwen.core.memory.embed_models.api import APIEmbedModel
->>> from openjiuwen.core.memory.engine.memory_engine import MemoryEngine
->>> from openjiuwen.core.memory.store.impl.dbm_kv_store import DbmKVStore
->>> from openjiuwen.core.memory.store.impl.default_db_store import DefaultDbStore
->>> from openjiuwen.core.memory.store.impl.milvus_semantic_store import MilvusSemanticStore
->>> 
->>> async def run():
-...     # 创建kv数据库
-...     dbm_test_dir = "test_dbm"
-...     os.makedirs(dbm_test_dir, exist_ok=True)
-...     dbm_kv_path = os.path.join(dbm_test_dir, "testdb")
-...     kv_store = DbmKVStore(dbm_kv_path)
-...     # 创建embedding模型
-...     embed_model = APIEmbedModel(
-...	        model_name=os.getenv("EMBED_MODEL_NAME"),
-...	        base_url=os.getenv("EMBED_API_BASE"),
-...	        api_key=os.getenv("EMBED_API_KEY"),
-...	        timeout=int(os.getenv("EMBED_TIMEOUT")),
-...	        max_retries=int(os.getenv("EMBED_MAX_RETRIES"))
-...	    )
-...     # 创建semantic数据库
-...     semantic_store = MilvusSemanticStore(
-...	        milvus_host=os.getenv("MILVUS_HOST"),
-...	        milvus_port=os.getenv("MILVUS_PORT"),
-...	        collection_name=os.getenv("MILVUS_COLLECTION_NAME"),
-...	        embedding_dims=os.getenv("MILVUS_MODEL_DIMENSION", 1024),
-...	        embed_model=embed_model,
-...	        token=os.getenv("MILVUS_TOKEN", None)
-...	    )
-...     # 创建mysql数据库
-...     db_user = os.getenv("DB_USER")
-...     db_password = os.getenv("DB_PASSWORD")
-...     db_host = os.getenv("DB_HOST")
-...     db_port = os.getenv("DB_PORT")
-...     db_name = os.getenv("DB_NAME")
-...     db_engine_instance = create_async_engine(
-...	    	url=f"mysql+aiomysql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}?charset=utf8mb4",
-...	    	pool_size=20,
-...	    	max_overflow=20
-...	    )
-...     db_store = DefaultDbStore(db_engine_instance)
-...     # kv_store等存储对象的定义参考store.md
-...     MemoryEngine.register_store(
-...	        kv_store=kv_store,
-...	        semantic_store=semantic_store,
-...	        db_store=db_store
-...	    )
-...     # 只需调用一次create_mem_engine_instance方法，创建memory_engine实例后，通过get_mem_engine_instance获取实例
-...     await MemoryEngine.create_mem_engine_instance(config=SysMemConfig())
-...     memory_engine = MemoryEngine.get_mem_engine_instance()
-...     # 输入用户标识、群组标识以及变量名
-...     user_id = "user123"
-...     group_id = "group456"
-...     name = "var_name"
-...     # 调用get_user_variable方法
-...     user_variable = await memory_engine.get_user_variable(
-...    		user_id=user_id,
-...    		group_id=group_id,
-...    		name=name
-...    	)
-...     print(user_variable)
-...     # 显式释放连接池，避免loop关闭时再清理，在所有操作后再执行
-...     await db_engine_instance.dispose()
->>> asyncio.run(run())
-输出用户自定义变量的值
-```
-
-### async list_user_variables
-
-```python
-list_user_variables(user_id: str, group_id: str) -> dict[str, str]
-```
-
-列举某用户在指定群组下的全部自定义变量。
-
-**参数：**
-
-* **user_id** (str)：用户标识，默认值：无。
-* **group_id** (str)：群组标识，默认值：无。
-
-**返回：**
-**dict[str, str]**，变量名到字符串值的映射。
-
-**样例：**
-
-```python
->>> import asyncio
->>> import os
->>> from sqlalchemy.ext.asyncio import create_async_engine
->>> from openjiuwen.core.memory.config.config import SysMemConfig
->>> from openjiuwen.core.memory.embed_models.api import APIEmbedModel
->>> from openjiuwen.core.memory.engine.memory_engine import MemoryEngine
->>> from openjiuwen.core.memory.store.impl.dbm_kv_store import DbmKVStore
->>> from openjiuwen.core.memory.store.impl.default_db_store import DefaultDbStore
->>> from openjiuwen.core.memory.store.impl.milvus_semantic_store import MilvusSemanticStore
->>> 
->>> async def run():
-...     # 创建kv数据库
-...     dbm_test_dir = "test_dbm"
-...     os.makedirs(dbm_test_dir, exist_ok=True)
-...     dbm_kv_path = os.path.join(dbm_test_dir, "testdb")
-...     kv_store = DbmKVStore(dbm_kv_path)
-...     # 创建embedding模型
-...     embed_model = APIEmbedModel(
-...	        model_name=os.getenv("EMBED_MODEL_NAME"),
-...	        base_url=os.getenv("EMBED_API_BASE"),
-...	        api_key=os.getenv("EMBED_API_KEY"),
-...	        timeout=int(os.getenv("EMBED_TIMEOUT")),
-...	        max_retries=int(os.getenv("EMBED_MAX_RETRIES"))
-...	    )
-...     # 创建semantic数据库
-...     semantic_store = MilvusSemanticStore(
-...	        milvus_host=os.getenv("MILVUS_HOST"),
-...	        milvus_port=os.getenv("MILVUS_PORT"),
-...	        collection_name=os.getenv("MILVUS_COLLECTION_NAME"),
-...	        embedding_dims=os.getenv("MILVUS_MODEL_DIMENSION", 1024),
-...	        embed_model=embed_model,
-...	        token=os.getenv("MILVUS_TOKEN", None)
-...	    )
-...     # 创建mysql数据库
-...     db_user = os.getenv("DB_USER")
-...     db_password = os.getenv("DB_PASSWORD")
-...     db_host = os.getenv("DB_HOST")
-...     db_port = os.getenv("DB_PORT")
-...     db_name = os.getenv("DB_NAME")
-...     db_engine_instance = create_async_engine(
-...	    	url=f"mysql+aiomysql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}?charset=utf8mb4",
-...	    	pool_size=20,
-...	    	max_overflow=20
-...	    )
-...     db_store = DefaultDbStore(db_engine_instance)
-...     # kv_store等存储对象的定义参考store.md
-...     MemoryEngine.register_store(
-...	        kv_store=kv_store,
-...	        semantic_store=semantic_store,
-...	        db_store=db_store
-...	    )
-...     # 只需调用一次create_mem_engine_instance方法，创建memory_engine实例后，通过get_mem_engine_instance获取实例
-...     await MemoryEngine.create_mem_engine_instance(config=SysMemConfig())
-...     memory_engine = MemoryEngine.get_mem_engine_instance()
-...     # 输入用户标识、群组标识
-...     user_id = "user123"
-...     group_id = "group456"
-...     # 调用list_user_variables方法
-...     user_dict = await memory_engine.list_user_variables(
-...     	user_id=user_id,
-...     	group_id=group_id
-...     )
-...     print(user_dict)
-...     # 显式释放连接池，避免loop关闭时再清理，在所有操作后再执行
-...     await db_engine_instance.dispose()
->>> asyncio.run(run())
-输出用户在指定群组下的全部自定义变量
-```
+1. 校验 `scope_id` 格式，无效则返回空字典；
+2. 若 `search_manager` 未初始化，抛出 `JiuWenBaseException`（`MEMORY_GET_MEMORY_EXECUTION_ERROR`）；
+3. 若 `names` 为 `None`：调用 `search_manager.get_all_user_variable(user_id, scope_id)` 返回所有变量；
+4. 若 `names` 为 `str`：调用 `search_manager.get_user_variable(user_id, scope_id, names)` 返回单个变量；
+5. 若 `names` 为 `list[str]`：遍历列表，逐个调用 `get_user_variable` 并合并结果；
+6. 若 `names` 类型不符合预期，抛出异常。
 
 ### async search_user_mem
 
 ```python
-search_user_mem(user_id: str, group_id: str, query: str, num: int, threshold: float = 0.3) -> list[dict[str, Any]]
+async def search_user_mem(
+    self,
+    query: str,
+    num: int,
+    user_id: str = "__default__",
+    scope_id: str = "__default__",
+    threshold: float = 0.3,
+) -> list[MemResult]
 ```
 
-基于自然语言查询对用户记忆做语义相似度搜索。
+基于语义相似度搜索用户记忆（用户画像、变量等），返回与查询最相关的 N 条记忆。
 
-**参数：**
+**参数**：
 
-* **user_id** (str)：用户标识，默认值：无。
-* **group_id** (str)：群组标识，默认值：无。
-* **query** (str)：自然语言查询，默认值：无。
-* **num** (int)：最大返回条数，默认值：无。
-* **threshold** (float，可选)：最小相似度阈值（如余弦相似度）。默认值：0.3。
+- `query: str`：查询文本。
+- `num: int`：要返回的记忆数量（top-k）。
+- `user_id: str`：用户标识符，默认 `"__default__"`。
+- `scope_id: str`：作用域标识符，默认 `"__default__"`；格式无效时返回空列表。
+- `threshold: float`：相似度阈值，默认 0.3；低于该阈值的记忆会被过滤。
 
-**返回：**
-**list[dict[str, Any]]**，记忆记录列表，每条含 id、内容、类型、相似度分数等元数据。
+**返回**：
 
-**样例：**
+- `list[MemResult]`：记忆结果列表，每个 `MemResult` 包含：
+  - `mem_info: MemInfo`（`mem_id / content / type`）；
+  - `score: float`（相似度分数）。
+
+**行为**：
+
+1. 校验 `scope_id` 格式，无效则返回空列表；
+2. 设置嵌入模型；
+3. 若 `search_manager` 未初始化，抛出异常；
+4. 构造 `SearchParams(query, scope_id, top_k=num, user_id, threshold)`；
+5. 调用 `search_manager.search(params)` 执行搜索；
+6. 将搜索结果转换为 `list[MemResult]` 格式并返回；若发生异常，记录日志并返回空列表。
+
+### async user_mem_total_num
 
 ```python
->>> import asyncio
->>> import os
->>> from sqlalchemy.ext.asyncio import create_async_engine
->>> from openjiuwen.core.memory.config.config import SysMemConfig
->>> from openjiuwen.core.memory.embed_models.api import APIEmbedModel
->>> from openjiuwen.core.memory.engine.memory_engine import MemoryEngine
->>> from openjiuwen.core.memory.store.impl.dbm_kv_store import DbmKVStore
->>> from openjiuwen.core.memory.store.impl.default_db_store import DefaultDbStore
->>> from openjiuwen.core.memory.store.impl.milvus_semantic_store import MilvusSemanticStore
->>> 
->>> async def run():
-...     # 创建kv数据库
-...     dbm_test_dir = "test_dbm"
-...     os.makedirs(dbm_test_dir, exist_ok=True)
-...     dbm_kv_path = os.path.join(dbm_test_dir, "testdb")
-...     kv_store = DbmKVStore(dbm_kv_path)
-...     # 创建embedding模型
-...     embed_model = APIEmbedModel(
-...	        model_name=os.getenv("EMBED_MODEL_NAME"),
-...	        base_url=os.getenv("EMBED_API_BASE"),
-...	        api_key=os.getenv("EMBED_API_KEY"),
-...	        timeout=int(os.getenv("EMBED_TIMEOUT")),
-...	        max_retries=int(os.getenv("EMBED_MAX_RETRIES"))
-...	    )
-...     # 创建semantic数据库
-...     semantic_store = MilvusSemanticStore(
-...	        milvus_host=os.getenv("MILVUS_HOST"),
-...	        milvus_port=os.getenv("MILVUS_PORT"),
-...	        collection_name=os.getenv("MILVUS_COLLECTION_NAME"),
-...	        embedding_dims=os.getenv("MILVUS_MODEL_DIMENSION", 1024),
-...	        embed_model=embed_model,
-...	        token=os.getenv("MILVUS_TOKEN", None)
-...	    )
-...     # 创建mysql数据库
-...     db_user = os.getenv("DB_USER")
-...     db_password = os.getenv("DB_PASSWORD")
-...     db_host = os.getenv("DB_HOST")
-...     db_port = os.getenv("DB_PORT")
-...     db_name = os.getenv("DB_NAME")
-...     db_engine_instance = create_async_engine(
-...	    	url=f"mysql+aiomysql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}?charset=utf8mb4",
-...	    	pool_size=20,
-...	    	max_overflow=20
-...	    )
-...     db_store = DefaultDbStore(db_engine_instance)
-...     # kv_store等存储对象的定义参考store.md
-...     MemoryEngine.register_store(
-...	        kv_store=kv_store,
-...	        semantic_store=semantic_store,
-...	        db_store=db_store
-...	    )
-...     # 只需调用一次create_mem_engine_instance方法，创建memory_engine实例后，通过get_mem_engine_instance获取实例
-...     await MemoryEngine.create_mem_engine_instance(config=SysMemConfig())
-...     memory_engine = MemoryEngine.get_mem_engine_instance()
-...     # 输入用户标识、群组标识、自然语言查询、最大返回条数以及最小相似度阈值
-...     user_id = "user123"
-...     group_id = "group456"
-...     query = "query"
-...     num = 5
-...     threshold = 0.3
-...     # 调用search_user_mem方法
-...     search_list = await memory_engine.search_user_mem(
-...     	user_id=user_id,
-...     	group_id=group_id,
-...     	query=query,
-...     	num=num,
-...     	threshold=threshold
-...     )
-...     print(search_list)
-...     # 显式释放连接池，避免loop关闭时再清理，在所有操作后再执行
-...     await db_engine_instance.dispose()
-...     await embed_model.close()
->>> asyncio.run(run())
-输出对用户记忆做语义相似度的搜索结果
+async def user_mem_total_num(
+    self,
+    user_id: str = "__default__",
+    scope_id: str = "__default__",
+) -> int
 ```
 
-### async list_user_mem
+返回指定用户在某 scope 下的记忆总数。
+
+**参数**：
+
+- `user_id: str`：用户标识符，默认 `"__default__"`。
+- `scope_id: str`：作用域标识符，默认 `"__default__"`；格式无效时返回 0。
+
+**返回**：
+
+- `int`：记忆总数；若 `scope_id` 格式无效，返回 0。
+
+**行为**：
+
+1. 校验 `scope_id` 格式，无效则返回 0；
+2. 调用 `search_manager.list_user_profile(user_id, scope_id)` 获取所有用户画像列表；
+3. 返回列表长度。
+
+### async get_user_mem_by_page
 
 ```python
-list_user_mem(user_id: str,group_id: str,num: int,page: int) -> list[dict[str, Any]]
+async def get_user_mem_by_page(
+    self,
+    user_id: str = "__default__",
+    scope_id: str = "__default__",
+    page_size: int = 10,
+    page_idx: int = 0,
+    memory_type: MemoryType = MemoryType.UNKNOWN,
+) -> list[MemInfo]
 ```
 
-按页列举用户记忆条目（通常按时间顺序，非语义）。
+分页获取用户记忆列表，支持按记忆类型过滤。
 
-**参数：**
+**参数**：
 
-* **user_id** (str)：用户标识，默认值：无。
-* **group_id** (str)：群组标识，默认值：无。
-* **num** (int)：每页条目数，默认>0。
-* **page** (int)：页码，通常从 1 开始。
+- `user_id: str`：用户标识符，默认 `"__default__"`。
+- `scope_id: str`：作用域标识符，默认 `"__default__"`；格式无效时返回空列表。
+- `page_size: int`：每页数量，默认 10。
+- `page_idx: int`：页码（从 0 开始），默认 0。
+- `memory_type: MemoryType`：记忆类型过滤，默认 `MemoryType.UNKNOWN`（不过滤）；可选值包括 `MemoryType.USER_PROFILE`、`MemoryType.VARIABLE` 等。
 
-**返回：**
-**list[dict[str, Any]]**，对应页的记忆条目列表。
+**返回**：
 
-**样例：**
+- `list[MemInfo]`：记忆信息列表，每个 `MemInfo` 包含 `mem_id / content / type`；若 `scope_id` 格式无效或 `search_manager` 未初始化，返回空列表或抛出异常。
+
+**行为**：
+
+1. 校验 `scope_id` 格式，无效则返回空列表；
+2. 若 `search_manager` 未初始化，抛出异常；
+3. 调用 `search_manager.list_user_mem(user_id, scope_id, nums=page_size, pages=page_idx)` 获取分页数据；
+4. 若结果为空，返回空列表；
+5. 遍历结果，根据 `memory_type` 过滤（若 `memory_type != MemoryType.UNKNOWN`，只保留匹配类型的记忆）；
+6. 构造 `list[MemInfo]` 并返回。
+
+### async update_variables
 
 ```python
->>> import asyncio
->>> import os
->>> from sqlalchemy.ext.asyncio import create_async_engine
->>> from openjiuwen.core.memory.config.config import SysMemConfig
->>> from openjiuwen.core.memory.embed_models.api import APIEmbedModel
->>> from openjiuwen.core.memory.engine.memory_engine import MemoryEngine
->>> from openjiuwen.core.memory.store.impl.dbm_kv_store import DbmKVStore
->>> from openjiuwen.core.memory.store.impl.default_db_store import DefaultDbStore
->>> from openjiuwen.core.memory.store.impl.milvus_semantic_store import MilvusSemanticStore
->>> 
->>> async def run():
-...     # 创建kv数据库
-...     dbm_test_dir = "test_dbm"
-...     os.makedirs(dbm_test_dir, exist_ok=True)
-...     dbm_kv_path = os.path.join(dbm_test_dir, "testdb")
-...     kv_store = DbmKVStore(dbm_kv_path)
-...     # 创建embedding模型
-...     embed_model = APIEmbedModel(
-...	        model_name=os.getenv("EMBED_MODEL_NAME"),
-...	        base_url=os.getenv("EMBED_API_BASE"),
-...	        api_key=os.getenv("EMBED_API_KEY"),
-...	        timeout=int(os.getenv("EMBED_TIMEOUT")),
-...	        max_retries=int(os.getenv("EMBED_MAX_RETRIES"))
-...	    )
-...     # 创建semantic数据库
-...     semantic_store = MilvusSemanticStore(
-...	        milvus_host=os.getenv("MILVUS_HOST"),
-...	        milvus_port=os.getenv("MILVUS_PORT"),
-...	        collection_name=os.getenv("MILVUS_COLLECTION_NAME"),
-...	        embedding_dims=os.getenv("MILVUS_MODEL_DIMENSION", 1024),
-...	        embed_model=embed_model,
-...	        token=os.getenv("MILVUS_TOKEN", None)
-...	    )
-...     # 创建mysql数据库
-...     db_user = os.getenv("DB_USER")
-...     db_password = os.getenv("DB_PASSWORD")
-...     db_host = os.getenv("DB_HOST")
-...     db_port = os.getenv("DB_PORT")
-...     db_name = os.getenv("DB_NAME")
-...     db_engine_instance = create_async_engine(
-...	    	url=f"mysql+aiomysql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}?charset=utf8mb4",
-...	    	pool_size=20,
-...	    	max_overflow=20
-...	    )
-...     db_store = DefaultDbStore(db_engine_instance)
-...     # kv_store等存储对象的定义参考store.md
-...     MemoryEngine.register_store(
-...	        kv_store=kv_store,
-...	        semantic_store=semantic_store,
-...	        db_store=db_store
-...	    )
-...     # 只需调用一次create_mem_engine_instance方法，创建memory_engine实例后，通过get_mem_engine_instance获取实例
-...     await MemoryEngine.create_mem_engine_instance(config=SysMemConfig())
-...     memory_engine = MemoryEngine.get_mem_engine_instance()
-...     # 输入用户标识、群组标识、每页条目数以及页码
-...     user_id = "user123"
-...     group_id = "group456"
-...     num = 5
-...     page = 5
-...     # 调用list_user_mem方法
-...     user_mem_list = await memory_engine.list_user_mem(
-...     	user_id=user_id,
-...     	group_id=group_id,
-...     	num=num,
-...     	page=page
-...     )
-...     print(user_mem_list)
-...     # 显式释放连接池，避免loop关闭时再清理，在所有操作后再执行
-...     await db_engine_instance.dispose()
->>> asyncio.run(run())
-输出按页列举用户记忆条目
+async def update_variables(
+    self,
+    variables: dict[str, str],
+    user_id: str = "__default__",
+    scope_id: str = "__default__",
+) -> None
 ```
 
-### async update_user_variable
+批量更新用户变量。
+
+**参数**：
+
+- `variables: dict[str, str]`：变量名到变量值的映射字典。
+- `user_id: str`：用户标识符，默认 `"__default__"`。
+- `scope_id: str`：作用域标识符，默认 `"__default__"`；格式无效时直接返回。
+
+**行为**：
+
+1. 校验 `scope_id` 格式，无效则返回；
+2. 获取用户级分布式锁；
+3. 在锁内：若 `variable_manager` 未初始化，抛出 `JiuWenBaseException`（`MEMORY_UPDATE_MEMORY_EXECUTION_ERROR`）；否则遍历 `variables`，对每个 `(name, value)` 调用 `variable_manager.update_user_variable(user_id, scope_id, var_name=name, var_mem=value)`。
+
+### async delete_variables
 
 ```python
-update_user_variable(user_id: str,group_id: str,name: str,value: str) -> bool
+async def delete_variables(
+    self,
+    names: list[str],
+    user_id: str = "__default__",
+    scope_id: str = "__default__",
+) -> bool
 ```
 
-新建或更新用户自定义变量。
+批量删除用户变量。
 
-**参数：**
+**参数**：
 
-* **user_id** (str)：用户标识，默认值：无。
-* **group_id** (str)：群组标识，默认值：无。
-* **name** (str)：变量名，默认值：无。
-* **value** (str)：变量值（以字符串存储），默认值：无。
+- `names: list[str]`：要删除的变量名列表。
+- `user_id: str`：用户标识符，默认 `"__default__"`。
+- `scope_id: str`：作用域标识符，默认 `"__default__"`；格式无效时返回 `False`。
 
-**返回：**
-**bool**，更新成功返回True。
+**返回**：
 
-**样例：**
+- `bool`：删除成功返回 `True`，`scope_id` 格式无效返回 `False`。
+
+**行为**：
+
+1. 校验 `scope_id` 格式，无效则返回 `False`；
+2. 获取用户级分布式锁；
+3. 在锁内：若 `variable_manager` 未初始化，抛出 `JiuWenBaseException`（`MEMORY_DELETE_MEMORY_EXECUTION_ERROR`）；否则遍历 `names`，对每个 `name` 调用 `variable_manager.delete_user_variable(user_id, scope_id, var_name=name)`；
+4. 返回 `True`。
+
+## 辅助类型
+
+### class MemInfo
 
 ```python
->>> import asyncio
->>> import os
->>> from sqlalchemy.ext.asyncio import create_async_engine
->>> from openjiuwen.core.memory.config.config import SysMemConfig
->>> from openjiuwen.core.memory.embed_models.api import APIEmbedModel
->>> from openjiuwen.core.memory.engine.memory_engine import MemoryEngine
->>> from openjiuwen.core.memory.store.impl.dbm_kv_store import DbmKVStore
->>> from openjiuwen.core.memory.store.impl.default_db_store import DefaultDbStore
->>> from openjiuwen.core.memory.store.impl.milvus_semantic_store import MilvusSemanticStore
->>> 
->>> async def run():
-...     # 创建kv数据库
-...     dbm_test_dir = "test_dbm"
-...     os.makedirs(dbm_test_dir, exist_ok=True)
-...     dbm_kv_path = os.path.join(dbm_test_dir, "testdb")
-...     kv_store = DbmKVStore(dbm_kv_path)
-...     # 创建embedding模型
-...     embed_model = APIEmbedModel(
-...	        model_name=os.getenv("EMBED_MODEL_NAME"),
-...	        base_url=os.getenv("EMBED_API_BASE"),
-...	        api_key=os.getenv("EMBED_API_KEY"),
-...	        timeout=int(os.getenv("EMBED_TIMEOUT")),
-...	        max_retries=int(os.getenv("EMBED_MAX_RETRIES"))
-...	    )
-...     # 创建semantic数据库
-...     semantic_store = MilvusSemanticStore(
-...	        milvus_host=os.getenv("MILVUS_HOST"),
-...	        milvus_port=os.getenv("MILVUS_PORT"),
-...	        collection_name=os.getenv("MILVUS_COLLECTION_NAME"),
-...	        embedding_dims=os.getenv("MILVUS_MODEL_DIMENSION", 1024),
-...	        embed_model=embed_model,
-...	        token=os.getenv("MILVUS_TOKEN", None)
-...	    )
-...     # 创建mysql数据库
-...     db_user = os.getenv("DB_USER")
-...     db_password = os.getenv("DB_PASSWORD")
-...     db_host = os.getenv("DB_HOST")
-...     db_port = os.getenv("DB_PORT")
-...     db_name = os.getenv("DB_NAME")
-...     db_engine_instance = create_async_engine(
-...	    	url=f"mysql+aiomysql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}?charset=utf8mb4",
-...	    	pool_size=20,
-...	    	max_overflow=20
-...	    )
-...     db_store = DefaultDbStore(db_engine_instance)
-...     # kv_store等存储对象的定义参考store.md
-...     MemoryEngine.register_store(
-...	        kv_store=kv_store,
-...	        semantic_store=semantic_store,
-...	        db_store=db_store
-...	    )
-...     # 只需调用一次create_mem_engine_instance方法，创建memory_engine实例后，通过get_mem_engine_instance获取实例
-...     await MemoryEngine.create_mem_engine_instance(config=SysMemConfig())
-...     memory_engine = MemoryEngine.get_mem_engine_instance()
-...     # 输入用户标识、群组标识、变量名以及变量值
-...     user_id = "user123"
-...     group_id = "group456"
-...     name = "var_name"
-...     value = "var_value"
-...     # 调用update_user_variable方法
-...     result = await memory_engine.update_user_variable(
-...     	user_id=user_id,
-...     	group_id=group_id,
-...     	name=name,
-...     	value=value
-...     )
-...     print(result)
-...     # 显式释放连接池，避免loop关闭时再清理，在所有操作后再执行
-...     await db_engine_instance.dispose()
->>> asyncio.run(run())
-新建或更新用户自定义变量，成功返回True，失败返回False。
+class openjiuwen.core.memory.long_term_memory.MemInfo(BaseModel)
 ```
 
-### async delete_user_variable
+表示单条记忆的元数据信息。
+
+**字段**：
+
+- `mem_id: str`：记忆唯一标识符。
+- `content: str`：记忆内容文本。
+- `type: MemoryType`：记忆类型（如 `USER_PROFILE`、`VARIABLE` 等）。
+
+### class MemResult
 
 ```python
-delete_user_variable(user_id: str, group_id: str, name: str) -> bool
+class openjiuwen.core.memory.long_term_memory.MemResult(BaseModel)
 ```
 
-按名称删除用户自定义变量。
+表示语义搜索返回的记忆结果，包含记忆信息和相似度分数。
 
-**参数：**
+**字段**：
 
-* **user_id** (str)：用户标识，默认值：无。
-* **group_id** (str)：群组标识，默认值：无。
-* **name** (str)：待删除变量名，默认值：无。
+- `mem_info: MemInfo`：记忆信息对象。
+- `score: float`：相似度分数（0.0-1.0 之间，越高越相关）。
 
-**返回：**
-**bool**，删除成功返回True。
-
-**样例：**
+## 典型使用流程示例
 
 ```python
->>> import asyncio
->>> import os
->>> from sqlalchemy.ext.asyncio import create_async_engine
->>> from openjiuwen.core.memory.config.config import SysMemConfig
->>> from openjiuwen.core.memory.embed_models.api import APIEmbedModel
->>> from openjiuwen.core.memory.engine.memory_engine import MemoryEngine
->>> from openjiuwen.core.memory.store.impl.dbm_kv_store import DbmKVStore
->>> from openjiuwen.core.memory.store.impl.default_db_store import DefaultDbStore
->>> from openjiuwen.core.memory.store.impl.milvus_semantic_store import MilvusSemanticStore
->>> 
->>> async def run():
-...     # 创建kv数据库
-...     dbm_test_dir = "test_dbm"
-...     os.makedirs(dbm_test_dir, exist_ok=True)
-...     dbm_kv_path = os.path.join(dbm_test_dir, "testdb")
-...     kv_store = DbmKVStore(dbm_kv_path)
-...     # 创建embedding模型
-...     embed_model = APIEmbedModel(
-...	        model_name=os.getenv("EMBED_MODEL_NAME"),
-...	        base_url=os.getenv("EMBED_API_BASE"),
-...	        api_key=os.getenv("EMBED_API_KEY"),
-...	        timeout=int(os.getenv("EMBED_TIMEOUT")),
-...	        max_retries=int(os.getenv("EMBED_MAX_RETRIES"))
-...	    )
-...     # 创建semantic数据库
-...     semantic_store = MilvusSemanticStore(
-...	        milvus_host=os.getenv("MILVUS_HOST"),
-...	        milvus_port=os.getenv("MILVUS_PORT"),
-...	        collection_name=os.getenv("MILVUS_COLLECTION_NAME"),
-...	        embedding_dims=os.getenv("MILVUS_MODEL_DIMENSION", 1024),
-...	        embed_model=embed_model,
-...	        token=os.getenv("MILVUS_TOKEN", None)
-...	    )
-...     # 创建mysql数据库
-...     db_user = os.getenv("DB_USER")
-...     db_password = os.getenv("DB_PASSWORD")
-...     db_host = os.getenv("DB_HOST")
-...     db_port = os.getenv("DB_PORT")
-...     db_name = os.getenv("DB_NAME")
-...     db_engine_instance = create_async_engine(
-...	    	url=f"mysql+aiomysql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}?charset=utf8mb4",
-...	    	pool_size=20,
-...	    	max_overflow=20
-...	    )
-...     db_store = DefaultDbStore(db_engine_instance)
-...     # kv_store等存储对象的定义参考store.md
-...     MemoryEngine.register_store(
-...	        kv_store=kv_store,
-...	        semantic_store=semantic_store,
-...	        db_store=db_store
-...	    )
-...     # 只需调用一次create_mem_engine_instance方法，创建memory_engine实例后，通过get_mem_engine_instance获取实例
-...     await MemoryEngine.create_mem_engine_instance(config=SysMemConfig())
-...     memory_engine = MemoryEngine.get_mem_engine_instance()
-...     # 输入用户标识、群组标识以及待删除变量值
-...     user_id = "user123"
-...     group_id = "group456"
-...     name = "var_name"
-...     # 调用delete_user_variable方法
-...     result = await memory_engine.delete_user_variable(
-...     	user_id=user_id,
-...     	group_id=group_id,
-...     	name=name
-...     )
-...     print(result)
-...     # 显式释放连接池，避免loop关闭时再清理，在所有操作后再执行
-...     await db_engine_instance.dispose()
->>> asyncio.run(run())
-按名称删除用户自定义变量，成功返回True，失败返回False。
+import os
+import asyncio
+from sqlalchemy.ext.asyncio import create_async_engine
+
+from openjiuwen.core.memory import (
+    LongTermMemory,
+    MemoryEngineConfig,
+    MemoryScopeConfig,
+    AgentMemoryConfig,
+    MemoryMilvusVectorStore,
+)
+from openjiuwen.core.foundation.store.in_memory_kv_store import InMemoryKVStore
+from openjiuwen.core.foundation.store.default_db_store import DefaultDbStore
+from openjiuwen.core.foundation.llm.schema.config import ModelClientConfig, ModelRequestConfig
+from openjiuwen.core.foundation.llm.schema.message import UserMessage, AIMessage
+from openjiuwen.core.common.schema.param import Param
+
+
+async def demo_long_term_memory():
+    # 1. 创建 LongTermMemory 实例（单例）
+    engine = LongTermMemory()
+
+    # 2. 注册底层存储
+    kv_store = InMemoryKVStore()
+    vector_store = MemoryMilvusVectorStore(
+        milvus_host=os.getenv("MILVUS_HOST", "localhost"),
+        milvus_port=os.getenv("MILVUS_PORT", "19530"),
+        token=os.getenv("MILVUS_TOKEN"),
+        embedding_dims=1024,
+    )
+    async_engine = create_async_engine(
+        f"mysql+aiomysql://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}/{os.getenv('AGENT_DB_NAME')}?charset=utf8mb4",
+        pool_size=20,
+    )
+    db_store = DefaultDbStore(async_engine)
+
+    await engine.register_store(
+        kv_store=kv_store,
+        vector_store=vector_store,
+        db_store=db_store,
+    )
+
+    # 3. 设置全局配置
+    engine_config = MemoryEngineConfig(
+        default_model_cfg=ModelRequestConfig(model="gpt-4o-mini", temperature=0.0),
+        default_model_client_cfg=ModelClientConfig(
+            client_id="default_memory_llm",
+            client_provider="OpenAI",
+            api_key=os.getenv("MEMORY_MODEL_API_KEY"),
+            api_base=os.getenv("MEMORY_MODEL_API_BASE"),
+        ),
+        crypto_key=b"",  # 不启用加密
+    )
+    engine.set_config(engine_config)
+
+    # 4. 可选：为特定 scope 配置独立的模型/向量参数
+    scope_config = MemoryScopeConfig(
+        model_cfg=ModelRequestConfig(model="gpt-4o", temperature=0.1),
+        model_client_cfg=ModelClientConfig(
+            client_id="scope_llm",
+            client_provider="OpenAI",
+            api_key=os.getenv("SCOPE_API_KEY"),
+        ),
+    )
+    await engine.set_scope_config("app_demo_scope", scope_config)
+
+    # 5. 添加消息并生成记忆
+    agent_config = AgentMemoryConfig(
+        mem_variables=[
+            Param(name="favorite_color", description="用户喜欢的颜色", type="string"),
+            Param(name="age", description="用户年龄", type="number"),
+        ],
+        enable_long_term_mem=True,
+    )
+
+    messages = [
+        UserMessage(content="我喜欢蓝色，今年25岁"),
+        AIMessage(content="好的，我记住了您喜欢蓝色，年龄是25岁。"),
+    ]
+
+    await engine.add_messages(
+        messages=messages,
+        agent_config=agent_config,
+        user_id="user_001",
+        scope_id="app_demo_scope",
+        session_id="session_001",
+    )
+
+    # 6. 查询变量
+    variables = await engine.get_variables(
+        names=["favorite_color", "age"],
+        user_id="user_001",
+        scope_id="app_demo_scope",
+    )
+    print(f"用户变量: {variables}")  # {'favorite_color': '蓝色', 'age': '25'}
+
+    # 7. 语义搜索记忆
+    results = await engine.search_user_mem(
+        query="用户喜欢的颜色",
+        num=3,
+        user_id="user_001",
+        scope_id="app_demo_scope",
+    )
+    for result in results:
+        print(f"记忆: {result.mem_info.content}, 相似度: {result.score}")
+
+    # 8. 获取最近消息
+    recent = await engine.get_recent_messages(
+        user_id="user_001",
+        scope_id="app_demo_scope",
+        session_id="session_001",
+        num=10,
+    )
+    print(f"最近消息数: {len(recent)}")
+
+
+asyncio.run(demo_long_term_memory())
 ```
+
+> **说明**：所有方法中涉及的 `user_id`、`scope_id`、`session_id` 若使用默认值 `"__default__"`，表示使用系统默认标识符；在实际业务中，建议传入有意义的业务标识符以支持多租户隔离和精确查询。

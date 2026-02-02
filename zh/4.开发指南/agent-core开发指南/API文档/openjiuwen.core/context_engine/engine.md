@@ -1,24 +1,177 @@
 # openjiuwen.core.context_engine.engine
 
 ## class openjiuwen.core.context_engine.engine.ContextEngine
+
 ```python
-class openjiuwen.core.context_engine.engine.ContextEngine(agent_id:str, config: ContextEngineConfig = None, model: Optional[BaseModelClient] = None)
+class ContextEngine(config: ContextEngineConfig | None = None)
 ```
-`ContextEngine`类用于管理模型输入上下文的信息，包含对上下文信息（长短期记忆、工具、知识等）的记录、获取、筛选等，便于开发Agent时对上下文内容进行标准化管理和调用。
+
+`ContextEngine` 类用于管理模型输入上下文的信息，基于 `Session` 提供统一的上下文创建、缓存、保存与恢复能力。它为会话中的不同「上下文 ID」创建和维护对应的 `ModelContext`，并可选地与记忆引擎协作，从长期记忆加载/写入消息。
+
+**参数：**
+
+- **config** ([ContextEngineConfig](./config.md), 可选)：上下文引擎全局配置。
+  - 控制默认窗口消息数、从记忆中恢复的消息条数等。
+  - 省略时使用默认配置。
+
+**示例：**
+
+```python
+from openjiuwen.core.context_engine import ContextEngine, ContextEngineConfig
+
+# 创建上下文引擎实例
+context_engine = ContextEngine(config=ContextEngineConfig())
+```
+
+### create_context
+
+```python
+async create_context(
+    context_id: str = "default_context_id",
+    session: Session | None = None,
+    *,
+    history_messages: list[BaseMessage] | None = None,
+    token_counter: TokenCounter | None = None,
+    mem_scope_id: str | None = None,
+) -> ModelContext
+```
+
+为给定 `Session` 和 `context_id` 创建或获取一个 `ModelContext`。
+
+**参数：**
+
+- **context_id** (str)：上下文 ID，用于区分同一会话内的多个上下文（默认 `"default_context_id"`）。
+- **session** (`Session` | None)：会话对象。
+  - 若传入，会从 `session.get_session_id()` 读取会话 ID，用于隔离不同用户/会话。
+  - 为空时使用 `"default_session_id"`。
+- **history_messages** (list[`BaseMessage`] | None)：初始历史消息列表。
+  - 若不传且提供 `mem_scope_id`，则会尝试从长期记忆中恢复历史。
+  - 若两者都不提供，则从空上下文开始。
+- **token_counter** (`TokenCounter` | None)：Token 统计策略。
+  - 为空时使用默认实现（如 `TiktokenCounter`）。
+  - 用于在构造窗口时统计消息与工具的 Token 消耗。
+- **mem_scope_id** (str | None)：记忆作用域 ID。
+  - 仅当 `history_messages` 为空时生效。
+  - 配合记忆引擎从长期记忆中加载最近的若干条消息。
+
+**返回：**
+
+- **ModelContext**：会话 + 上下文 ID 唯一对应的上下文对象。
+
+### get_context
+
+```python
+get_context(
+    context_id: str = "default_context_id",
+    session_id: str = "default_session_id",
+) -> ModelContext | None
+```
+
+从内部缓存中获取已存在的 `ModelContext`。
+
+**参数：**
+
+- **context_id** (str)：上下文 ID。
+- **session_id** (str)：会话 ID。
+
+**返回：**
+
+- 已存在的 `ModelContext`，若不存在则返回 `None`。
+
+### clear_context
+
+```python
+clear_context(
+    context_id: str | None = None,
+    session_id: str | None = None,
+) -> None
+```
+
+从内部池中移除上下文。
+
+**行为：**
+
+- 两个参数都为空：清空所有上下文。
+- 只传 `session_id`：清空该会话下的所有上下文。
+- 同时传 `session_id` 与 `context_id`：仅删除对应的单个上下文。
+
+### save_contexts
+
+```python
+async save_contexts(
+    context_ids: list[str],
+    session: Session | None = None,
+    *,
+    mem_scope_id: str | None = None,
+) -> None
+```
+
+批量保存多个上下文的运行时状态。
+
+**行为：**
+
+- 总是更新本地上下文缓存（调用每个上下文的 `on_save()`）。
+- 若提供 `mem_scope_id`，则会将对应上下文的新增消息写入长期记忆，以便后续恢复。
+
+**参数：**
+
+- **context_ids** (list[str])：要保存的上下文 ID 列表。
+- **session** (`Session` | None)：会话对象。
+  - 若为空，使用 `"default_session_id"`。
+- **mem_scope_id** (str | None)：记忆作用域 ID。
+  - 提供时，会将新消息写入长期记忆。
+
+**简要示例：**
+
+```python
+import asyncio
+from openjiuwen.core.context_engine import ContextEngine
+from openjiuwen.core.session.workflow import create_workflow_session
+from openjiuwen.core.foundation.llm.messages import HumanMessage
+
+
+async def main():
+    engine = ContextEngine()
+    session = create_workflow_session(session_id="s1")
+
+    # 创建上下文并追加消息
+    ctx = await engine.create_context(context_id="chat", session=session)
+    await ctx.add_messages(HumanMessage(content="你好，请帮我查询天气"))
+
+    # 构造用于模型推理的窗口
+    window = await ctx.get_context_window()
+    messages = window.get_messages()
+
+    # 保存上下文（可选：同时写入长期记忆）
+    await engine.save_contexts(["chat"], session=session, mem_scope_id="weather_scope")
+
+
+asyncio.run(main())
+```
+
+# openjiuwen.core.context_engine.engine
+
+## class openjiuwen.core.context_engine.engine.ContextEngine
+
+```python
+class ContextEngine(config: ContextEngineConfig | None = None)
+```
+
+`ContextEngine` 类用于管理模型输入上下文的信息，基于 `Session` 提供统一的上下文创建、缓存、保存与恢复能力。它为会话中的不同「上下文 ID」创建和维护对应的 `ModelContext`，并可选地与记忆引擎协作，从长期记忆加载/写入消息。
 
 **参数**：
 
-- **agent_id**(str)：当前agent id，必填。
-- **config**([ContextEngineConfig](./config.md), 可选)：上下文引擎相关配置参数。默认值：`None`，表示无可用配置。
-- **model**([BaseModelClient](../utils/llm/base.md), 可选)：大模型实例。默认值：`None`，表示没有大模型实列。
+- **config** ([ContextEngineConfig](./config.md), 可选)：上下文引擎全局配置。
+  - 控制默认窗口消息数、从记忆中恢复的消息条数等。
+  - 省略时使用默认配置。
 
-​**样例**​：
+**示例**：
 
 ```python
->>> from openjiuwen.core.context_engine.engine import ContextEngine 
->>> 
->>> # 创建上下文引擎实例
->>> context_engine = ContextEngine(agent_id="agent_id")
+from openjiuwen.core.context_engine import ContextEngine, ContextEngineConfig
+
+# 创建上下文引擎实例
+context_engine = ContextEngine(config=ContextEngineConfig())
 ```
 
 ### get_agent_context
@@ -41,11 +194,11 @@ get_agent_context(session_id: str) -> AgentContext
 >>> import os
 >>> os.environ['LLM_SSL_VERIFY'] = 'false'
 >>> from datetime import datetime
->>> from openjiuwen.agent.react_agent import create_react_agent_config, ReActAgent
->>> from openjiuwen.core.component.common.configs.model_config import ModelConfig
->>> from openjiuwen.core.utils.llm.base import BaseModelInfo
->>> from openjiuwen.core.utils.tool.param import Param
->>> from openjiuwen.core.utils.tool.service_api.restful_api import RestfulApi
+>>> from openjiuwen.core.single_agent.legacy import create_react_agent_config
+>>> from openjiuwen.core.single_agent import ReActAgent
+>>> from openjiuwen.core.foundation.llm import ModelConfig, BaseModelInfo
+>>> from openjiuwen.core.foundation.tool.param import Param
+>>> from openjiuwen.core.foundation.tool.service_api.restful_api import RestfulApi
 >>> 
 >>> API_BASE = os.getenv("API_BASE", "your api base")
 >>> API_KEY = os.getenv("API_KEY", "your api key")
@@ -132,11 +285,10 @@ get_workflow_context(workflow_id: str, session_id: str) -> WorkflowContext
 **样例**：
 
 ```python
->>> from openjiuwen.agent.common.schema import WorkflowSchema
->>> from openjiuwen.agent.workflow_agent.workflow_agent import WorkflowAgent
->>> from openjiuwen.agent.config.workflow_config import WorkflowAgentConfig
->>> from openjiuwen.core.workflow.base import Workflow
->>> from openjiuwen.core.workflow.workflow_config import WorkflowConfig, WorkflowMetadata
+>>> from openjiuwen.core.single_agent.legacy import WorkflowSchema
+>>> from openjiuwen.core.application.workflow_agent import WorkflowAgentConfig, WorkflowAgent
+>>> from openjiuwen.core.workflow import Workflow, WorkflowCard
+>>> from openjiuwen.core.workflow.workflow_config import WorkflowConfig
 >>> 
 >>> agent_id = "weather_agent_test"
 >>> workflow_id = "weather_agent_flow_id_test"
@@ -144,9 +296,9 @@ get_workflow_context(workflow_id: str, session_id: str) -> WorkflowContext
 >>> workflow_version = "1.0"
 >>> 
 >>> workflow_config = WorkflowConfig(
-...     metadata=WorkflowMetadata(
-...         name=workflow_name,
+...     card=WorkflowCard(
 ...         id=workflow_id,
+...         name=workflow_name,
 ...         version=workflow_version,
 ...     )
 ... )

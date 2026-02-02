@@ -11,13 +11,12 @@ openJiuwen框架提供了`WorkflowAgent`预置智能体。开发者创建`Workfl
 
 ```python
 import os
-from openjiuwen.core.workflow.workflow_config import WorkflowConfig, WorkflowMetadata, WorkflowInputsSchema
-from openjiuwen.core.workflow.base import Workflow
-from openjiuwen.core.component.common.configs.model_config import ModelConfig
-from openjiuwen.core.utils.llm.base import BaseModelInfo
-from openjiuwen.core.component.start_comp import Start
-from openjiuwen.core.component.end_comp import End
-from openjiuwen.core.component.questioner_comp import QuestionerComponent, FieldInfo, QuestionerConfig
+from openjiuwen.core.workflow import (
+    Workflow, WorkflowCard, Start, End,
+    QuestionerComponent, FieldInfo, QuestionerConfig,
+)
+from openjiuwen.core.workflow.workflow_config import WorkflowConfig
+from openjiuwen.core.foundation.llm import ModelConfig, BaseModelInfo
 
 API_BASE = os.getenv("API_BASE", "your api base")
 API_KEY = os.getenv("API_KEY", "your api key")
@@ -28,19 +27,9 @@ def _build_workflow_with_questioner():
     id = "questioner_workflow"
     version = "0.0.1"
     name = "questioner_workflow"
-    inputs_schema_dict = {
-        "type": "object",
-        "properties": {
-            "query": {
-                "type": "string",
-                "description": "用户输入信息",
-                "required": True
-            }
-        }
-    }
-    workflow_inputs_schema = WorkflowInputsSchema(**inputs_schema_dict)
-    workflow_config = WorkflowConfig(metadata=WorkflowMetadata(name=name, id=id, version=version),
-                                     workflow_inputs_schema=workflow_inputs_schema)
+    workflow_config = WorkflowConfig(
+        card=WorkflowCard(id=id, name=name, version=version)
+    )
     flow = Workflow(workflow_config=workflow_config)
 
     model_config = ModelConfig(
@@ -95,9 +84,8 @@ def _build_workflow_with_questioner():
 示例代码如下：
 
 ```python
-from openjiuwen.agent.config.workflow_config import WorkflowAgentConfig
-from openjiuwen.agent.workflow_agent.workflow_agent import WorkflowAgent
-from openjiuwen.agent.common.schema import WorkflowSchema
+from openjiuwen.core.application.workflow_agent import WorkflowAgentConfig, WorkflowAgent
+from openjiuwen.core.single_agent.legacy import WorkflowSchema
 
 def _create_model():
     return ModelConfig(model_provider=MODEL_PROVIDER,
@@ -256,8 +244,8 @@ WorkflowAgent 批调用的输出结果 >>> [OutputSchema(type='__interaction__',
 ```python
 import asyncio
 from typing import List
-from openjiuwen.core.runtime.interaction.interactive_input import InteractiveInput
-from openjiuwen.core.stream.base import OutputSchema
+from openjiuwen.core.session.interaction.interactive_input import InteractiveInput
+from openjiuwen.core.session.stream import OutputSchema
 
 async def main():
     my_workflow = _build_workflow_with_questioner()
@@ -298,7 +286,7 @@ WorkflowAgent 用户反馈后的批调用输出结果 >>> {'output': WorkflowOut
 
 ```python
 import asyncio
-from openjiuwen.core.stream.base import OutputSchema
+from openjiuwen.core.session.stream import OutputSchema
 
 async def main():
     my_workflow = _build_workflow_with_questioner()
@@ -333,8 +321,8 @@ WorkflowAgent 第一次输出结果 >>> type='__interaction__' index=0 payload=I
 
 ```python
 import asyncio
-from openjiuwen.core.runtime.interaction.interactive_input import InteractiveInput
-from openjiuwen.core.stream.base import OutputSchema
+from openjiuwen.core.session.interaction.interactive_input import InteractiveInput
+from openjiuwen.core.session.stream import OutputSchema
 
 async def main():
     my_workflow = _build_workflow_with_questioner()

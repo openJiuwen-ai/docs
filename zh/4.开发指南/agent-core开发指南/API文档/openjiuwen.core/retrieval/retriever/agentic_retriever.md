@@ -46,7 +46,7 @@ retrieve(query: str, top_k: int = 5, score_threshold: Optional[float] = None, mo
 >>> import asyncio
 >>> from openjiuwen.core.retrieval.retriever.agentic_retriever import AgenticRetriever
 >>> from openjiuwen.core.retrieval.retriever.graph_retriever import GraphRetriever
->>> from openjiuwen.core.utils.llm.base import BaseModelClient
+>>> from openjiuwen.core.foundation.llm import BaseModelClient
 >>> 
 >>> async def run():
 ...     # 创建图检索器
