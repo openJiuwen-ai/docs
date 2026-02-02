@@ -66,7 +66,7 @@
  ### abstractmethod async delete
  
  ```python
- delete(key: str) -> bool
+ delete(key: str)
  ```
  
  删除数据库中指定key值。
