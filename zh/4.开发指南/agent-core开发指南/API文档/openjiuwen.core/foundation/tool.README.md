@@ -2,6 +2,8 @@
 
 `openjiuwen.core.foundation.tool`是openJiuwen的工具模块，支持将开发者自定义工具转换成可被LLM识别与调用的工具。
 
+**详细 API 文档**：[tool.md](./tool/tool.md)
+
 **Classes**：
 
 | CLASS | DESCRIPTION |

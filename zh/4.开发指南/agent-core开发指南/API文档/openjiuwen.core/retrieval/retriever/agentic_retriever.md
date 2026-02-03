@@ -57,7 +57,7 @@ retrieve(query: str, top_k: int = 5, score_threshold: Optional[float] = None, mo
 ...     retriever = AgenticRetriever(
 ...         graph_retriever=graph_retriever,
 ...         llm_client=llm_client,
-...         llm_model_name="gpt-4",
+...         llm_model_name="<model_name>",
 ...         max_iter=3,
 ...         agent_topk=15
 ...     )

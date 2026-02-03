@@ -653,7 +653,7 @@ async def demo_long_term_memory():
 
     # 3. 设置全局配置
     engine_config = MemoryEngineConfig(
-        default_model_cfg=ModelRequestConfig(model="gpt-4o-mini", temperature=0.0),
+        default_model_cfg=ModelRequestConfig(model="<model_name>", temperature=0.0),
         default_model_client_cfg=ModelClientConfig(
             client_id="default_memory_llm",
             client_provider="OpenAI",
@@ -666,7 +666,7 @@ async def demo_long_term_memory():
 
     # 4. 可选：为特定 scope 配置独立的模型/向量参数
     scope_config = MemoryScopeConfig(
-        model_cfg=ModelRequestConfig(model="gpt-4o", temperature=0.1),
+        model_cfg=ModelRequestConfig(model="<model_name>", temperature=0.1),
         model_client_cfg=ModelClientConfig(
             client_id="scope_llm",
             client_provider="OpenAI",

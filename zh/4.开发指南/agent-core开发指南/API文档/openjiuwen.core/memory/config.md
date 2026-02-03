@@ -101,7 +101,7 @@ from openjiuwen.core.common.schema.param import Param
 # 1. 创建全局引擎配置
 engine_config = MemoryEngineConfig(
     default_model_cfg=ModelRequestConfig(
-        model="gpt-4o-mini",
+        model="<model_name>",
         temperature=0.0,
     ),
     default_model_client_cfg=ModelClientConfig(
@@ -117,7 +117,7 @@ engine_config = MemoryEngineConfig(
 # 2. 创建作用域配置（可选）
 scope_config = MemoryScopeConfig(
     model_cfg=ModelRequestConfig(
-        model="gpt-4o",
+        model="<model_name>",
         temperature=0.1,
     ),
     model_client_cfg=ModelClientConfig(

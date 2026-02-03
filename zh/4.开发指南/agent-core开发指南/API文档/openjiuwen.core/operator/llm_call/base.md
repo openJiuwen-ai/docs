@@ -31,7 +31,7 @@ def __init__(
 
 **参数**：
 
-- `model_name: str`：要调用的大模型名称（例如 `"gpt-4o"`），在调用 `llm.invoke/llm.stream` 时作为 `model` 传入；
+- `model_name: str`：要调用的大模型名称，在调用 `llm.invoke/llm.stream` 时作为 `model` 传入；
 - `llm: Model`：`openjiuwen.core.foundation.llm.Model` 实例，已经配置好 `ModelClientConfig` / `ModelRequestConfig` 等参数；
 - `system_prompt`：系统提示词模版内容：
   - 可以是字符串；

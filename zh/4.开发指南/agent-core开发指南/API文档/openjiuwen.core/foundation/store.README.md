@@ -2,6 +2,8 @@
 
 `openjiuwen.core.foundation.store`提供了openJiuwen的存储抽象模块。
 
+**详细 API 文档**：[store.md](./store/store.md)
+
 **Classes**：
 
 | CLASS | DESCRIPTION |

@@ -2,6 +2,8 @@
 
 `openjiuwen.core.foundation.llm`是openJiuwen中用于统一管理和调用大模型实例的核心模块。
 
+**详细 API 文档**：[llm.md](./llm/llm.md)
+
 **Classes**：
 
 | CLASS | DESCRIPTION |

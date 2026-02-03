@@ -35,7 +35,7 @@ add_message(message: BaseMessage, tags: Optional[Dict[str, str]] = None)
 >>> 
 >>> # 样例2：添加AI回复消息
 >>> ai_message = AIMessage(content="今天天气晴朗，温度25度。")
->>> agent_context_impl.add_message(ai_message, tags={"type": "ai_response", "model": "gpt-4"})
+>>> agent_context_impl.add_message(ai_message, tags={"type": "ai_response", "model": "<model_name>"})
 ```
 
 ### batch_add_messages
@@ -229,7 +229,7 @@ add_message(message: BaseMessage, tags: Optional[Dict[str, str]] = None)
 >>> 
 >>> # 样例2：添加AI回复消息
 >>> ai_message = AIMessage(content="今天天气晴朗，温度25度。")
->>> workflow_context_impl.add_message(ai_message, tags={"type": "ai_response", "model": "gpt-4"})
+>>> workflow_context_impl.add_message(ai_message, tags={"type": "ai_response", "model": "<model_name>"})
 ```
 
 ### batch_add_messages
