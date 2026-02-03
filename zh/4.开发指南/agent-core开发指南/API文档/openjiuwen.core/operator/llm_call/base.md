@@ -1,166 +1,176 @@
 # openjiuwen.core.operator.llm_call.base
 
-## class LLMCall
+## class openjiuwen.core.operator.llm_call.base.LLMCall
 
 ```python
-class openjiuwen.core.operator.llm_call.base.LLMCall
+LLMCall(model_name: str, llm: Model, system_prompt: str | List[BaseMessage] | List[Dict], user_prompt: str | List[BaseMessage] | List[Dict], freeze_system_prompt: bool = False, freeze_user_prompt: bool = True, llm_call_id: str = "llm_call")
 ```
 
-`LLMCall` 是对大模型调用进行封装的算子类，用于：
-
-- 将一个 `Model` 实例与固定的 `model_name`、系统提示词（system prompt）和用户提示词（user prompt）绑定；
-*- 在调用时将输入变量渲染进提示词，组合历史消息，形成完整的消息列表；
-*- 支持普通调用 (`invoke`) 与流式调用 (`stream`)，并在需要时回调优化器函数记录执行结果用于后续优化。
-
-对应源码：`openjiuwen.core.operator.llm_call.base.LLMCall`。
-
-### __init__
-
-```python
-def __init__(
-    self,
-    model_name: str,
-    llm: Model,
-    system_prompt: str | list[BaseMessage] | list[dict],
-    user_prompt: str | list[BaseMessage] | list[dict],
-    freeze_system_prompt: bool = False,
-    freeze_user_prompt: bool = True,
-    llm_call_id: str = "llm_call",
-) -> None
-```
+`LLMCall` 封装单次 LLM 调用的配置与执行逻辑，支持 system/user 提示词模板、历史消息注入和工具调用。调用时根据 `inputs` 填充模板并拼装 `[system, history, user]` 消息序列后转发给底层 `Model`。
 
 **参数**：
 
-- `model_name: str`：要调用的大模型名称，在调用 `llm.invoke/llm.stream` 时作为 `model` 传入；
-- `llm: Model`：`openjiuwen.core.foundation.llm.Model` 实例，已经配置好 `ModelClientConfig` / `ModelRequestConfig` 等参数；
-- `system_prompt`：系统提示词模版内容：
-  - 可以是字符串；
-  - 也可以是 `BaseMessage` 列表或等价的字典列表；
-  - 内部会包装成 `PromptTemplate`。
-- `user_prompt`：用户提示词模版内容，类型与 `system_prompt` 一致；
-- `freeze_system_prompt: bool`：是否冻结系统提示词模板，若为 `True`，后续调用 `update_system_prompt` 将不再生效；
-- `freeze_user_prompt: bool`：是否冻结用户提示词模板，若为 `True`，后续调用 `update_user_prompt` 将不再生效；
-- `llm_call_id: str`：该 `LLMCall` 的标识，用于在优化器回调中区分不同的调用算子。
+* **model_name**(str)：模型名称，调用 `llm.invoke` / `llm.stream` 时传入。
+* **llm**(Model)：大模型实例，用于执行 invoke 与 stream。
+* **system_prompt**(str | List[BaseMessage] | List[Dict])：系统提示词，支持字符串模板或消息列表。字符串支持 `{{key}}` 占位符。
+* **user_prompt**(str | List[BaseMessage] | List[Dict]，可选)：用户提示词，同上。默认值：`"{{query}}"`。
+* **freeze_system_prompt**(bool，可选)：为 `True` 时禁止 `update_system_prompt` 修改。默认值：`False`。
+* **freeze_user_prompt**(bool，可选)：为 `True` 时禁止 `update_user_prompt` 修改。默认值：`True`。
+* **llm_call_id**(str，可选)：本调用的标识符，用于 optimizer_callback 等。默认值：`"llm_call"`。
 
 ### async invoke
 
 ```python
-async def invoke(
-    self,
-    inputs: dict[str, Any],
-    session: Session,
-    history: list[BaseMessage] | None = None,
-    tools: list[ToolInfo] | None = None,
-) -> BaseMessage:
+async invoke(inputs: Dict[str, Any], session: Session, history: Optional[List[BaseMessage]] = None, tools: Optional[List[ToolInfo]] = None) -> BaseMessage
 ```
 
-异步调用大模型，返回完整的单条响应消息。
+根据 `inputs` 填充提示词模板并调用 LLM，返回模型回复消息。若已设置 `optimizer_callback`，则会在调用结束后执行回调。
 
 **参数**：
 
-- `inputs: dict[str, Any]`：用于渲染系统提示词和用户提示词模版的变量字典（例如 `{"query": "..."}`）；
-- `session: Session`：会话对象，用于在触发优化器回调时传递上下文；
-- `history: list[BaseMessage] | None`：历史对话消息列表，可为 `None`；
-- `tools: list[ToolInfo] | None`：可选的工具列表，在需要工具调用时传入。
+* **inputs**(Dict[str, Any])：用于填充 system/user 模板的变量，如 `{"query": "用户问题"}`。
+* **session**(Session)：会话对象，用于 optimizer_callback 等。
+* **history**(List[BaseMessage]，可选)：历史消息列表，插入到 system 与 user 之间。默认值：`None`。
+* **tools**(List[ToolInfo]，可选)：可调用工具列表。默认值：`None`。
 
-**行为**：
+**返回**：
 
-1. 调用内部 `_format_llm_input(inputs, history)` 构造消息列表：
-   - 使用系统提示词模版渲染出一组 `SystemMessage`；
-   - 拼接历史消息 `history`；
-   - 使用用户提示词模版渲染出用户消息；
-2. 调用底层模型：
+**BaseMessage**（通常为 AssistantMessage），模型返回的完整消息。
 
-   ```python
-   response = await self._llm.invoke(model=self._model_name, messages=messages, tools=tools)
-   ```
+**样例**：
 
-3. 若已通过 `set_optimizer_callback` 设置优化器回调，则在得到响应后调用：
-
-   ```python
-   await self._optimizer_callback(self._llm_call_id, inputs, response, session)
-   ```
-
-4. 返回 `response`（`BaseMessage` 实例）。
+```python
+>>> import os
+>>> import asyncio
+>>> from unittest.mock import MagicMock
+>>> from openjiuwen.core.operator.llm_call import LLMCall
+>>> from openjiuwen.core.foundation.llm import Model, ModelRequestConfig, ModelClientConfig
+>>>
+>>> API_BASE = os.getenv("API_BASE", "your api base")
+>>> API_KEY = os.getenv("API_KEY", "your api key")
+>>> MODEL_NAME = os.getenv("MODEL_NAME", "gpt-4o-mini")
+>>> MODEL_PROVIDER = os.getenv("MODEL_PROVIDER", "OpenAI")
+>>>
+>>> async def main():
+...     model_config = ModelRequestConfig(model=MODEL_NAME)
+...     model_client_config = ModelClientConfig(
+...         client_provider=MODEL_PROVIDER,
+...         api_base=API_BASE,
+...         api_key=API_KEY,
+...     )
+...     llm = Model(model_client_config, model_config)
+...     llm_call = LLMCall(
+...         model_name=MODEL_NAME,
+...         llm=llm,
+...         system_prompt="你是一个助手。",
+...         user_prompt="{{query}}",
+...     )
+...     session = MagicMock()
+...     result = await llm_call.invoke(
+...         inputs={"query": "你好"},
+...         session=session,
+...     )
+...     return result.content
+>>>
+>>> asyncio.run(main())
+'你好！有什么可以帮助你的？'
+```
 
 ### async stream
 
 ```python
-async def stream(
-    self,
-    inputs: dict[str, Any],
-    session: Session,
-    history: list[BaseMessage] | None = None,
-    tools: list[ToolInfo] | None = None,
-) -> AsyncIterator:
+async stream(inputs: Dict[str, Any], session: Session, history: Optional[List[BaseMessage]] = None, tools: Optional[List[ToolInfo]] = None) -> AsyncIterator
 ```
 
-异步流式调用大模型，逐块返回消息片段，并在结束时触发优化器回调。
+流式调用 LLM，逐个产出消息块。若已设置 `optimizer_callback`，则在流结束后、基于完整拼接内容执行回调。
 
-**行为**：
+**参数**：
 
-1. 同样通过 `_format_llm_input` 构造消息列表；
-2. 调用底层模型的 `stream` 接口：
+* **inputs**(Dict[str, Any])：用于填充模板的变量。
+* **session**(Session)：会话对象。
+* **history**(List[BaseMessage]，可选)：历史消息列表。默认值：`None`。
+* **tools**(List[ToolInfo]，可选)：可调用工具列表。默认值：`None`。
 
-   ```python
-   async for chunk in self._llm.stream(model=self._model_name, messages=messages, tools=tools):
-       ...
-       yield chunk
-   ```
+**返回**：
 
-3. 将所有片段的内容累积成一个字符串 `response`，在流完成后：
+**AsyncIterator**，异步迭代器，逐块产出 `AssistantMessageChunk`。
 
-   ```python
-   await self._optimizer_callback(self._llm_call_id, inputs, response, session)
-   ```
-
-> 注意：`stream` 方法本身不会返回最终聚合的 `BaseMessage`，而是通过迭代器逐块返回底层模型的流式输出。
-
-### 提示词相关接口
+### get_optimizer_callback
 
 ```python
-def get_system_prompt(self) -> PromptTemplate
-def get_user_prompt(self) -> PromptTemplate
-
-def update_system_prompt(self, system_prompt: str | list[BaseMessage] | list[dict]) -> None
-def update_user_prompt(self, user_prompt: str | list[BaseMessage] | list[dict]) -> None
-
-def set_freeze_system_prompt(self, switch: bool) -> None
-def set_freeze_user_prompt(self, switch: bool) -> None
-
-def get_freeze_system_prompt(self) -> bool
-def get_freeze_user_prompt(self) -> bool
+get_optimizer_callback() -> Optional[Callable]
 ```
 
-- `get_system_prompt / get_user_prompt`：返回当前使用的系统/用户提示词模板对象（`PromptTemplate` 实例）；
-- `update_system_prompt / update_user_prompt`：在未冻结的情况下更新提示词模板内容；
-- `set_freeze_system_prompt / set_freeze_user_prompt`：设置是否冻结对应的提示词模板；
-- `get_freeze_system_prompt / get_freeze_user_prompt`：查询当前冻结状态。
+返回当前设置的优化回调函数。
 
-### 优化器回调接口
+### set_optimizer_callback
 
 ```python
-def get_optimizer_callback(self) -> Optional[Callable]
-def set_optimizer_callback(self, callback: Optional[Callable]) -> None
+set_optimizer_callback(callback: Optional[Callable]) -> None
 ```
 
-- `set_optimizer_callback`：注册一个回调函数，签名大致为：
+设置或清除优化回调。回调签名为 `async (llm_call_id, inputs, response, session)`，在 invoke/stream 完成后调用。
 
-  ```python
-  async def optimizer_callback(
-      llm_call_id: str,
-      inputs: dict[str, Any],
-      output: Any,
-      session: Session,
-  ) -> None:
-      ...
-  ```
+### get_system_prompt
 
-- `get_optimizer_callback`：获取当前注册的回调函数。
+```python
+get_system_prompt() -> PromptTemplate
+```
 
-当回调被设置后：
+返回当前系统提示词模板。
 
-- 在 `invoke` 成功得到 `response` 后调用一次；
-- 在 `stream` 完成并聚合所有片段后调用一次。  
-这为后续的提示词/模型调用优化提供了完整的输入输出与会话上下文信息。
+### get_user_prompt
 
+```python
+get_user_prompt() -> PromptTemplate
+```
+
+返回当前用户提示词模板。
+
+### update_system_prompt
+
+```python
+update_system_prompt(system_prompt: str | List[BaseMessage] | List[Dict]) -> None
+```
+
+更新系统提示词。若 `freeze_system_prompt` 为 `True`，则不会生效。
+
+### update_user_prompt
+
+```python
+update_user_prompt(user_prompt: str | List[BaseMessage] | List[Dict]) -> None
+```
+
+更新用户提示词。若 `freeze_user_prompt` 为 `True`，则不会生效。
+
+### set_freeze_system_prompt
+
+```python
+set_freeze_system_prompt(switch: bool) -> None
+```
+
+设置是否冻结系统提示词。
+
+### set_freeze_user_prompt
+
+```python
+set_freeze_user_prompt(switch: bool) -> None
+```
+
+设置是否冻结用户提示词。
+
+### get_freeze_system_prompt
+
+```python
+get_freeze_system_prompt() -> bool
+```
+
+返回系统提示词是否已冻结。
+
+### get_freeze_user_prompt
+
+```python
+get_freeze_user_prompt() -> bool
+```
+
+返回用户提示词是否已冻结。
