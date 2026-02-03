@@ -1,27 +1,27 @@
 # openjiuwen.core.sys_operation.base
 
+`openjiuwen.core.sys_operation.base` 模块定义了系统操作的基础类和运行模式枚举。
+
 ## class OperationMode
 
 ```python
-class openjiuwen.core.sys_operation.base.OperationMode(str, Enum)
+class OperationMode(str, Enum):
+    LOCAL = "local"
+    SANDBOX = "sandbox"
 ```
 
-系统操作运行模式的枚举类型。
+系统操作的运行模式枚举。
 
-**可选值**：
-
-- `OperationMode.LOCAL`：本地模式，在当前机器的文件系统 / 解释器 / Shell 环境下执行；
-- `OperationMode.SANDBOX`：沙箱模式，通过远程沙箱网关进行隔离执行。
-
-> 该枚举主要用于配置 `SysOperationCard.mode`，并在运行时选择对应的本地/沙箱实现。
+- `LOCAL`：本地模式 (`"local"`)，在当前运行环境中直接执行操作。
+- `SANDBOX`：沙箱模式 (`"sandbox"`)，通过网关连接远程沙箱环境执行操作。
 
 ## class BaseOperation
 
 ```python
-class openjiuwen.core.sys_operation.base.BaseOperation
+class BaseOperation
 ```
 
-系统操作（如 `fs/code/shell`）的抽象基类。
+所有具体操作（如文件、代码、Shell）的基类。
 
 ### __init__
 
@@ -31,18 +31,16 @@ def __init__(
     name: str,
     mode: OperationMode,
     description: str,
-    run_config: Union[LocalWorkConfig, SandboxGatewayConfig],
+    run_config: Union[LocalWorkConfig, SandboxGatewayConfig]
 )
 ```
 
 **参数**：
 
-- `name: str`：操作名称（如 `"fs"`、`"code"`、`"shell"`）；
-- `mode: OperationMode`：运行模式（LOCAL 或 SANDBOX）；
-- `description: str`：该操作的描述信息；
-- `run_config: LocalWorkConfig | SandboxGatewayConfig`：
-  - 本地模式下为 `LocalWorkConfig`；
-  - 沙箱模式下为 `SandboxGatewayConfig`。
+- `name`: 操作的唯一标识符（例如 "fs", "code", "shell"）。
+- `mode`: 运行模式 (`OperationMode`)。
+- `description`: 操作的人类可读描述。
+- `run_config`: 运行配置，根据模式不同可能是 `LocalWorkConfig` 或 `SandboxGatewayConfig`。
 
 ### list_tools
 
@@ -50,7 +48,4 @@ def __init__(
 def list_tools(self) -> list[ToolCard]
 ```
 
-返回当前操作下可用的工具列表（`ToolCard` 列表）。
-
-> 该方法在基类中仅作占位，具体工具枚举由各子类（如文件操作、代码执行操作等）实现。
-
+列出该操作提供的所有工具定义（`ToolCard` 列表）。具体的工具列表由子类实现。
