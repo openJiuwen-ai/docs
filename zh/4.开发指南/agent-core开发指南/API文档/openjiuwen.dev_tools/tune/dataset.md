@@ -1,62 +1,137 @@
-# openjiuwen.dev_tools.tune.dataset
+# openjiuwen.dev_tools.tune.dataset.case_loader
 
 ## class openjiuwen.dev_tools.tune.dataset.case_loader.CaseLoader
 
-`CaseLoader` 用于管理调优/评测数据集（持有 `Case` 列表并提供 shuffle/split 等操作）。
-
-它既可以作为 `Trainer.train/evaluate` 的输入，也可以在自定义训练流程中被迭代消费。
-
-## 初始化
-
 ```python
-CaseLoader(cases: List[Case])
+openjiuwen.dev_tools.tune.dataset.case_loader.CaseLoader(cases: List[Case])
 ```
+
+CaseLoader类用于管理用例，提供case的获取、乱序等操作，用于Agent训练、优化等场景。
 
 **参数**：
 
-- **cases**：样本列表。
-  - 会在初始化时为每个样本分配稳定的 `case_id`（形如 `case_0`、`case_1`）。
-  - 若你希望保留原始 uuid，请避免再调用 `CaseLoader._assign_case_id()`（内部实现细节）。
+- **cases**(List[[Case](base.md#class-openjiuwendev_toolstunebasecase)])：待加载的测试用例列表，每个`Case`应包含输入参数（inputs）、期望输出（label）以及工具（tools, 可选）。
 
-## 常用方法
-
-### get_cases
+**样例**：
 
 ```python
-get_cases(self) -> List[Case]
+>>> from openjiuwen.dev_tools.tune.base import Case
+>>> from openjiuwen.dev_tools.tune.dataset.case_loader import CaseLoader
+>>>
+>>> # 构造测试用例
+>>> case1 = Case(
+...     inputs = {"query": "沈自邠，字茂仁，号几轩，又号茂秀，浙江秀水长溪（今嘉兴南汇）人"},
+...     label = {"output": "[沈自邠]"},
+... )
+>>> case2 = Case(
+...     inputs={"query": "潘之恒（约1536—1621）字景升，号鸾啸生，冰华生，安徽歙县、岩寺人，侨寓金陵（今江苏南京）"},
+...     label={"output": "[潘之恒]"}
+... )
+>>> case_loader = CaseLoader([case1, case2])
 ```
-
-返回内部持有的样本列表（按当前顺序）。
 
 ### shuffle
 
 ```python
-shuffle(self, random_seed: int = 0)
+shuffle(random_seed: int = 0)
 ```
 
-原地打乱样本顺序，并重新分配 `case_id` 以反映新顺序。
+随机打乱用例列表。
+
 
 **参数**：
 
-- **random_seed**：随机种子。
-  - 用于保证实验可复现。
-  - 同一 seed + 同一初始样本顺序将得到相同 shuffle 结果。
+- **random_seed**(int, 可选)：随机种子，用于控制随机打乱的结果，默认值：`0`。
 
-### split
+**样例**：
 
 ```python
-split(self, ratio: float = 0.5) -> Tuple[CaseLoader, CaseLoader]
+>>> from openjiuwen.dev_tools.tune.base import Case
+>>> from openjiuwen.dev_tools.tune.dataset.case_loader import CaseLoader
+>>>
+>>> # 构造测试用例
+>>> case1 = Case(
+...     inputs = {"query": "沈自邠，字茂仁，号几轩，又号茂秀，浙江秀水长溪（今嘉兴南汇）人"},
+...     label = {"output": "[沈自邠]"},
+... )
+>>> case2 = Case(
+...     inputs={"query": "潘之恒（约1536—1621）字景升，号鸾啸生，冰华生，安徽歙县、岩寺人，侨寓金陵（今江苏南京）"},
+...     label={"output": "[潘之恒]"}
+... )
+>>> case_loader = CaseLoader([case1, case2])
+>>> case_loader.shuffle()
+>>> print(case_loader.get_cases())
+[Case(inputs={'query': '沈自邠，字茂仁，号几轩，又号茂秀，浙江秀水长溪（今嘉兴南汇）人'}, label={'output': '[沈自邠]'}, tools=None, case_id='case_0'), Case(inputs={'query': '潘之恒（约1536—1621） 字景升，号鸾啸生，冰华生，安徽歙县、岩寺人，侨寓金陵（今江苏南京）'}, label={'output': '[潘之恒]'}, tools=None, case_id='case_1')]
 ```
 
-按比例拆分数据集为两部分（常用于 train/val 切分）。
+---
 
-**参数**：
+### size
 
-- **ratio**：切分比例（0~1）。
-  - 表示第一部分占比（默认 0.5）。
-  - 若 ratio 越界，会记录错误并回退到默认 0.5（避免直接抛异常中断流程）。
+```python
+size() -> int
+```
+
+返回当前加载的用例总数。
 
 **返回**：
 
-- `(train_loader, val_loader)`：两个新的 `CaseLoader` 实例（内部会 deepcopy 样本以避免互相影响）。
+**int**，用例数量。
 
+**样例**：
+
+```python
+>>> from openjiuwen.dev_tools.tune.base import Case
+>>> from openjiuwen.dev_tools.tune.dataset.case_loader import CaseLoader
+>>>
+>>> # 构造测试用例
+>>> case1 = Case(
+...     inputs = {"query": "沈自邠，字茂仁，号几轩，又号茂秀，浙江秀水长溪（今嘉兴南汇）人"},
+...     label = {"output": "[沈自邠]"},
+... )
+>>> case2 = Case(
+...     inputs={"query": "潘之恒（约1536—1621）字景升，号鸾啸生，冰华生，安徽歙县、岩寺人，侨寓金陵（今江苏南京）"},
+...     label={"output": "[潘之恒]"}
+... )
+>>> case_loader = CaseLoader([case1, case2])
+>>> print(case_loader .size())
+2
+```
+
+---
+
+### get_cases
+
+```python
+get_cases() -> List[Case]
+```
+
+返回用例列表。
+
+
+**返回**：
+
+**List[[Case](base.md#class-openjiuwendev_toolstunebasecase)]**，当前加载的所有用例。
+
+**样例**：
+
+```python
+>>> from openjiuwen.dev_tools.tune.base import Case
+>>> from openjiuwen.dev_tools.tune.dataset.case_loader import CaseLoader
+>>>
+>>> # 构造测试用例
+>>> case1 = Case(
+...     inputs = {"query": "沈自邠，字茂仁，号几轩，又号茂秀，浙江秀水长溪（今嘉兴南汇）人"},
+...     label = {"output": "[沈自邠]"},
+... )
+>>> case2 = Case(
+...     inputs={"query": "潘之恒（约1536—1621）字景升，号鸾啸生，冰华生，安徽歙县、岩寺人，侨寓金陵（今江苏南京）"},
+...     label={"output": "[潘之恒]"}
+... )
+>>> case_loader = CaseLoader([case1, case2])
+>>> all_cases = case_loader.get_cases()
+>>> for case in all_cases:
+...     print(case.inputs)
+{'query': '沈自邠，字茂仁，号几轩，又号茂秀，浙江秀水长溪（今嘉兴南汇）人'}
+{'query': '潘之恒（约1536—1621）字景升，号鸾啸生，冰华生，安徽歙县、岩寺人，侨寓金陵（今江苏南京）'}
+```

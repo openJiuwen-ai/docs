@@ -2,59 +2,63 @@
 
 ## class openjiuwen.dev_tools.tune.base.Case
 
-`Case` 表示一条用于调优/评测的用例数据（inputs/label/tools 等）。
+```python
+openjiuwen.dev_tools.tune.base.Case(inputs: Dict[str, Any], label: Dict[str, Any], tools: Optional[List[ToolInfo]] = None)
+```
 
-在 tune 体系中，`Case` 的定位是“训练样本/评测样本”的最小单元。
+定义测试用例，包含输入参数、期望输出和可选工具信息。
+**参数**：
 
-### 字段
+- **inputs**(Dict[str, Any])：用例的输入参数。
+- **label**(Dict[str, Any])：期望的输出或标签信息，用于验证结果正确性。
+- **tools**(List[[ToolInfo](../../openjiuwen.core/foundation/llm/llm.md#toolcall)]，可选)：表示该用例可调用的工具列表（如API、插件等），用于多工具协作场景, 默认值：`None`。
 
-- **inputs** (Dict[str, Any])：输入。
-  - 必填，且至少包含 1 个字段。
-  - 建议与 Agent/Workflow 的输入协议保持一致（例如 `{ "query": "...", "context": ... }`）。
-  - `Trainer.predict` 会把 `case.inputs` 展开传给 agent.invoke，并附带 `conversation_id`（用于区分不同样本的会话）。
-- **label** (Dict[str, Any])：标准答案/目标输出。
-  - 必填，且至少包含 1 个字段。
-  - `DefaultEvaluator` 会把 label 与模型输出 predict 做一致性对比。
-  - label 建议尽量结构化（字段稳定），避免仅用长文本导致评测不稳定。
-- **tools** (Optional[List[ToolInfo]])：该样本允许使用的工具列表。
-  - 可选。
-  - 用于在优化与评测时提供工具上下文（部分 Optimizer/Evaluator 会用到工具描述）。
-- **case_id** (str)：样本 id。
-  - 默认自动生成 uuid。
-  - `CaseLoader` 会在加载后重写成稳定序号（例如 `case_0`、`case_1`），以便日志与对齐。
-
-### 示例
+**样例**：
 
 ```python
-from openjiuwen.dev_tools.tune import Case
-
-case = Case(
-    inputs={"query": "北京今天的天气怎么样？"},
-    label={"answer": "……标准答案……"},
-)
+>>> from openjiuwen.dev_tools.tune.base import Case
+>>>
+>>> # 构造测试用例
+>>> case1 = Case(
+...     inputs = {"query": "沈自邠，字茂仁，号几轩，又号茂秀，浙江秀水长溪（今嘉兴南汇）人"},
+...     label = {"output": "[沈自邠]"},
+... )
+>>> case2 = Case(
+...     inputs={"query": "潘之恒（约1536—1621）字景升，号鸾啸生，冰华生，安徽歙县、岩寺人，侨寓金陵（今江苏南京）"},
+...     label={"output": "[潘之恒]"}
+... )
 ```
 
 ## class openjiuwen.dev_tools.tune.base.EvaluatedCase
 
-`EvaluatedCase` 表示带评测结果的用例数据（通常由 Evaluator 产出，供 Optimizer/Trainer 使用）。
+```python
+openjiuwen.dev_tools.tune.base.EvaluatedCase(case: Case, answer: Dict[str, Any], score: float = 0.0, reason: str = "")
+```
 
-它把“样本 + 模型输出 + 评分/原因”绑定在一起，作为 Optimizer 反向更新的主要信号来源。
+`EvaluatedCase`为经过评估器评估后的用例，包含原始用例、模型输出、评估得分与原因说明，适用于自动化评测流程中的结果记录与分析。
 
-### 字段
+**参数**：
 
-- **case** (Case)：原始样本。
-  - 内含 inputs/label/tools/case_id。
-- **answer** (Dict[str, Any] | None)：模型输出。
-  - 通常来自 `Trainer.predict`。
-  - 若模型执行异常，可能是 `{"error": "..."} ` 结构（具体取决于 predict 的错误处理）。
-- **score** (float)：评分，范围 0~1。
-  - `DefaultEvaluator` 默认输出 1.0（通过）或 0.0（不通过）。
-  - 你也可以实现自定义 evaluator 输出更细粒度评分。
-- **reason** (str)：评分原因/解释。
-  - 建议写明“不一致点/失败原因”，以便 Optimizer 能聚焦修复。
-  - `BadCasePromptBuilder` 等会把 reason 作为优化信号的一部分。
+- **case**(Case)：原始测试用例，包含inputs、label、tools等字段。
+- **answer**(Dict[str, Any])：模型输出结果，用于与label对比。
+- **score**(float)：评估得分。范围为[0, 1]，分值越大表示评估结果越好。
+- **reason**(str)：评估失败或通过的原因说明，用于调试和分析。
 
-### 属性快捷访问
+**样例**：
 
-- **inputs/label/tools/case_id**：`EvaluatedCase` 提供了 property 直接透传到 `case.*`，便于在优化器里访问。
-
+```python
+>>> from openjiuwen.dev_tools.tune.base import EvaluatedCase
+>>> from openjiuwen.dev_tools.tune.base import Case
+>>> # 构造测试用例
+>>> case1 = Case(
+...     inputs = {"query": "沈自邠，字茂仁，号几轩，又号茂秀，浙江秀水长溪（今嘉兴南汇）人"},
+...     label = {"output": "[沈自邠]"},
+... )
+>>>
+>>> evaluated_case = EvaluatedCase(
+...     case=case1,
+...     answer={"output": "[沈自邠, 茂仁]"},
+...     score=0.0,
+...     reason="答案不一致，模型回答比标准答案多了'茂仁'"
+... )
+```
