@@ -9,7 +9,7 @@
 class openjiuwen.core.workflow.components.llm.llm_comp.LLMCompConfig(ComponentConfig)
 ```
 
-LLM 组件的配置数据类，继承自 [ComponentConfig](../base.md)。
+LLM 组件的配置数据类，继承自 [ComponentConfig](../components.md)。
 
 ### 字段
 
@@ -31,7 +31,7 @@ LLM 组件的配置数据类，继承自 [ComponentConfig](../base.md)。
 class openjiuwen.core.workflow.components.llm.llm_comp.LLMComponent(ComponentComposable)
 ```
 
-大模型组件，实现 [ComponentComposable](../base.md)。根据 [LLMCompConfig](llm_comp.md#class-llmcompconfig) 构造 [LLMExecutable](llm_comp.md#class-llmexecutable)，在 [to_executable](llm_comp.md#to_executable) 时校验模板、响应格式与输出配置，并创建可执行实例。
+大模型组件，实现 [ComponentComposable](../components.md)。根据 [LLMCompConfig](llm_comp.md#class-llmcompconfig) 构造 [LLMExecutable](llm_comp.md#class-llmexecutable)，在 [to_executable](llm_comp.md#to_executable) 时校验模板、响应格式与输出配置，并创建可执行实例。
 
 ### \_\_init\_\_
 

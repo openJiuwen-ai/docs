@@ -53,7 +53,7 @@ class openjiuwen.core.workflow.components.llm.questioner_comp.QuestionerConfig(C
 class openjiuwen.core.workflow.components.llm.questioner_comp.QuestionerComponent(ComponentComposable)
 ```
 
-提问器组件，实现 [ComponentComposable](../base.md)。根据 [QuestionerConfig](questioner_comp.md#class-questionerconfig) 构造 QuestionerExecutable；可执行对象在 `invoke` 时加载/恢复会话中的提问器状态，按状态与配置决定是直接提问、从历史抽取还是结束并输出，必要时调用 [session.interact](../../../session/interaction.md) 进行人机交互。
+提问器组件，实现 [ComponentComposable](../components.md)。根据 [QuestionerConfig](questioner_comp.md#class-questionerconfig) 构造 QuestionerExecutable；可执行对象在 `invoke` 时加载/恢复会话中的提问器状态，按状态与配置决定是直接提问、从历史抽取还是结束并输出，必要时调用 [session.interact](../../../session/interaction.md) 进行人机交互。
 
 ### \_\_init\_\_
 

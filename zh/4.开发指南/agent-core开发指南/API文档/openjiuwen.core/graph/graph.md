@@ -1,4 +1,4 @@
-# openjiuwen.core.graph.base
+# openjiuwen.core.graph
 
 ## class Graph
 

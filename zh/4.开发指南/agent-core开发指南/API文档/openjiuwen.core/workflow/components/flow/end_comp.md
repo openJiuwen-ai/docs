@@ -22,7 +22,7 @@ class openjiuwen.core.workflow.components.flow.end_comp.EndConfig(BaseModel)
 class openjiuwen.core.workflow.components.flow.end_comp.End(WorkflowComponent)
 ```
 
-工作流结束组件，继承自 [WorkflowComponent](../base.md#class-openjiuwencoreworkflowcomponentsbaseworkflowcomponent)。无配置时直接将上游输入整理为 `output` 输出；有配置时使用 [EndConfig](end_comp.md#class-endconfig) 中的 `response_template` 渲染结果，并支持流式输出。
+工作流结束组件，继承自 [WorkflowComponent](../components.md#class-workflowcomponent)。无配置时直接将上游输入整理为 `output` 输出；有配置时使用 [EndConfig](end_comp.md#class-endconfig) 中的 `response_template` 渲染结果，并支持流式输出。
 
 ### \_\_init\_\_
 

@@ -1,10 +1,11 @@
-# openjiuwen.core.workflow.components.base
+# openjiuwen.core.workflow.components
+## class ComponentExecutable
 
-## class openjiuwen.core.workflow.components.base.WorkflowComponent
+## class ComponentComposable
 
-> **注意**：组件类通过 `openjiuwen.core.workflow` 模块导出。建议使用 `from openjiuwen.core.workflow import WorkflowComponent` 导入。
+> **注意**：组件类通过 `openjiuwen.core.workflow` 模块导出。建议使用 `from openjiuwen.core.workflow import ComponentComposable` 导入。
 
-`WorkflowComponent`是自定义工作流组件的抽象基类。所有自定义组件需继承该类，并实现将自身加入图以及转换为可执行单元（`ComponentExecutable`）的逻辑。
+`ComponentComposable`是自定义工作流组件的抽象基类。所有自定义组件需继承该类，并实现将自身加入图以及转换为可执行单元（`ComponentExecutable`）的逻辑。
 
 ### add_component
 
@@ -16,7 +17,7 @@ def add_component(self, graph: Graph, node_id: str, wait_for_all: bool = False) 
 
 **参数**：
 
-- **graph**([Graph](../../graph/base.md#class-graph))：`workflow`的`graph`实例。
+- **graph**([Graph](../../graph/graph.md#class-graph))：`workflow`的`graph`实例。
 - **node_id**(str)：本组件在`graph`中唯一的`node_id`。
 - **wait_for_all**(bool)：本组件是否需要等待前置组件全部执行完成，`True`表示等待，`False`表示不等待。默认值：`False`。
 
@@ -27,15 +28,15 @@ def add_component(self, graph: Graph, node_id: str, wait_for_all: bool = False) 
 >>> import random
 >>> 
 >>> from openjiuwen.core.context_engine import ModelContext
->>> from openjiuwen.core.workflow import WorkflowComponent, BranchRouter, End, Start, Workflow, Input, Output
+>>> from openjiuwen.core.workflow import ComponentComposable, BranchRouter, End, Start, Workflow, Input, Output
 >>> from openjiuwen.core.session import Session
 >>> from openjiuwen.core.session.workflow import create_workflow_session
->>> from openjiuwen.core.graph.base import Graph
+>>> from openjiuwen.core.graph import Graph
 >>> 
 >>> 
 >>> # 自定义组件`CustomIntentComponent`实现了`add_component`接口，用于为本组件定制内置的条件边，并自定义实现了接口`add_branch`用于绑定内置条件边的目标节点。
 >>> # 创建自定义组件，并实现add_component接口
->>> class CustomIntentComponent(WorkflowComponent):
+>>> class CustomIntentComponent(ComponentComposable):
 ...     def __init__(self, default_intents):
 ...         super().__init__()
 ...         self._intents = default_intents
@@ -53,7 +54,7 @@ def add_component(self, graph: Graph, node_id: str, wait_for_all: bool = False) 
 ...         return {'result': self._intents[random.randint(0, len(self._intents) - 1)]}
 >>> 
 >>> 
->>> class TravelComponent(WorkflowComponent):
+>>> class TravelComponent(ComponentComposable):
 ...     def __init__(self, node_id):
 ...         super().__init__()
 ...         self.node_id = node_id
@@ -63,7 +64,7 @@ def add_component(self, graph: Graph, node_id: str, wait_for_all: bool = False) 
 ...         return inputs
 >>> 
 >>> 
->>> class EatComponent(WorkflowComponent):
+>>> class EatComponent(ComponentComposable):
 ...     def __init__(self, node_id):
 ...         super().__init__()
 ...         self.node_id = node_id
@@ -109,7 +110,7 @@ def to_executable(self) -> Executable
 
 **返回**：
 
-**[Executable](../../graph/base.md)**，本组件的执行实例。
+**[Executable](../../graph/graph.md)**，本组件的执行实例。
 
 **样例**：
 
@@ -121,11 +122,11 @@ def to_executable(self) -> Executable
 >>> from openjiuwen.core.graph.executable import Executable
 >>> from openjiuwen.core.session import Session
 >>> from openjiuwen.core.session.workflow import create_workflow_session
->>> from openjiuwen.core.workflow import ComponentExecutable, End, Input, Output, Start, Workflow, WorkflowComponent
+>>> from openjiuwen.core.workflow import ComponentExecutable, End, Input, Output, Start, Workflow, ComponentComposable
 >>> 
->>> # `CalculateComponent`继承`WorkflowComponent`，是用于数学运算的组件，实现`to_executable`方法提供了实现计算逻辑的`ComputeExecutor`实例，实现`add_component`方法将`CalculateComponent`节点添加到工作流中。
+>>> # `CalculateComponent`继承`ComponentComposable`，是用于数学运算的组件，实现`to_executable`方法提供了实现计算逻辑的`ComputeExecutor`实例，实现`add_component`方法将`CalculateComponent`节点添加到工作流中。
 >>> # 创建自定义组件，并实现to_executable接口
->>> class CalculateComponent(WorkflowComponent):
+>>> class CalculateComponent(ComponentComposable):
 ...     def to_executable(self) -> Executable:
 ...         return ComputeExecutor()
 >>> 
@@ -162,3 +163,6 @@ def to_executable(self) -> Executable
 ...     asyncio.run(run_workflow())
 {'output': {'result': 3}}
 ```
+
+
+## class WorkflowComponent

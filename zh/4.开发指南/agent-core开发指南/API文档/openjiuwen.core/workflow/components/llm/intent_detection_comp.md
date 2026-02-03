@@ -30,7 +30,7 @@ class openjiuwen.core.workflow.components.llm.intent_detection_comp.IntentDetect
 class openjiuwen.core.workflow.components.llm.intent_detection_comp.IntentDetectionComponent(ComponentComposable)
 ```
 
-意图识别组件，实现 [ComponentComposable](../base.md)。内部持有一个 [BranchRouter](../flow/branch_router.md#class-branchrouter)，通过 `add_component` 将本节点加入图并添加条件边，通过 `add_branch` 配置“分类 → 下游节点”的映射；`to_executable` 返回 IntentDetectionExecutable，执行时调用大模型得到分类结果并写入会话，供路由器求值。
+意图识别组件，实现 [ComponentComposable](../components.md)。内部持有一个 [BranchRouter](../flow/branch_router.md#class-branchrouter)，通过 `add_component` 将本节点加入图并添加条件边，通过 `add_branch` 配置“分类 → 下游节点”的映射；`to_executable` 返回 IntentDetectionExecutable，执行时调用大模型得到分类结果并写入会话，供路由器求值。
 
 ### \_\_init\_\_
 
@@ -48,7 +48,7 @@ def __init__(self, component_config: Optional[IntentDetectionCompConfig] = None)
 def add_component(self, graph: Graph, node_id: str, wait_for_all: bool = False) -> None
 ```
 
-将本组件作为节点加入 [Graph](../../../graph/base.md#class-graph)，并为该节点添加条件边，由内部 [BranchRouter](../flow/branch_router.md#class-branchrouter) 根据意图识别结果路由到下游。
+将本组件作为节点加入 [Graph](../../../graph/graph.md#class-graph)，并为该节点添加条件边，由内部 [BranchRouter](../flow/branch_router.md#class-branchrouter) 根据意图识别结果路由到下游。
 
 **参数**：
 

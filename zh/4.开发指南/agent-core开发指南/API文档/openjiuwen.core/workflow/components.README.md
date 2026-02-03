@@ -4,7 +4,7 @@
 
 | 文档 | 说明 |
 |------|------|
-| [base](./components/base.md) | WorkflowComponent、ComponentExecutable、ComponentConfig |
+| [base](components/components.md) | WorkflowComponent、ComponentExecutable、ComponentConfig |
 | [branch_comp](./components/flow/branch_comp.md) | BranchComponent |
 | [branch_router](./components/flow/branch_router.md) | BranchRouter、Branch |
 | [condition/condition](./components/condition/condition.md) | Condition、FuncCondition、AlwaysTrue |

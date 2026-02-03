@@ -9,7 +9,7 @@
 class openjiuwen.core.workflow.components.tool.tool_comp.ToolComponentConfig(ComponentConfig)
 ```
 
-工具组件的配置数据类，继承自 [ComponentConfig](../base.md)。当前主要用于指定要绑定的工具 id，其余为预留扩展。
+工具组件的配置数据类，继承自 [ComponentConfig](../components.md)。当前主要用于指定要绑定的工具 id，其余为预留扩展。
 
 ### 字段
 
@@ -23,7 +23,7 @@ class openjiuwen.core.workflow.components.tool.tool_comp.ToolComponentConfig(Com
 class openjiuwen.core.workflow.components.tool.tool_comp.ToolComponent(ComponentComposable)
 ```
 
-工具组件，实现 [ComponentComposable](../base.md)。在构造时根据 [ToolComponentConfig](tool_comp.md#class-toolcomponentconfig) 的 `tool_id` 从 `Runner.resource_mgr` 获取工具实例；[to_executable](tool_comp.md#to_executable) 返回 [ToolExecutable](tool_comp.md#class-toolexecutable) 实例，由该可执行对象在运行时校验输入并调用工具。
+工具组件，实现 [ComponentComposable](../components.md)。在构造时根据 [ToolComponentConfig](tool_comp.md#class-toolcomponentconfig) 的 `tool_id` 从 `Runner.resource_mgr` 获取工具实例；[to_executable](tool_comp.md#to_executable) 返回 [ToolExecutable](tool_comp.md#class-toolexecutable) 实例，由该可执行对象在运行时校验输入并调用工具。
 
 ### \_\_init\_\_
 

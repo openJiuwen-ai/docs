@@ -1,102 +1,223 @@
-# openjiuwen.core.runner.runner
+# openjiuwen.core.runner.Runner
 
-## class Runner
+## class openjiuwen.core.runner.Runner
+Runner提供了Workflow、Agent、Tool和Group的统一执行接口。
 
-```python
-class openjiuwen.core.runner.runner.Runner
-```
 
-`Runner` 是 openJiuwen 中统一的**执行入口与资源管理中心**，负责：
-
-- 执行 Workflow（工作流）、Agent（单智能体）、AgentGroup（多智能体协作）；
-*- 管理工作流、Agent、工具、大模型、系统操作等资源（通过 `ResourceMgr`）；
-*- 在分布式模式下，启动和管理消息队列以及系统级订阅。
-
-对应源码：`openjiuwen.core.runner.runner.Runner`。
-
-### __init__
-
-```python
-def __init__(self, runner_id: str = "global", config: RunnerConfig | None = None)
-```
-
-**参数**：
-
-- `runner_id: str`：Runner 的唯一 id，默认 `"global"`；
-- `config: RunnerConfig | None`：Runner 全局配置，不传时使用 `DEFAULT_RUNNER_CONFIG`（本地模式、fake MQ 等）。
-
-构造时会：
-
-- 创建资源管理器 `ResourceMgr()`；
-- 创建本地消息队列 `LocalMessageQueue()`；
-- 调用 `set_runner_config(config or DEFAULT_RUNNER_CONFIG)` 初始化 Runner 全局配置。
-
-### 属性 resource_mgr / pubsub / dist_pubsub
-
-```python
-@property
-def resource_mgr(self) -> ResourceMgr
-
-@property
-def pubsub(self)
-
-@property
-def dist_pubsub(self)
-```
-
-- `resource_mgr`：返回 `ResourceMgr` 实例，用于统一管理工作流、Agent、AgentGroup、Tool、Model、Prompt、SysOperation 等资源；
-- `pubsub`：本地消息队列（`LocalMessageQueue` 实例），用于进程内发布/订阅；
-- `dist_pubsub`：分布式消息队列（仅在 `distributed_mode=True` 时初始化），用于跨进程通信。
-
-### set_config / get_config
-
-```python
-def set_config(self, config: RunnerConfig) -> None
-def get_config(self) -> RunnerConfig
-```
-
-- `set_config`：设置 Runner 全局配置（内部调用 `set_runner_config(config)`）；
-- `get_config`：获取当前全局配置（内部调用 `get_runner_config()`）。
-
-## 生命周期管理
-
-### async start
-
+### start
 ```python
 async def start(self) -> bool
 ```
+启动Runner。
 
-启动 Runner 及其相关组件。
 
-**行为**：
-
-- 打印启动日志；
-- 若 `RunnerConfig.distributed_mode` 为 `True`：
-  - 通过 `MessageQueueFactory.create(...)` 创建分布式消息队列实例并启动；
-  - 创建 `ReplyTopicSubscription` 实例用于处理系统级回复，并启动；
-  - 启动本地消息队列 `self._message_queue.start()`；
-- 若全部成功，返回 `True`，否则返回 `False` 并输出错误日志。
-
-### async stop
-
+**样例**：
 ```python
-async def stop(self) -> bool
+>>> import asyncio
+>>>
+>>> from openjiuwen.core.runner.runner import Runner
+>>> 
+>>> asyncio.run(Runner.start())
 ```
 
-停止 Runner 并释放资源。
+### stop
+```python
+async def stop(self)
+```
+关闭Runner。
 
-**行为**：
 
-- 若当前处于分布式模式：
-  - 关闭并清理 `ReplyTopicSubscription`；
-  - 停止分布式消息队列；
-- 停止本地消息队列；
-- 始终调用 `self._resource_manager.release()` 释放所有资源；
-- 打印停止日志，并返回停止结果（`True/False`）。
+**样例**：
+```python
+>>> import asyncio
+>>>
+>>> from openjiuwen.core.runner.runner import Runner
+>>> 
+>>> asyncio.run(Runner.stop())
+```
 
-## 执行工作流
+### resource_mgr
+```python
+@property
+def resource_mgr(self) -> ResourceMgr:
+```
 
-### async run_workflow
+
+### run_agent
+
+```python
+async def run_agent(
+    self,
+    agent: str | BaseAgent | LegacyBaseAgent,
+    inputs: Any,
+    *,
+    session: str | Session | None = None,
+    context: ModelContext | None = None,
+    envs: dict[str, Any] | None = None,
+) -> Any
+```
+执行agent并返回其结果。
+
+**参数**:
+
+* **agent(str|Agent)**：agent的ID或agent实例。
+* **inputs(Any)**：输入数据。
+
+**返回**：
+
+**Any**，agent执行结果。
+
+**异常**：
+
+- **JiuWenBaseException**：openJiuwen异常基类，具体详细信息和解决方法，参见[StatusCode](../common/exception/status_code.md)。
+
+**样例**：
+
+```python
+>>> import asyncio
+>>> 
+>>> from openjiuwen.agent.common.enum import ControllerType
+>>> from openjiuwen.agent.common.schema import WorkflowSchema
+>>> from openjiuwen.agent.config.workflow_config import WorkflowAgentConfig
+>>> from openjiuwen.agent.workflow_agent.workflow_agent import WorkflowAgent
+>>> from openjiuwen.core.component.end_comp import End
+>>> from openjiuwen.core.component.start_comp import Start
+>>> from openjiuwen.core.runner.runner import resource_mgr
+>>> from openjiuwen.core.workflow.base import Workflow
+>>> from openjiuwen.core.workflow.workflow_config import WorkflowConfig, WorkflowMetadata
+>>> 
+>>> # 创建工作流flow, 将flow注册到资源管理器
+>>> flow = Workflow(workflow_config=WorkflowConfig(
+...     metadata=WorkflowMetadata(id="workflow_id", version="1", name="简单工作流",
+...                               description="this_is_a_demo")))
+... 
+>>> flow.set_start_comp("start", Start(), inputs_schema={"query": "${query}"})
+>>> flow.set_end_comp("end", End(), inputs_schema={"result": "${start.query}"})
+>>> flow.add_connection("start", "end")
+>>> 
+>>> resource_mgr.workflow().add_workflow("workflow_id_1", flow)
+>>> 
+>>> # 创建Agent
+>>> 
+>>> workflow_agent_config = WorkflowAgentConfig(id="agent_id", version="1", description="this_is_a_demo",
+...                                            workflows=[WorkflowSchema(
+...                                                id="workflow_id",
+...                                                version="1",
+...                                                name="简单工作流",
+...                                                description="this_is_a_demo",
+...                                                inputs={"query": {"type": "string"}},
+...                                            )],
+...                                            controller_type=ControllerType.WorkflowController
+...                                            )
+...
+>>> agent = WorkflowAgent(agent_config=workflow_agent_config)
+>>> 
+>>> from openjiuwen.core.runner.runner import Runner
+>>> 
+>>> # 直接调用agent实例
+>>> print(asyncio.run(Runner.run_agent(agent, inputs={"conversion_id": "id1", "query": "哈哈"})))
+{'output': WorkflowOutput(result={'output': {'result': '哈哈'}}, state=<WorkflowExecutionState.COMPLETED: 'COMPLETED'>), 'result_type': 'answer'}
+>>> 
+>>> # 通过id，调用agent，需要首先将agent注册
+>>> Runner.add_agent("agent_id", agent)
+>>> print(asyncio.run(Runner.run_agent("agent_id", inputs={"conversion_id": "id1", "query": "哈哈"})))
+{'output': WorkflowOutput(result={'output': {'result': '哈哈'}}, state=<WorkflowExecutionState.COMPLETED: 'COMPLETED'>), 'result_type': 'answer'}
+```
+
+### run_agent_streaming
+
+```python
+async def run_agent_streaming(
+    self,
+    agent: str | BaseAgent,
+    inputs: Any,
+    *,
+    session: str | Session | None = None,
+    context: ModelContext | None = None,
+    stream_modes: list[BaseStreamMode] | None = None,
+    envs: dict[str, Any] | None = None,
+)
+```
+流式执行Agent并返回生成器。
+
+**参数**:
+
+* **agent(str|Agent)**：agent的ID或agent实例。
+* **inputs(Any)**：输入数据。
+
+**返回**:
+
+**AsyncGenerator**，流式结果生成器。
+
+**异常**：
+
+- **JiuWenBaseException**：openJiuwen异常基类，具体详细信息和解决方法，参见[StatusCode](../common/exception/status_code.md)。
+
+**样例**：
+
+```python
+>>> import asyncio
+>>> 
+>>> from openjiuwen.agent.common.enum import ControllerType
+>>> from openjiuwen.agent.common.schema import WorkflowSchema
+>>> from openjiuwen.agent.config.workflow_config import WorkflowAgentConfig
+>>> from openjiuwen.agent.workflow_agent.workflow_agent import WorkflowAgent
+>>> from openjiuwen.core.component.end_comp import End
+>>> from openjiuwen.core.component.start_comp import Start
+>>> from openjiuwen.core.runner.runner import resource_mgr
+>>> from openjiuwen.core.stream.base import OutputSchema
+>>> from openjiuwen.core.workflow.base import Workflow
+>>> from openjiuwen.core.workflow.workflow_config import WorkflowConfig, WorkflowMetadata
+>>> 
+>>> # 创建工作流flow, 将flow注册到资源管理器
+>>> flow = Workflow(workflow_config=WorkflowConfig(
+...     metadata=WorkflowMetadata(id="workflow_id", version="1", name="简单工作流",
+...                               description="this_is_a_demo")))
+... 
+>>> flow.set_start_comp("start", Start(), inputs_schema={"query": "${query}"})
+>>> flow.set_end_comp("end", End(), inputs_schema={"result": "${start.query}"})
+>>> flow.add_connection("start", "end")
+>>> 
+>>> resource_mgr.workflow().add_workflow("workflow_id_1", flow)
+>>> 
+>>> # 创建Agent
+>>> workflow_agent_config = WorkflowAgentConfig(id="agent_id", version="1", description="this_is_a_demo",
+...                                            workflows=[WorkflowSchema(
+...                                                id="workflow_id",
+...                                                version="1",
+...                                                name="简单工作流",
+...                                                description="this_is_a_demo",
+...                                                inputs={"query": {"type": "string"}},
+...                                            )],
+...                                            controller_type=ControllerType.WorkflowController
+...                                            )
+... 
+>>> agent = WorkflowAgent(agent_config=workflow_agent_config)
+>>> 
+>>> from openjiuwen.core.runner.runner import Runner
+>>> async def run_workflow():
+...     result = Runner.run_agent_streaming(agent, inputs={"conversion_id": "id1", "query": "哈哈"})
+...     async for chunk in result:
+...         if isinstance(chunk, OutputSchema):
+...             print(chunk)
+... 
+>>> asyncio.run(run_workflow())
+type='workflow_final' index=0 payload={'output': {'result': '哈哈'}}
+>>> 
+>>> # 通过id，调用agent，需要首先将agent注册
+>>> Runner.add_agent("agent_id", agent)
+>>> async def run_workflow():
+...     result = Runner.run_agent_streaming("agent_id", inputs={"conversion_id": "id1", "query": "哈哈"})
+...     async for chunk in result:
+...         if isinstance(chunk, OutputSchema):
+...             print(chunk)
+... 
+>>> asyncio.run(run_workflow())
+type='workflow_final' index=0 payload={'output': {'result': '哈哈'}}
+
+```
+
+### run_workflow
 
 ```python
 async def run_workflow(
@@ -109,33 +230,84 @@ async def run_workflow(
     envs: dict[str, Any] | None = None,
 ) -> Any
 ```
-
-执行单个 Workflow，并返回其执行结果。
+执行工作流并返回其执行结果。
 
 **参数**：
 
-- `workflow: str | Workflow`：
-  - 若为字符串：表示 workflow id，Runner 会从 `resource_mgr.workflow()` 中获取对应的 Workflow 实例；
-  - 若为 `Workflow` 实例：直接使用该实例执行。
-- `inputs: Any`：工作流输入数据。
-- `session: str | Session | None`：
-  - 可以传入已有的工作流会话 id（字符串）或 `Session` 实例；
-  - 若不传，则内部自动创建新的工作流会话（`create_workflow_session()`）。
-- `context: ModelContext | None`：模型上下文（如历史消息、token 统计等），可选。
-- `envs: dict[str, Any] | None`：执行环境变量/配置覆盖项（当前实现中预留）。
+* **workflow(str|Workflow)**：工作流ID或者工作流实例。不可取值为`None`或`''`。
+* **inputs(Any)**：执行工作流的输入数据。
+* **runtime(Runtime|WorkflowRuntime)**：运行时实例。若提供的运行时来源于Agent的运行时，则`workflow`必须被Agent绑定。默认为`None`。
+* **context(Context)**：用于存储用户对话信息的上下文引擎。默认为`None`，表示不开启上下文引擎功能。
 
-**行为**：
+**返回**：
 
-1. 通过 `_prepare_workflow(workflow, session)` 获取 `(workflow_instance, workflow_session)`：
-   - 字符串 id 会从资源管理器中查找；
-   - 会话参数会根据类型创建或转换为 WorkflowSession。
-2. 调用：
+**Any**，工作流执行结果。
 
-   ```python
-   return await workflow_instance.invoke(inputs, session=workflow_session, context=context)
-   ```
+**异常**：
 
-### async run_workflow_streaming
+- **JiuWenBaseException**：openJiuwen异常基类，具体详细信息和解决方法，参见[StatusCode](../common/exception/status_code.md)。
+
+**样例**：
+
+```python
+>>> import asyncio
+>>> 
+>>> from openjiuwen.core.component.base import WorkflowComponent
+>>> from openjiuwen.core.component.end_comp import End
+>>> from openjiuwen.core.component.start_comp import Start
+>>> from openjiuwen.core.context_engine.base import Context
+>>> from openjiuwen.core.runtime.base import ComponentExecutable, Input, Output
+>>> from openjiuwen.core.runtime.runtime import Runtime
+>>> from openjiuwen.core.runtime.workflow import WorkflowRuntime
+>>> from openjiuwen.core.workflow.base import Workflow
+>>> from openjiuwen.core.workflow.workflow_config import WorkflowConfig, WorkflowMetadata
+>>> from openjiuwen.core.runner.runner import Runner, resource_mgr
+>>> 
+>>> # 自定义组件Node
+>>> class Node(ComponentExecutable, WorkflowComponent):
+...     def __init__(self):
+...         super().__init__()
+... 
+...     async def invoke(self, inputs: Input, runtime: Runtime, context: Context) -> Output:
+...         return inputs
+...
+>>> # 创建工作流
+>>> def build_workflow(name, workflow_id, version):
+...     workflow_config = WorkflowConfig(
+...         metadata=WorkflowMetadata(
+...             id=workflow_id,
+...             version=version,
+...             name=name,
+...         )
+...     )
+...     flow = Workflow(workflow_config=workflow_config)
+...     flow.set_start_comp("start", Start(),
+...                         inputs_schema={
+...                             "query": "${query}"})
+...     flow.add_workflow_comp("node_a", Node(),
+...                            inputs_schema={
+...                                "output": "${start.query}"})
+...     flow.set_end_comp("end", End(),
+...                       inputs_schema={
+...                           "result": "${node_a.output}"})
+...     flow.add_connection("start", "node_a")
+...     flow.add_connection("node_a", "end")
+...     return flow
+... 
+>>> 
+>>> # 直接运行workflow
+>>> workflow = build_workflow("test_workflow", "test_workflow", "1")
+>>> result = asyncio.run(Runner.run_workflow(workflow=workflow, inputs={"query": "query workflow"}, runtime=WorkflowRuntime()))
+>>> print(result)
+result={'output': {'result': 'query workflow'}} state=<WorkflowExecutionState.COMPLETED: 'COMPLETED'>
+>>> # 指定workflow的id，执行工作流，首先需要将workflow添加到资源管理器中
+>>> resource_mgr.workflow().add_workflow("test_workflow", workflow)
+>>> result = asyncio.run(Runner.run_workflow(workflow="test_workflow", inputs={"query": "query workflow"}, runtime=WorkflowRuntime()))
+>>> print(result)
+result={'output': {'result': 'query workflow'}} state=<WorkflowExecutionState.COMPLETED: 'COMPLETED'>
+```
+
+### run_workflow_streaming
 
 ```python
 async def run_workflow_streaming(
@@ -150,75 +322,101 @@ async def run_workflow_streaming(
 )
 ```
 
-以流式方式执行 Workflow，返回一个异步迭代器，每次迭代产生一个 `WorkflowChunk`（通常是 `OutputSchema/CustomSchema/TraceSchema`）。
+流式执行工作流并返回其执行结果。
 
-**行为**：
+**参数**：
 
-1. 与 `run_workflow` 相同，通过 `_prepare_workflow` 获取实例和会话；
-2. 调用：
+* **workflow(str|Workflow)**：工作流ID或者工作流实例。不可取值为`None`或`''`。
+* **inputs(Any)**：执行工作流的输入数据。
+* **runtime(Runtime|WorkflowRuntime)**：运行时实例。若提供的运行时来源于Agent的运行时，则入参中`workflow`必须被Agent绑定。默认为`None`。
+* **stream_modes(list[BaseStreamMode])**：流式输出的类型。默认为`None`。
+* **context(Context)**：用于存储用户对话信息的上下文引擎。默认为`None`，表示不开启上下文引擎功能。
 
-   ```python
-   async for chunk in workflow_instance.stream(
-       inputs,
-       session=workflow_session,
-       stream_modes=stream_modes,
-       context=context,
-   ):
-       yield chunk
-   ```
+**返回**：
 
-## 执行 Agent
+**AsyncGenerator**，流式结果生成器。
 
-### async run_agent
+**异常**：
 
-```python
-async def run_agent(
-    self,
-    agent: str | BaseAgent | LegacyBaseAgent,
-    inputs: Any,
-    *,
-    session: str | Session | None = None,
-    context: ModelContext | None = None,
-    envs: dict[str, Any] | None = None,
-) -> Any
-```
+- **JiuWenBaseException**：openJiuwen异常基类，具体详细信息和解决方法，参见[StatusCode](../common/exception/status_code.md)。
 
-执行单个 Agent，并返回其执行结果。
-
-**行为（简要）**：
-
-- 通过 `_prepare_agent(agent, inputs)` 获取 `agent_instance` 与 `agent_session`；
-- 若 `agent_instance` 是 `RemoteAgent`：直接调用 `agent_instance.invoke(inputs)`；
-- 若是 `LegacyBaseAgent`：调用 `agent_instance.invoke(inputs, session=None)`（由控制器内部管理会话）；
-- 否则：调用 `agent_instance.invoke(inputs, agent_session)`，并在结束后执行 `agent_session._inner.post_run()`。
-
-### async run_agent_streaming
+**样例**：
 
 ```python
-async def run_agent_streaming(
-    self,
-    agent: str | BaseAgent | LegacyBaseAgent,
-    inputs: Any,
-    *,
-    session: str | Session | None = None,
-    context: ModelContext | None = None,
-    stream_modes: list[BaseStreamMode] | None = None,
-    envs: dict[str, Any] | None = None,
-)
+>>> import asyncio
+>>> 
+>>> from openjiuwen.core.component.base import WorkflowComponent
+>>> from openjiuwen.core.component.end_comp import End
+>>> from openjiuwen.core.component.start_comp import Start
+>>> from openjiuwen.core.context_engine.base import Context
+>>> from openjiuwen.core.runner.runner import Runner
+>>> from openjiuwen.core.runtime.base import ComponentExecutable, Input, Output
+>>> from openjiuwen.core.runtime.runtime import Runtime
+>>> from openjiuwen.core.runtime.workflow import WorkflowRuntime
+>>> from openjiuwen.core.stream.base import CustomSchema
+>>> from openjiuwen.core.workflow.base import Workflow
+>>> from openjiuwen.core.workflow.workflow_config import WorkflowConfig, WorkflowMetadata
+>>> 
+>>> # 自定义组件Node
+>>> class Node(ComponentExecutable, WorkflowComponent):
+...    def __init__(self):
+...        super().__init__()
+...
+...    async def invoke(self, inputs: Input, runtime: Runtime, context: Context) -> Output:
+...        await runtime.write_custom_stream({"1": "1"})
+...        await runtime.write_custom_stream({"2": "2"})
+...        return inputs
+...
+>>> # 创建工作流
+>>> def build_workflow(name, workflow_id, version):
+...    workflow_config = WorkflowConfig(
+...        metadata=WorkflowMetadata(
+...            id=workflow_id,
+...            version=version,
+...            name=name,
+...        )
+...    )
+...    flow = Workflow(workflow_config=workflow_config)
+...    flow.set_start_comp("start", Start(),
+...                        inputs_schema={
+...                            "query": "${query}"})
+...    flow.add_workflow_comp("node_a", Node(),
+...                           inputs_schema={
+...                               "output": "${start.query}"})
+...    flow.set_end_comp("end", End(),
+...                      inputs_schema={
+...                          "result": "${node_a.output}"})
+...    flow.add_connection("start", "node_a")
+...    flow.add_connection("node_a", "end")
+...    return flow
+...
+>>> # 直接运行workflow
+>>> workflow = build_workflow("test_workflow", "test_workflow", "1")
+>>> async def run_workflow():
+...     result = Runner.run_workflow_streaming(workflow=workflow, inputs={"query": "query workflow"}, runtime=WorkflowRuntime())
+...     async for chunk in result:
+...         if isinstance(chunk, CustomSchema):
+...             print(chunk)
+...
+>>> asyncio.run(run_workflow())
+1='1'
+2='2'
+>>> 
+>>> # 指定id运行workflow, 前提必须将workflow添加到资源管理器
+>>> from openjiuwen.core.runner.runner import resource_mgr
+>>> resource_mgr.workflow().add_workflow("test_workflow", workflow)
+>>> async def run_workflow():
+...     result = Runner.run_workflow_streaming(workflow="test_workflow", inputs={"query": "query workflow"}, runtime=WorkflowRuntime())
+...     async for chunk in result:
+...         if isinstance(chunk, CustomSchema):
+...             print(chunk)
+...
+>>> asyncio.run(run_workflow())
+1='1'
+2='2'
 ```
 
-流式执行单个 Agent。
-
-**行为（简要）**：
-
-- 通过 `_prepare_agent(agent, inputs, session)` 获取实例与会话；
-- 若为 `RemoteAgent`：`async for chunk in agent_instance.stream(inputs): yield chunk`；
-- 若为 `LegacyBaseAgent`：`agent_instance.stream(inputs, session=None)`；
-- 否则：`agent_instance.stream(inputs, session=agent_session)`，流结束后调用 `agent_session._inner.post_run()`。
-
-## 执行 AgentGroup
-
-### async run_agent_group
+### run_agent_group
 
 ```python
 async def run_agent_group(
@@ -231,15 +429,256 @@ async def run_agent_group(
     envs: dict[str, Any] | None = None,
 ) -> Any
 ```
+执行AgentGroup并返回结果。
 
-执行一个 AgentGroup，并返回其执行结果。
+**参数**：
 
-**行为**：
+* **agent_group(str|AgentGroup)**：ID或AgentGroup实例。不可取值为`None`或`''`。
+* **inputs**: 输入数据。
 
-- 通过 `_prepare_agent_group(agent_group)` 获取 `agent_group_instance`（字符串 id 会从资源管理器中加载）；
-- 调用 `await agent_group_instance.invoke(inputs)` 返回结果。
+**返回**：
 
-### async run_agent_group_streaming
+**Any**，AgentGroup执行结果。
+
+**异常**：
+
+- **JiuWenBaseException**：openJiuwen异常基类，具体详细信息和解决方法，参见[StatusCode](../common/exception/status_code.md)。
+
+**样例**：
+
+```python
+>>> import os
+>>> from openjiuwen.agent.config.workflow_config import WorkflowAgentConfig
+>>> from openjiuwen.agent.workflow_agent.workflow_agent import WorkflowAgent
+>>> from openjiuwen.core.workflow.base import Workflow
+>>> from openjiuwen.core.component.common.configs.model_config import ModelConfig
+>>> from openjiuwen.core.component.end_comp import End
+>>> from openjiuwen.core.component.questioner_comp import (
+...     FieldInfo,
+...     QuestionerComponent,
+...     QuestionerConfig
+... )
+... 
+>>> from openjiuwen.agent.config.base import AgentConfig
+>>> from openjiuwen.core.component.start_comp import Start
+>>> from openjiuwen.core.utils.llm.base import BaseModelInfo
+>>> from openjiuwen.core.workflow.workflow_config import WorkflowConfig, WorkflowMetadata
+>>> 
+>>> API_BASE = os.getenv("API_BASE", "your api base")
+>>> API_KEY = os.getenv("API_KEY", "your api key")
+>>> MODEL_NAME = os.getenv("MODEL_NAME", "")
+>>> MODEL_PROVIDER = os.getenv("MODEL_PROVIDER", "")
+>>> 
+>>> 
+>>> def _create_model_config() -> ModelConfig:
+...   """创建模型配置"""
+...   return ModelConfig(
+...       model_provider=MODEL_PROVIDER,
+...       model_info=BaseModelInfo(
+...           model=MODEL_NAME,
+...           api_base=API_BASE,
+...           api_key=API_KEY,
+...           temperature=0.7,
+...           top_p=0.9,
+...           timeout=120,
+...       ),
+...   )
+... 
+>>> def _create_start_component():
+...    """创建 Start 组件"""
+...    return Start({
+...        "inputs": [
+...            {
+...                "id": "query",
+...                "type": "String",
+...                "required": "true",
+...                "sourceType": "ref"
+...            }
+...        ]
+...    })
+... 
+>>> 
+>>> def _build_financial_workflow(
+...         workflow_id: str,
+...         workflow_name: str,
+...         workflow_desc: str,
+...         field_name: str,
+...         field_desc: str
+... ) -> Workflow:
+...   """
+...   构建金融业务工作流（带中断节点）
+... 
+...   Args:
+...       workflow_id: 工作流ID
+...       workflow_name: 工作流名称
+...       workflow_desc: 工作流描述
+...       field_name: 提问字段名
+...       field_desc: 提问字段描述
+... 
+...   Returns:
+...       Workflow: 包含 start -> questioner -> end 的工作流
+...   """
+...   workflow_config = WorkflowConfig(
+...       metadata=WorkflowMetadata(
+...           name=workflow_name,
+...           id=workflow_id,
+...           version="1.0",
+...           description=workflow_desc,
+...       )
+...   )
+...   flow = Workflow(workflow_config=workflow_config)
+... 
+...   # 创建组件
+...   start = _create_start_component()
+... 
+...   # 创建提问器（中断节点）
+...   key_fields = [
+...       FieldInfo(
+...           field_name=field_name,
+...           description=field_desc,
+...           required=True
+...       ),
+...   ]
+...   model_config = _create_model_config()
+...   questioner_config = QuestionerConfig(
+...       model=model_config,
+...       question_content="",
+...       extract_fields_from_response=True,
+...       field_names=key_fields,
+...       with_chat_history=False,
+...   )
+...   questioner = QuestionerComponent(questioner_config)
+... 
+...   # End 组件
+...   end = End({"responseTemplate": f"{workflow_name}完成: {{{{{field_name}}}}}"})
+... 
+...   # 注册组件
+...   flow.set_start_comp("start", start, inputs_schema={"query": "${query}"})
+...   flow.add_workflow_comp(
+...       "questioner", questioner, inputs_schema={"query": "${start.query}"}
+...   )
+...   flow.set_end_comp(
+...       "end", end, inputs_schema={field_name: f"${{questioner.{field_name}}}"}
+...   )
+... 
+...   # 连接拓扑: start -> questioner -> end
+...   flow.add_connection("start", "questioner")
+...   flow.add_connection("questioner", "end")
+... 
+...   return flow
+... 
+>>> def _create_workflow_agent(
+...         agent_id: str,
+...         description: str,
+...         workflow: Workflow
+... ) -> WorkflowAgent:
+...     """创建 WorkflowAgent"""
+...     config = WorkflowAgentConfig(
+...         id=agent_id,
+...         version="1.0",
+...         description=description,
+...         workflows=[],
+...         model=_create_model_config(),
+...     )
+...     agent = WorkflowAgent(config)
+...     agent.add_workflows([workflow])
+...     return agent
+... 
+>>> # 创建金融业务工作流
+>>> transfer_workflow = _build_financial_workflow(
+...     workflow_id="transfer_flow",
+...     workflow_name="转账服务",
+...     workflow_desc="处理用户转账请求，支持转账到指定账户",
+...     field_name="amount",
+...     field_desc="转账金额（数字）"
+... )
+... 
+>>> balance_workflow = _build_financial_workflow(
+...     workflow_id="balance_flow",
+...     workflow_name="余额查询",
+...     workflow_desc="查询用户账户余额信息",
+...     field_name="account",
+...     field_desc="账户号码"
+... )
+... 
+>>> invest_workflow = _build_financial_workflow(
+...     workflow_id="invest_flow",
+...     workflow_name="理财服务",
+...     workflow_desc="提供理财产品推荐和购买服务",
+...     field_name="product",
+...     field_desc="理财产品名称"
+... )
+... 
+>>> # 创建 WorkflowAgent
+>>> transfer_agent = _create_workflow_agent(
+...     agent_id="transfer_agent",
+...     description="转账服务，处理用户的转账请求",
+...     workflow=transfer_workflow
+... )
+... 
+>>> balance_agent = _create_workflow_agent(
+...     agent_id="balance_agent",
+...     description="余额查询服务，查询用户账户余额",
+...     workflow=balance_workflow
+... )
+... 
+>>> invest_agent = _create_workflow_agent(
+...     agent_id="invest_agent",
+...     description="理财服务，提供理财产品推荐和购买",
+...     workflow=invest_workflow
+... )
+... 
+>>> from openjiuwen.agent_group.hierarchical_group import (
+...     HierarchicalGroup,
+...     HierarchicalGroupConfig
+... )
+... 
+>>> config = HierarchicalGroupConfig(
+...     group_id="financial_group",
+...     leader_agent_id="main_controller"
+... )
+... 
+>>> hierarchical_group = HierarchicalGroup(config)
+>>> 
+>>> from openjiuwen.agent.config.base import AgentConfig
+>>> from openjiuwen.agent_group.hierarchical_group.agents.main_controller import HierarchicalMainController
+>>> from openjiuwen.core.agent.agent import ControllerAgent
+>>> 
+>>> main_config = AgentConfig(
+...     id="main_controller",
+...     description="金融服务主控制器，识别用户意图并分发任务"
+... )
+...
+>>> main_controller = HierarchicalMainController()
+>>> main_agent = ControllerAgent(main_config, controller=main_controller)
+>>> 
+>>> # 添加所有 agent 到 group
+>>> hierarchical_group.add_agent("main_controller", main_agent)
+>>> hierarchical_group.add_agent("transfer_agent", transfer_agent)
+>>> hierarchical_group.add_agent("balance_agent", balance_agent)
+>>> hierarchical_group.add_agent("invest_agent", invest_agent)
+>>> 
+>>> from openjiuwen.core.agent.message.message import Message
+>>> from openjiuwen.core.runner.runner import Runner
+>>> import asyncio
+>>> 
+>>> asyncio.run(Runner.start())
+>>> conversation_id = "session_001"
+>>> hierarchical_group.group_controller.subscribe("test_query1", ["transfer_agent"])
+>>> message1 = Message.create_user_message(
+...     content="给张三转账",
+...     conversation_id=conversation_id
+... )
+... 
+>>> # 广播消息给所有订阅 test_query1主题的agent
+>>> message1.message_type = "test_query1"
+>>> result1 = asyncio.run(Runner.run_agent_group(hierarchical_group, message1))
+>>> asyncio.run(Runner.stop())
+>>> print(result1)
+[OutputSchema(type='__interaction__', index=0, payload=InteractionOutput(id='questioner', value='请您提供转账金额（数字）相关的信息'))]
+```
+
+### run_agent_group_streaming
 
 ```python
 async def run_agent_group_streaming(
@@ -254,26 +693,333 @@ async def run_agent_group_streaming(
 )
 ```
 
-流式执行 AgentGroup。
 
-**行为**：
+流式执行AgentGroup并返回结果。
 
-- 通过 `_prepare_agent_group(agent_group)` 获取实例；
-- 调用 `async for chunk in agent_group_instance.stream(inputs): yield chunk`。
+**参数**：
 
-## 释放会话资源
+* **agent_group(str|AgentGroup)**：ID或AgentGroup实例。不可取值为`None`或`''`。
+* **inputs**: 输入数据。
 
-### async release
+**返回**：
+
+**AsyncGenerator**，流式结果生成器。
+
+**异常**：
+
+- **JiuWenBaseException**：openJiuwen异常基类，具体详细信息和解决方法，参见[StatusCode](../common/exception/status_code.md)。
+
+**样例**：
 
 ```python
-async def release(self, session_id: str) -> None
+>>> import os
+>>> import asyncio
+>>> 
+>>> from openjiuwen.core.agent.message.message import Message
+>>> from openjiuwen.agent.config.workflow_config import WorkflowAgentConfig
+>>> from openjiuwen.agent.workflow_agent.workflow_agent import WorkflowAgent
+>>> from openjiuwen.core.agent.agent import ControllerAgent
+>>> from openjiuwen.core.workflow.base import Workflow
+>>> from openjiuwen.core.component.common.configs.model_config import ModelConfig
+>>> from openjiuwen.core.component.end_comp import End
+>>> from openjiuwen.core.component.questioner_comp import (
+...     FieldInfo,
+...     QuestionerComponent,
+...     QuestionerConfig
+... )
+... 
+>>> from openjiuwen.agent.config.base import AgentConfig
+>>> from openjiuwen.core.component.start_comp import Start
+>>> from openjiuwen.core.utils.llm.base import BaseModelInfo
+>>> from openjiuwen.core.workflow.workflow_config import WorkflowConfig, WorkflowMetadata
+>>> from openjiuwen.agent_group.hierarchical_group import (
+...     HierarchicalGroup,
+...     HierarchicalGroupConfig
+... )
+... 
+>>> from openjiuwen.agent_group.hierarchical_group.agents.main_controller import HierarchicalMainController
+>>> from openjiuwen.core.runner.runner import Runner
+>>> 
+>>> API_BASE = os.getenv("API_BASE", "your api base")
+>>> API_KEY = os.getenv("API_KEY", "your api key")
+>>> MODEL_NAME = os.getenv("MODEL_NAME", "")
+>>> MODEL_PROVIDER = os.getenv("MODEL_PROVIDER", "")
+>>> 
+>>> 
+>>> def _create_model_config() -> ModelConfig:
+...     """创建模型配置"""
+...     return ModelConfig(
+...         model_provider=MODEL_PROVIDER,
+...         model_info=BaseModelInfo(
+...             model=MODEL_NAME,
+...             api_base=API_BASE,
+...             api_key=API_KEY,
+...             temperature=0.7,
+...             top_p=0.9,
+...             timeout=120,
+...         ),
+...     )
+... 
+>>> def _create_start_component():
+...     """创建 Start 组件"""
+...     return Start({
+...         "inputs": [
+...             {
+...                 "id": "query",
+...                 "type": "String",
+...                 "required": "true",
+...                 "sourceType": "ref"
+...             }
+...         ]
+...     })
+... 
+>>> 
+>>> def _build_financial_workflow(
+...         workflow_id: str,
+...         workflow_name: str,
+...         workflow_desc: str,
+...         field_name: str,
+...         field_desc: str
+... ) -> Workflow:
+...     """
+...     构建金融业务工作流（带中断节点）
+... 
+...     Args:
+...         workflow_id: 工作流ID
+...         workflow_name: 工作流名称
+...         workflow_desc: 工作流描述
+...         field_name: 提问字段名
+...         field_desc: 提问字段描述
+... 
+...     Returns:
+...         Workflow: 包含 start -> questioner -> end 的工作流
+...     """
+...     workflow_config = WorkflowConfig(
+...         metadata=WorkflowMetadata(
+...             name=workflow_name,
+...             id=workflow_id,
+...             version="1.0",
+...             description=workflow_desc,
+...         )
+...     )
+...     flow = Workflow(workflow_config=workflow_config)
+... 
+...     # 创建组件
+...     start = _create_start_component()
+... 
+...     # 创建提问器（中断节点）
+...     key_fields = [
+...         FieldInfo(
+...             field_name=field_name,
+...             description=field_desc,
+...             required=True
+...         ),
+...     ]
+...     model_config = _create_model_config()
+...     questioner_config = QuestionerConfig(
+...         model=model_config,
+...         question_content="",
+...         extract_fields_from_response=True,
+...         field_names=key_fields,
+...         with_chat_history=False,
+...     )
+...     questioner = QuestionerComponent(questioner_config)
+... 
+...     # End 组件
+...     end = End({"responseTemplate": f"{workflow_name}完成: {{{{{field_name}}}}}"})
+... 
+...     # 注册组件
+...     flow.set_start_comp("start", start, inputs_schema={"query": "${query}"})
+...     flow.add_workflow_comp(
+...         "questioner", questioner, inputs_schema={"query": "${start.query}"}
+...     )
+...     flow.set_end_comp(
+...         "end", end, inputs_schema={field_name: f"${{questioner.{field_name}}}"}
+...     )
+... 
+...     # 连接拓扑: start -> questioner -> end
+...     flow.add_connection("start", "questioner")
+...     flow.add_connection("questioner", "end")
+... 
+...     return flow
+... 
+>>> def _create_workflow_agent(
+...         agent_id: str,
+...         description: str,
+...         workflow: Workflow
+... ) -> WorkflowAgent:
+...     """创建 WorkflowAgent"""
+...     config = WorkflowAgentConfig(
+...         id=agent_id,
+...         version="1.0",
+...         description=description,
+...         workflows=[],
+...         model=_create_model_config(),
+...     )
+...     agent = WorkflowAgent(config)
+...     agent.add_workflows([workflow])
+...     return agent
+... 
+>>> # 创建金融业务工作流
+>>> transfer_workflow = _build_financial_workflow(
+...     workflow_id="transfer_flow",
+...     workflow_name="转账服务",
+...     workflow_desc="处理用户转账请求，支持转账到指定账户",
+...     field_name="amount",
+...     field_desc="转账金额（数字）"
+... )
+... 
+>>> balance_workflow = _build_financial_workflow(
+...     workflow_id="balance_flow",
+...     workflow_name="余额查询",
+...     workflow_desc="查询用户账户余额信息",
+...     field_name="account",
+...     field_desc="账户号码"
+... )
+... 
+>>> invest_workflow = _build_financial_workflow(
+...     workflow_id="invest_flow",
+...     workflow_name="理财服务",
+...     workflow_desc="提供理财产品推荐和购买服务",
+...     field_name="product",
+...     field_desc="理财产品名称"
+... )
+... 
+>>> # 创建 WorkflowAgent
+>>> transfer_agent = _create_workflow_agent(
+...     agent_id="transfer_agent",
+...     description="转账服务，处理用户的转账请求",
+...     workflow=transfer_workflow
+... )
+... 
+>>> balance_agent = _create_workflow_agent(
+...     agent_id="balance_agent",
+...     description="余额查询服务，查询用户账户余额",
+...     workflow=balance_workflow
+... )
+...  
+>>> invest_agent = _create_workflow_agent(
+...     agent_id="invest_agent",
+...     description="理财服务，提供理财产品推荐和购买",
+...     workflow=invest_workflow
+... )
+... 
+>>> # 创建 HierarchicalGroup
+>>> config = HierarchicalGroupConfig(
+...     group_id="financial_group",
+...     leader_agent_id="main_controller"
+... )   
+... 
+>>> hierarchical_group = HierarchicalGroup(config)
+>>> 
+>>> # 创建主 agent（HierarchicalMainController）
+>>> main_config = AgentConfig(
+...     id="main_controller",
+...     description="金融服务主控制器，识别用户意图并分发任务"
+... )
+... 
+>>> main_controller = HierarchicalMainController()
+>>> main_agent = ControllerAgent(main_config, controller=main_controller)
+>>> 
+>>> # 添加所有 agent 到 group
+>>> hierarchical_group.add_agent("main_controller", main_agent)
+>>> hierarchical_group.add_agent("transfer_agent", transfer_agent)
+>>> hierarchical_group.add_agent("balance_agent", balance_agent)
+>>> hierarchical_group.add_agent("invest_agent", invest_agent)
+>>> 
+>>> async def main():
+...     # 启动Runner
+...     await Runner.start()
+...     message = Message.create_user_message(
+...         content="给张三转账500元",
+...         conversation_id="stream_session_test"
+...     )
+...     # 流式调用
+...     async for chunk in Runner.run_agent_group_streaming(hierarchical_group, message):
+...         print(f"输出结果：{chunk}")
+...     # 停止Runner
+...     await Runner.stop()
+... 
+>>> if __name__ == "__main__":
+...     asyncio.run(main())
+... 
+输出结果：type='tracer_workflow' payload={'traceId': '78e2562a-dbbe-48a4-b9ef-6be622f6df69', 'startTime': datetime.datetime(2025, 12, 9, 15, 34, 41, 167805), 'endTime': None, 'inputs': {'query': '给张三转账500元'}, 'outputs': None, 'error': None, 'invokeId': 'transfer_flow', 'parentInvokeId': None, 'executionId': '78e2562a-dbbe-48a4-b9ef-6be622f6df69', 'onInvokeData': [], 'componentId': '', 'componentName': '', 'componentType': 'transfer_flow', 'loopNodeId': None, 'loopIndex': None, 'status': 'start', 'parentNodeId': ''}
+输出结果：type='tracer_workflow' payload={'traceId': '78e2562a-dbbe-48a4-b9ef-6be622f6df69', 'startTime': datetime.datetime(2025, 12, 9, 15, 34, 41, 168923), 'endTime': None, 'inputs': {'query': '给张三转账500元'}, 'outputs': None, 'error': None, 'invokeId': 'start', 'parentInvokeId': 'transfer_flow', 'executionId': '78e2562a-dbbe-48a4-b9ef-6be622f6df69', 'onInvokeData': [], 'componentId': '', 'componentName': '', 'componentType': 'start', 'loopNodeId': None, 'loopIndex': None, 'status': 'start', 'parentNodeId': ''}
+输出结果：type='tracer_workflow' payload={'traceId': '78e2562a-dbbe-48a4-b9ef-6be622f6df69', 'startTime': datetime.datetime(2025, 12, 9, 15, 34, 41, 168923), 'endTime': datetime.datetime(2025, 12, 9, 15, 34, 41, 169086), 'inputs': {'query': '给张三转账500元'}, 'outputs': {'query': '给张三转账500元'}, 'error': None, 'invokeId': 'start', 'parentInvokeId': 'transfer_flow', 'executionId': '78e2562a-dbbe-48a4-b9ef-6be622f6df69', 'onInvokeData': [], 'componentId': '', 'componentName': '', 'componentType': 'start', 'loopNodeId': None, 'loopIndex': None, 'status': 'finish', 'parentNodeId': ''}
+输出结果：type='tracer_workflow' payload={'traceId': '78e2562a-dbbe-48a4-b9ef-6be622f6df69', 'startTime': datetime.datetime(2025, 12, 9, 15, 34, 41, 169679), 'endTime': None, 'inputs': {'query': '给张三转账500元'}, 'outputs': None, 'error': None, 'invokeId': 'questioner', 'parentInvokeId': 'start', 'executionId': '78e2562a-dbbe-48a4-b9ef-6be622f6df69', 'onInvokeData': [], 'componentId': '', 'componentName': '', 'componentType': 'questioner', 'loopNodeId': None, 'loopIndex': None, 'status': 'start', 'parentNodeId': ''}
+输出结果：type='tracer_workflow' payload={'traceId': '78e2562a-dbbe-48a4-b9ef-6be622f6df69', 'startTime': datetime.datetime(2025, 12, 9, 15, 34, 41, 169679), 'endTime': datetime.datetime(2025, 12, 9, 15, 34, 44, 750914), 'inputs': {'query': '给张三转账500元'}, 'outputs': {'amount': 500}, 'error': None, 'invokeId': 'questioner', 'parentInvokeId': 'start', 'executionId': '78e2562a-dbbe-48a4-b9ef-6be622f6df69', 'onInvokeData': [], 'componentId': '', 'componentName': '', 'componentType': 'questioner', 'loopNodeId': None, 'loopIndex': None, 'status': 'finish', 'parentNodeId': ''}
+输出结果：type='tracer_workflow' payload={'traceId': '78e2562a-dbbe-48a4-b9ef-6be622f6df69', 'startTime': datetime.datetime(2025, 12, 9, 15, 34, 44, 752452), 'endTime': None, 'inputs': {'amount': 500}, 'outputs': None, 'error': None, 'invokeId': 'end', 'parentInvokeId': 'questioner', 'executionId': '78e2562a-dbbe-48a4-b9ef-6be622f6df69', 'onInvokeData': [], 'componentId': '', 'componentName': '', 'componentType': 'end', 'loopNodeId': None, 'loopIndex': None, 'status': 'start', 'parentNodeId': ''}
+输出结果：type='tracer_workflow' payload={'traceId': '78e2562a-dbbe-48a4-b9ef-6be622f6df69', 'startTime': datetime.datetime(2025, 12, 9, 15, 34, 44, 752452), 'endTime': datetime.datetime(2025, 12, 9, 15, 34, 44, 752861), 'inputs': {'amount': 500}, 'outputs': {'responseContent': '转账服务完成: 500'}, 'error': None, 'invokeId': 'end', 'parentInvokeId': 'questioner', 'executionId': '78e2562a-dbbe-48a4-b9ef-6be622f6df69', 'onInvokeData': [], 'componentId': '', 'componentName': '', 'componentType': 'end', 'loopNodeId': None, 'loopIndex': None, 'status': 'finish', 'parentNodeId': ''}
+输出结果：type='tracer_workflow' payload={'traceId': '78e2562a-dbbe-48a4-b9ef-6be622f6df69', 'startTime': datetime.datetime(2025, 12, 9, 15, 34, 41, 167805), 'endTime': datetime.datetime(2025, 12, 9, 15, 34, 44, 754020), 'inputs': {'query': '给张三转账500元'}, 'outputs': {'responseContent': '转账服务完成: 500'}, 'error': None, 'invokeId': 'transfer_flow', 'parentInvokeId': None, 'executionId': '78e2562a-dbbe-48a4-b9ef-6be622f6df69', 'onInvokeData': [], 'componentId': '', 'componentName': '', 'componentType': 'transfer_flow', 'loopNodeId': None, 'loopIndex': None, 'status': 'finish', 'parentNodeId': ''}
+输出结果：type='workflow_final' index=0 payload={'output': WorkflowOutput(result={'responseContent': '转账服务完成: 500'}, state=<WorkflowExecutionState.COMPLETED: 'COMPLETED'>), 'result_type': 'answer'}
 ```
 
-根据会话 id 释放与之关联的内存 checkpoint 等资源。
+### release
+```python
+async def release(self, session_id: str)
+```
+清理指定`session_id`的缓存数据，如中断状态数据。
 
-**行为**：
+**参数**：
+* **session_id(str)**: 对话ID。若为`None`，则不清理。
 
-- 调用 `get_default_inmemory_checkpointer().release(session_id)` 删除对应会话的保存状态。
+**样例**：
 
-> **注意**：在大多数场景下，Runner 和 Session 的生命周期由框架自动管理；只有在需要精细化控制会话资源释放时，才需要显式调用该方法。
+```python
+>>> import asyncio
+>>> 
+>>> from openjiuwen.core.component.base import WorkflowComponent
+>>> from openjiuwen.core.component.end_comp import End
+>>> from openjiuwen.core.context_engine.base import Context
+>>> from openjiuwen.core.runtime.base import ComponentExecutable, Input, Output
+>>> from openjiuwen.core.runtime.runtime import Runtime
+>>> from openjiuwen.core.runtime.workflow import WorkflowRuntime
+>>> 
+>>> # 创建自定义节点：带交互中断
+>>> class InteractionNode(WorkflowComponent, ComponentExecutable):
+...     def __init__(self):
+...         super().__init__()
+... 
+...     async def invoke(self, inputs: Input, runtime: Runtime, context: Context) -> Output:
+...         answer = inputs.get("answer")
+...         query = await runtime.interact(answer)
+...         return {"query": query}
+... 
+>>> # 创建工作流
+>>> from openjiuwen.core.workflow.base import Workflow
+>>> from openjiuwen.core.component.start_comp import Start
+>>> 
+>>> workflow = Workflow()
+>>> workflow.set_start_comp("start", Start(), inputs_schema={"answer": "${user_input}"})
+>>> workflow.add_workflow_comp("interact_node", InteractionNode(), inputs_schema={"answer": "${start.answer}"})
+>>> workflow.set_end_comp("end", End(), inputs_schema={"result": "${interact_node.query}"})
+>>> workflow.add_connection("start", "interact_node")
+>>> workflow.add_connection("interact_node", "end")
+>>> 
+>>> # 调用工作流，第一次中断
+>>> from openjiuwen.core.runner.runner import Runner
+>>> input1 = {"user_input": "天气"}
+>>> result1 = asyncio.run(Runner.run_workflow(workflow, inputs=input1, runtime=WorkflowRuntime(session_id="session_1")))
+>>> print(f'result1: {result1}')
+result1: result=[OutputSchema(type='__interaction__', index=0, payload=InteractionOutput(id='interact_node', value='天气'))] state=<WorkflowExecutionState.INPUT_REQUIRED: 'INPUT_REQUIRED'>
+>>> 
+>>> # 传入交互式输入，继续工作流
+>>> from openjiuwen.core.runtime.interaction.interactive_input import InteractiveInput
+>>> # 这里需要为交互节点 'interact_node' 提供输入
+>>> input2 = InteractiveInput()
+>>> input2.update("interact_node", "晴天")
+>>> result2 = asyncio.run(Runner.run_workflow(workflow, inputs=input2, runtime=WorkflowRuntime(session_id="session_1")))
+>>> print(f'result2 after interactive input: {result2}')
+result2 after interactive input: result={'result': '晴天'} state=<WorkflowExecutionState.COMPLETED: 'COMPLETED'>
+>>> 
+>>> # 清理session_1的数据
+>>> asyncio.run(Runner.release(session_id="session_1"))
+>>> 
+>>> # 调用工作流，由于清理了session_1的数据，工作流从头执行
+>>> # 注意：release后需要重新传入初始输入（字典格式），不能使用InteractiveInput
+>>> result3 = asyncio.run(Runner.run_workflow(workflow, inputs=input1, runtime=WorkflowRuntime(session_id="session_1")))
+>>> print(f'result3 after release: {result3}')
+result3 after release: result=[OutputSchema(type='__interaction__', index=0, payload=InteractionOutput(id='interact_node', value='天气'))] state=<WorkflowExecutionState.INPUT_REQUIRED: 'INPUT_REQUIRED'>
+```
+
 

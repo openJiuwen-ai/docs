@@ -6,16 +6,16 @@
 
 | CLASS                                                                                                                                                                | DESCRIPTION                                                         |
 | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| [WorkflowConfig](./workflow/workflow_config.md)             | 工作流配置类（card、spec、workflow_max_nesting_depth）。            |
-| [WorkflowOutput](./workflow/base.md)                        | 工作流执行invoke的输出结果的数据类。                                |
-| [WorkflowChunk](./workflow/base.md)                          | 工作流执行stream返回的数据帧的数据类。                              |
-| [WorkflowExecutionState](./workflow/base.md)        | 工作流执行invoke的执行状态的枚举类。                                |
-| [Workflow](./workflow/base.md)                                    | 工作流类。                                                          |
-| [WorkflowCard](./workflow/base.md)                              | 工作流卡片类。                                                      |
-| [WorkflowComponent](./workflow/components/base.md)              | 自定义工作流组件的抽象基类。                                        |
-| [ComponentExecutable](./workflow/components/base.md)            | 组件可执行接口。                                                    |
-| [ComponentComposable](./workflow/components/base.md)            | 组件可组合接口。                                                    |
-| [ComponentConfig](./workflow/components/base.md)                | 组件配置基类。                                                      |
+| [WorkflowConfig](./workflow/workflow.md)             | 工作流配置类（card、spec、workflow_max_nesting_depth）。            |
+| [WorkflowOutput](./workflow/workflow.md)                        | 工作流执行invoke的输出结果的数据类。                                |
+| [WorkflowChunk](./workflow/workflow.md)                          | 工作流执行stream返回的数据帧的数据类。                              |
+| [WorkflowExecutionState](./workflow/workflow.md)        | 工作流执行invoke的执行状态的枚举类。                                |
+| [Workflow](./workflow/workflow.md)                                    | 工作流类。                                                          |
+| [WorkflowCard](./workflow/workflow.md)                              | 工作流卡片类。                                                      |
+| [WorkflowComponent](workflow/components/components.md)              | 自定义工作流组件的抽象基类。                                        |
+| [ComponentExecutable](workflow/components/components.md)            | 组件可执行接口。                                                    |
+| [ComponentComposable](workflow/components/components.md)            | 组件可组合接口。                                                    |
+| [ComponentConfig](workflow/components/components.md)                | 组件配置基类。                                                      |
 | [LLMComponent](./workflow/components/llm/llm_comp.md)               | openJiuwen预置的大模型组件。                                        |
 | [LLMCompConfig](./workflow/components/llm/llm_comp.md)             | 大模型组件配置信息的数据类。                                        |
 | [IntentDetectionComponent](./workflow/components/llm/intent_detection_comp.md) | openJiuwen预置的意图识别组件。                                     |
@@ -45,5 +45,5 @@
 
 | FUNCTION | DESCRIPTION |
 |----------|-------------|
-| [generate_workflow_key](./workflow/base.md) | 生成工作流键值。 |
-| [create_workflow_session](./workflow/base.md) | 创建工作流会话。 |
+| [generate_workflow_key](./workflow/workflow.md) | 生成工作流键值。 |
+| [create_workflow_session](./workflow/workflow.md) | 创建工作流会话。 |

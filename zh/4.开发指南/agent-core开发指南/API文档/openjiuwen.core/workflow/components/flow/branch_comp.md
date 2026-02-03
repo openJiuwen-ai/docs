@@ -10,7 +10,7 @@
 class openjiuwen.core.workflow.components.flow.branch_comp.BranchComponent(WorkflowComponent)
 ```
 
-工作流分支组件，继承自 [WorkflowComponent](../base.md#class-openjiuwencoreworkflowcomponentsbaseworkflowcomponent)。将当前节点加入图时，会为该节点添加条件边；运行时由 [BranchRouter](../flow/branch_router.md#class-branchrouter) 根据当前会话状态依次求值各分支条件，并返回首个满足条件的分支对应的目标节点列表。
+工作流分支组件，继承自 [WorkflowComponent](../components.md#class-workflowcomponent)。将当前节点加入图时，会为该节点添加条件边；运行时由 [BranchRouter](../flow/branch_router.md#class-branchrouter) 根据当前会话状态依次求值各分支条件，并返回首个满足条件的分支对应的目标节点列表。
 
 ### \_\_init\_\_
 
@@ -66,11 +66,11 @@ def router(self) -> Callable[..., Union[Hashable, list[Hashable]]]
 def add_component(self, graph: Graph, node_id: str, wait_for_all: bool = False) -> None
 ```
 
-将当前分支组件作为节点加入给定的 [Graph](../../../graph/base.md#class-graph)，并为该节点添加条件边，由 [router](branch_comp.md#router) 返回的路由器决定下一跳。
+将当前分支组件作为节点加入给定的 [Graph](../../../graph/graph.md#class-graph)，并为该节点添加条件边，由 [router](branch_comp.md#router) 返回的路由器决定下一跳。
 
 **参数**：
 
-- **graph**（[Graph](../../../graph/base.md#class-graph)）：工作流图实例。
+- **graph**（[Graph](../../../graph/graph.md#class-graph)）：工作流图实例。
 - **node_id**（str）：本组件在图中的唯一节点 id。
 - **wait_for_all**（bool）：是否等待所有前驱节点执行完成再执行本节点，默认 `False`。
 

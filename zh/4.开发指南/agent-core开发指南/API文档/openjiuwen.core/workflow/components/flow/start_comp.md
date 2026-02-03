@@ -8,7 +8,7 @@
 class openjiuwen.core.workflow.components.flow.start_comp.Start(WorkflowComponent)
 ```
 
-工作流开始组件，继承自 [WorkflowComponent](../base.md#class-openjiuwencoreworkflowcomponentsbaseworkflowcomponent)。作为工作流的入口，其输入通常由框架根据 `inputs_schema` 从用户输入或上下文填充，本组件在 `invoke` 中直接返回该输入。
+工作流开始组件，继承自 [WorkflowComponent](../components.md#class-workflowcomponent)。作为工作流的入口，其输入通常由框架根据 `inputs_schema` 从用户输入或上下文填充，本组件在 `invoke` 中直接返回该输入。
 
 ### \_\_init\_\_
 

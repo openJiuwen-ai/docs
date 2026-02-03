@@ -23,7 +23,7 @@ class openjiuwen.core.workflow.components.flow.loop.loop_comp.LoopType(str, Enum
 class openjiuwen.core.workflow.components.flow.loop.loop_comp.LoopGroup(BaseWorkflow, Executable)
 ```
 
-循环体工作流，继承自 `BaseWorkflow`（工作流基类） 并实现 [Executable](../../../../graph/base.md)。用于定义循环体内包含的节点、边、起始与结束节点；不支持嵌套 [LoopComponent](loop_comp.md#class-loopcomponent)。通过 `start_nodes` / `start_comp` 与 `end_nodes` / `end_comp` 配置循环体的入口与出口。
+循环体工作流，继承自 `BaseWorkflow`（工作流基类） 并实现 [Executable](../../../../graph/graph.md)。用于定义循环体内包含的节点、边、起始与结束节点；不支持嵌套 [LoopComponent](loop_comp.md#class-loopcomponent)。通过 `start_nodes` / `start_comp` 与 `end_nodes` / `end_comp` 配置循环体的入口与出口。
 
 ### add_workflow_comp
 
@@ -93,7 +93,7 @@ def is_empty(self) -> bool
 class openjiuwen.core.workflow.components.flow.loop.loop_comp.LoopComponent(WorkflowComponent)
 ```
 
-循环组件，继承自 [WorkflowComponent](../../base.md#class-openjiuwencoreworkflowcomponentsbaseworkflowcomponent)。根据输入中的 `loop_type`、`loop_array` / `loop_number` / `bool_expression` 等构建条件，驱动 [LoopGroup](loop_comp.md#class-loopgroup) 重复执行，并支持 [LoopBreakComponent](loop_comp.md#class-loopbreakcomponent) 与中间变量回写。
+循环组件，继承自 [WorkflowComponent](../../components.md#class-workflowcomponent)。根据输入中的 `loop_type`、`loop_array` / `loop_number` / `bool_expression` 等构建条件，驱动 [LoopGroup](loop_comp.md#class-loopgroup) 重复执行，并支持 [LoopBreakComponent](loop_comp.md#class-loopbreakcomponent) 与中间变量回写。
 
 ### \_\_init\_\_
 
@@ -195,7 +195,7 @@ async def on_invoke(self, inputs: Input, session: BaseSession, **kwargs) -> Outp
 class openjiuwen.core.workflow.components.flow.loop.loop_comp.LoopSetVariableComponent(WorkflowComponent)
 ```
 
-循环内设置变量组件，继承自 [WorkflowComponent](../../base.md#class-openjiuwencoreworkflowcomponentsbaseworkflowcomponent)。根据 `variable_mapping` 将右侧表达式的值（可为引用路径）写入会话状态中左侧路径对应的节点输出，用于在循环体内更新变量供后续节点或下一轮使用。
+循环内设置变量组件，继承自 [WorkflowComponent](../../components.md#class-workflowcomponent)。根据 `variable_mapping` 将右侧表达式的值（可为引用路径）写入会话状态中左侧路径对应的节点输出，用于在循环体内更新变量供后续节点或下一轮使用。
 
 ### \_\_init\_\_
 
