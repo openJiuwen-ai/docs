@@ -35,7 +35,7 @@ class openjiuwen.core.workflow.components.condition.expression.ExpressionConditi
 
 ```python
 >>> # 1. 导入必要的类
->>> from openjiuwen.core.workflow.components.condition.expression import ExpressionCondition
+>>> from openjiuwen.core.workflow import ExpressionCondition
 >>> 
 >>> # 2. 创建ExpressionCondition对象
 >>> # 示例1：字符串 空或者非空判断

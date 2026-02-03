@@ -9,7 +9,7 @@
 ### add_component
 
 ```python
-add_component(graph: Graph, node_id: str, wait_for_all: bool = False)
+def add_component(self, graph: Graph, node_id: str, wait_for_all: bool = False) -> None:
 ```
 
 定义如何将当前组件加入到指定`graph`。
@@ -26,7 +26,8 @@ add_component(graph: Graph, node_id: str, wait_for_all: bool = False)
 >>> import asyncio
 >>> import random
 >>> 
->>> from openjiuwen.core.workflow import WorkflowComponent, BranchRouter, End, Start, Workflow
+>>> from openjiuwen.core.context_engine import ModelContext
+>>> from openjiuwen.core.workflow import WorkflowComponent, BranchRouter, End, Start, Workflow, Input, Output
 >>> from openjiuwen.core.session import Session
 >>> from openjiuwen.core.session.workflow import create_workflow_session
 >>> from openjiuwen.core.graph.base import Graph
@@ -34,7 +35,7 @@ add_component(graph: Graph, node_id: str, wait_for_all: bool = False)
 >>> 
 >>> # 自定义组件`CustomIntentComponent`实现了`add_component`接口，用于为本组件定制内置的条件边，并自定义实现了接口`add_branch`用于绑定内置条件边的目标节点。
 >>> # 创建自定义组件，并实现add_component接口
->>> class CustomIntentComponent(WorkflowComponent, ComponentExecutable):
+>>> class CustomIntentComponent(WorkflowComponent):
 ...     def __init__(self, default_intents):
 ...         super().__init__()
 ...         self._intents = default_intents
@@ -47,27 +48,27 @@ add_component(graph: Graph, node_id: str, wait_for_all: bool = False)
 ...     def add_branch(self, condition: str, target: list[str], branch_id:str):
 ...         self._router.add_branch(condition=condition, target=target, branch_id=branch_id)
 ... 
-...     async def invoke(self, inputs: Input, session: Session, context: Context) -> Output:
+...     async def invoke(self, inputs: Input, session: Session, context: ModelContext) -> Output:
 ...         self._router.set_session(session)
 ...         return {'result': self._intents[random.randint(0, len(self._intents) - 1)]}
 >>> 
 >>> 
->>> class TravelComponent(WorkflowComponent, ComponentExecutable):
+>>> class TravelComponent(WorkflowComponent):
 ...     def __init__(self, node_id):
 ...         super().__init__()
 ...         self.node_id = node_id
 ... 
-...     async def invoke(self, inputs: Input, session: Session, context: Context) -> Output:
+...     async def invoke(self, inputs: Input, session: Session, context: ModelContext) -> Output:
 ...         print(f'[{self.node_id}] inputs = {inputs}')
 ...         return inputs
 >>> 
 >>> 
->>> class EatComponent(WorkflowComponent, ComponentExecutable):
+>>> class EatComponent(WorkflowComponent):
 ...     def __init__(self, node_id):
 ...         super().__init__()
 ...         self.node_id = node_id
 ... 
-...     async def invoke(self, inputs: Input, session: Session, context: Context) -> Output:
+...     async def invoke(self, inputs: Input, session: Session, context: ModelContext) -> Output:
 ...         print(f'[{self.node_id}] inputs = {inputs}')
 ...         return inputs
 >>> 
@@ -94,14 +95,14 @@ add_component(graph: Graph, node_id: str, wait_for_all: bool = False)
 >>> 
 >>> if __name__ == '__main__':
 ...     asyncio.get_event_loop().run_until_complete(run_workflow())
-[travel] inputs = {'intent': '出行'}
-{'output': {'travel': '出行'}}
+[eat] inputs = {'intent': '餐饮'}
+{'output': {'eat': '餐饮'}}
 ```
 
 ### to_executable
 
 ```python
-to_executable() -> Executable
+def to_executable(self) -> Executable
 ```
 
 返回该组件对应的可执行实例，openJiuwen支持用户自定义实现`ComponentExecutable`，作为本接口的返回，用于运行时调度执行。
@@ -115,15 +116,12 @@ to_executable() -> Executable
 ```python
 
 >>> import asyncio
->>> 
->>> from openjiuwen.core.workflow.components.base import WorkflowComponent
->>> from openjiuwen.core.workflow.components.flow.end_comp import End
->>> from openjiuwen.core.workflow.components.flow.start_comp import Start
->>> from openjiuwen.core.context_engine.base import Context
+>>>
+>>> from openjiuwen.core.context_engine import ModelContext 
 >>> from openjiuwen.core.graph.executable import Executable
->>> from openjiuwen.core.session.base import ComponentExecutable, Input, Output
+>>> from openjiuwen.core.session import Session
 >>> from openjiuwen.core.session.workflow import create_workflow_session
->>> from openjiuwen.core.workflow.base import Workflow
+>>> from openjiuwen.core.workflow import ComponentExecutable, End, Input, Output, Start, Workflow, WorkflowComponent
 >>> 
 >>> # `CalculateComponent`继承`WorkflowComponent`，是用于数学运算的组件，实现`to_executable`方法提供了实现计算逻辑的`ComputeExecutor`实例，实现`add_component`方法将`CalculateComponent`节点添加到工作流中。
 >>> # 创建自定义组件，并实现to_executable接口
@@ -132,7 +130,7 @@ to_executable() -> Executable
 ...         return ComputeExecutor()
 >>> 
 >>> class ComputeExecutor(ComponentExecutable):
-...     async def invoke(self, inputs: Input, session: Session, context: Context) -> Output:
+...     async def invoke(self, inputs: Input, session: Session, context: ModelContext) -> Output:
 ...         return {'result': self.__calculate__(data=inputs.get('data'))}
 ... 
 ...     def __calculate__(self, data):

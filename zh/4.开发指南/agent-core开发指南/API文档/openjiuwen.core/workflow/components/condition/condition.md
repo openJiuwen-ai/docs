@@ -18,7 +18,7 @@ class openjiuwen.core.workflow.components.condition.condition.FuncCondition(func
 >>> # 1. 导入必要的类
 >>> import os
 >>> 
->>> from openjiuwen.core.workflow.components.condition.condition import FuncCondition
+>>> from openjiuwen.core.workflow import FuncCondition
 >>> 
 >>> # 2. 定义一个条件函数
 >>> def allow_zero():
@@ -37,7 +37,7 @@ class openjiuwen.core.workflow.components.condition.condition.FuncCondition(func
 
 ```python
 >>> # 1. 导入必要的类
->>> from openjiuwen.core.workflow.components.condition.condition import AlwaysTrue
+>>> from openjiuwen.core.workflow import AlwaysTrue
 >>> 
 >>> # 2. 创建AlwaysTrue对象
 >>> condition = AlwaysTrue()

@@ -1,6 +1,6 @@
 # openjiuwen.core.workflow.components.flow.start_comp
 
-`openjiuwen.core.workflow.components.flow.start_comp` 模块提供工作流开始组件，用于定义工作流入口节点。该节点不执行业务逻辑，仅将上游传入的输入原样向下游传递。组件通过 `openjiuwen.core.workflow` 导出，建议使用 `from openjiuwen.core.workflow import Start` 导入。更多组件说明见 [components](../components.README.md)。
+`openjiuwen.core.workflow.components.flow.start_comp` 模块提供工作流开始组件，用于定义工作流入口节点。该节点不执行业务逻辑，仅将上游传入的输入原样向下游传递。组件通过 `openjiuwen.core.workflow` 导出，建议使用 `from openjiuwen.core.workflow import Start` 导入。更多组件说明见 [components](../../components.README.md)。
 
 ## class Start
 
@@ -8,7 +8,7 @@
 class openjiuwen.core.workflow.components.flow.start_comp.Start(WorkflowComponent)
 ```
 
-工作流开始组件，继承自 [WorkflowComponent](base.md#class-openjiuwencoreworkflowcomponentsbaseworkflowcomponent)。作为工作流的入口，其输入通常由框架根据 `inputs_schema` 从用户输入或上下文填充，本组件在 `invoke` 中直接返回该输入。
+工作流开始组件，继承自 [WorkflowComponent](../base.md#class-openjiuwencoreworkflowcomponentsbaseworkflowcomponent)。作为工作流的入口，其输入通常由框架根据 `inputs_schema` 从用户输入或上下文填充，本组件在 `invoke` 中直接返回该输入。
 
 ### \_\_init\_\_
 

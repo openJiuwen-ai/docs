@@ -242,7 +242,7 @@ add_conditional_edges(self, source_node_id: str, router: Router) -> Self
 **参数**：
 
 * **source_node_id**(str)：源节点的`node_id`。
-* **router**([Router](#type-alias-router))：条件边的路由器，用来决定条件边的目标节点或者目标节点列表，可以使用openJiuwen内置的[BranchRouter](../workflow/components/branch_router.md)或者自定义实现[Router](#type-alias-router)。
+* **router**([Router](#type-alias-router))：条件边的路由器，用来决定条件边的目标节点或者目标节点列表，可以使用openJiuwen内置的[BranchRouter](../workflow/components/flow/branch_router.md)或者自定义实现[Router](#type-alias-router)。
 
 **返回**：
 

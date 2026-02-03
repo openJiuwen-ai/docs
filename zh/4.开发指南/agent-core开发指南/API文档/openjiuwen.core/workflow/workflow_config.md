@@ -2,7 +2,7 @@
 
 ## class openjiuwen.core.workflow.workflow_config.WorkflowConfig
 
-工作流配置类，对应 `openjiuwen.core.workflow.workflow_config.WorkflowConfig`。用于构造 `Workflow(workflow_config=...)` 等。
+工作流配置类，对应 `openjiuwen.core.workflow.workflow_config.WorkflowConfig`。
 
 ### 字段
 
@@ -13,8 +13,7 @@
 ### 样例
 
 ```python
->>> from openjiuwen.core.workflow import WorkflowCard
->>> from openjiuwen.core.workflow.workflow_config import WorkflowConfig
+>>> from openjiuwen.core.workflow import WorkflowCard, WorkflowConfig
 >>>
 >>> config = WorkflowConfig(
 ...     card=WorkflowCard(

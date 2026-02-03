@@ -1,6 +1,6 @@
 # openjiuwen.core.workflow.components.flow.branch_router
 
-`openjiuwen.core.workflow.components.flow.branch_router` 模块提供分支路由器及其单条分支的抽象，用于在工作流条件边中根据当前会话状态选择下一跳节点。 [BranchComponent](branch_comp.md#class-branchcomponent) 内部使用本模块的 [BranchRouter](branch_router.md#class-branchrouter) 管理多条 [Branch](branch_router.md#class-branch)；条件支持字符串表达式、可调用对象或 [Condition](condition/condition.md) 子类，表达式语法见 [ExpressionCondition](condition/expression.md)。
+`openjiuwen.core.workflow.components.flow.branch_router` 模块提供分支路由器及其单条分支的抽象，用于在工作流条件边中根据当前会话状态选择下一跳节点。 [BranchComponent](branch_comp.md#class-branchcomponent) 内部使用本模块的 [BranchRouter](branch_router.md#class-branchrouter) 管理多条 [Branch](branch_router.md#class-branch)；条件支持字符串表达式、可调用对象或 [Condition](../condition/condition.md) 子类，表达式语法见 [ExpressionCondition](../condition/expression.md)。
 
 类通过 `openjiuwen.core.workflow` 导出，建议使用 `from openjiuwen.core.workflow import BranchRouter, Branch` 导入。
 
@@ -22,13 +22,13 @@ def __init__(self, condition: Union[str, Callable[[], bool], Condition], target:
 
 **参数**：
 
-- **condition**（`str | Callable[[], bool] | Condition`）：分支条件。若为 `str` 会封装为 [ExpressionCondition](condition/expression.md)；若为可调用对象则封装为 [FuncCondition](condition/condition.md#class-openjiuwencoreworkflowcomponentsconditionconditionfunccondition)；若为 [Condition](condition/condition.md) 子类则直接使用。其他类型会抛出异常。
+- **condition**（`str | Callable[[], bool] | Condition`）：分支条件。若为 `str` 会封装为 [ExpressionCondition](../condition/expression.md)；若为可调用对象则封装为 [FuncCondition](../condition/condition.md#class-openjiuwencoreworkflowcomponentsconditionconditionfunccondition)；若为 [Condition](../condition/condition.md) 子类则直接使用。其他类型会抛出异常。
 - **target**（list[str]）：该分支对应的下游节点 id 列表。
 - **branch_id**（str | None）：可选分支标识，默认 `None`。
 
 **异常**：
 
-- **JiuWenBaseException**：当条件类型不符合要求时，错误码参见 [StatusCode](../../common/exception/status_code.md) 中组件分支相关项。
+- **JiuWenBaseException**：当条件类型不符合要求时，错误码参见 [StatusCode](../../../common/exception/status_code.md) 中组件分支相关项。
 
 ### evaluate
 
@@ -100,7 +100,7 @@ def add_branch(self, condition: Union[str, Callable[[], bool], Condition], targe
 
 **异常**：
 
-- **JiuWenBaseException**：当 `condition` 或 `target` 为 `None` 时，错误码参见 [StatusCode](../../common/exception/status_code.md)。
+- **JiuWenBaseException**：当 `condition` 或 `target` 为 `None` 时，错误码参见 [StatusCode](../../../common/exception/status_code.md)。
 
 ### set_session
 
@@ -112,11 +112,11 @@ def set_session(self, session: Union[Session, BaseSession]) -> None
 
 **参数**：
 
-- **session**（Session | BaseSession）：工作流或 Agent 的会话实例。若为 [Session](../../session/session.md)，内部会使用其 `_inner` 会话。
+- **session**（Session | BaseSession）：工作流或 Agent 的会话实例。若为 [Session](../../../session/session.md)，内部会使用其 `_inner` 会话。
 
 **异常**：
 
-- **JiuWenBaseException**：当 `session` 类型不是 `Session` 或 `BaseSession` 时，错误码参见 [StatusCode](../../common/exception/status_code.md)。
+- **JiuWenBaseException**：当 `session` 类型不是 `Session` 或 `BaseSession` 时，错误码参见 [StatusCode](../../../common/exception/status_code.md)。
 
 ### \_\_call\_\_
 
@@ -132,7 +132,7 @@ async def __call__(self, *args, **kwargs) -> list[str]
 
 **异常**：
 
-- **JiuWenBaseException**：当没有任何分支条件满足时，错误码参见 [StatusCode](../../common/exception/status_code.md) 中的分支执行相关项（如“未找到满足条件的分支”）。
+- **JiuWenBaseException**：当没有任何分支条件满足时，错误码参见 [StatusCode](../../../common/exception/status_code.md) 中的分支执行相关项（如“未找到满足条件的分支”）。
 
 ### get_drawable_branch_router
 

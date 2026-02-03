@@ -1,6 +1,6 @@
 # openjiuwen.core.workflow.components.flow.end_comp
 
-`openjiuwen.core.workflow.components.flow.end_comp` 模块提供工作流结束组件，用于定义工作流的最终输出。支持无配置（直接透传上游输入）或配置响应模板（使用 `{{variable}}` 占位符格式化输出）。组件通过 `openjiuwen.core.workflow` 导出，建议使用 `from openjiuwen.core.workflow import End, EndConfig` 导入。更多组件说明见 [components](../components.README.md)。
+`openjiuwen.core.workflow.components.flow.end_comp` 模块提供工作流结束组件，用于定义工作流的最终输出。支持无配置（直接透传上游输入）或配置响应模板（使用 `{{variable}}` 占位符格式化输出）。组件通过 `openjiuwen.core.workflow` 导出，建议使用 `from openjiuwen.core.workflow import End, EndConfig` 导入。更多组件说明见 [components](../../components.README.md)。
 
 ## class EndConfig
 
@@ -22,7 +22,7 @@ class openjiuwen.core.workflow.components.flow.end_comp.EndConfig(BaseModel)
 class openjiuwen.core.workflow.components.flow.end_comp.End(WorkflowComponent)
 ```
 
-工作流结束组件，继承自 [WorkflowComponent](base.md#class-openjiuwencoreworkflowcomponentsbaseworkflowcomponent)。无配置时直接将上游输入整理为 `output` 输出；有配置时使用 [EndConfig](end_comp.md#class-endconfig) 中的 `response_template` 渲染结果，并支持流式输出。
+工作流结束组件，继承自 [WorkflowComponent](../base.md#class-openjiuwencoreworkflowcomponentsbaseworkflowcomponent)。无配置时直接将上游输入整理为 `output` 输出；有配置时使用 [EndConfig](end_comp.md#class-endconfig) 中的 `response_template` 渲染结果，并支持流式输出。
 
 ### \_\_init\_\_
 
@@ -36,7 +36,7 @@ def __init__(self, conf: Union[EndConfig, dict] = None) -> None
 
 **异常**：
 
-- **JiuWenBaseException**：当 `conf` 解析失败（如 `response_template` 类型错误）时，错误码参见 [StatusCode](../../common/exception/status_code.md) 中的 `COMPONENT_END_INIT_FAILED`。
+- **JiuWenBaseException**：当 `conf` 解析失败（如 `response_template` 类型错误）时，错误码参见 [StatusCode](../../../common/exception/status_code.md) 中的 `COMPONENT_END_INIT_FAILED`。
 
 ### set_mix
 

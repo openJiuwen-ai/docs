@@ -1,6 +1,6 @@
 # openjiuwen.core.workflow.components.flow.loop.loop_comp
 
-`openjiuwen.core.workflow.components.flow.loop.loop_comp` 模块提供工作流中的循环能力，包括：用于定义循环体的 [LoopGroup](loop_comp.md#class-loopgroup)、作为循环节点的 [LoopComponent](loop_comp.md#class-loopcomponent)、用于中途退出的 [LoopBreakComponent](loop_comp.md#class-loopbreakcomponent)、以及用于在循环内写回变量的 [LoopSetVariableComponent](loop_comp.md#class-loopsetvariablecomponent)。循环类型由 [LoopType](loop_comp.md#class-looptype) 枚举表示。组件通过 `openjiuwen.core.workflow` 导出，建议使用 `from openjiuwen.core.workflow import LoopComponent, LoopGroup, LoopBreakComponent, LoopSetVariableComponent` 导入。更多组件说明见 [components](../components.README.md)。
+`openjiuwen.core.workflow.components.flow.loop.loop_comp` 模块提供工作流中的循环能力，包括：用于定义循环体的 [LoopGroup](loop_comp.md#class-loopgroup)、作为循环节点的 [LoopComponent](loop_comp.md#class-loopcomponent)、用于中途退出的 [LoopBreakComponent](loop_comp.md#class-loopbreakcomponent)、以及用于在循环内写回变量的 [LoopSetVariableComponent](loop_comp.md#class-loopsetvariablecomponent)。循环类型由 [LoopType](loop_comp.md#class-looptype) 枚举表示。组件通过 `openjiuwen.core.workflow` 导出，建议使用 `from openjiuwen.core.workflow import LoopComponent, LoopGroup, LoopBreakComponent, LoopSetVariableComponent` 导入。更多组件说明见 [components](../../../components.README.md)。
 
 ## class LoopType
 
@@ -23,7 +23,7 @@ class openjiuwen.core.workflow.components.flow.loop.loop_comp.LoopType(str, Enum
 class openjiuwen.core.workflow.components.flow.loop.loop_comp.LoopGroup(BaseWorkflow, Executable)
 ```
 
-循环体工作流，继承自 `BaseWorkflow`（工作流基类） 并实现 [Executable](../../graph/base.md)。用于定义循环体内包含的节点、边、起始与结束节点；不支持嵌套 [LoopComponent](loop_comp.md#class-loopcomponent)。通过 `start_nodes` / `start_comp` 与 `end_nodes` / `end_comp` 配置循环体的入口与出口。
+循环体工作流，继承自 `BaseWorkflow`（工作流基类） 并实现 [Executable](../../../../graph/base.md)。用于定义循环体内包含的节点、边、起始与结束节点；不支持嵌套 [LoopComponent](loop_comp.md#class-loopcomponent)。通过 `start_nodes` / `start_comp` 与 `end_nodes` / `end_comp` 配置循环体的入口与出口。
 
 ### add_workflow_comp
 
@@ -93,7 +93,7 @@ def is_empty(self) -> bool
 class openjiuwen.core.workflow.components.flow.loop.loop_comp.LoopComponent(WorkflowComponent)
 ```
 
-循环组件，继承自 [WorkflowComponent](base.md#class-openjiuwencoreworkflowcomponentsbaseworkflowcomponent)。根据输入中的 `loop_type`、`loop_array` / `loop_number` / `bool_expression` 等构建条件，驱动 [LoopGroup](loop_comp.md#class-loopgroup) 重复执行，并支持 [LoopBreakComponent](loop_comp.md#class-loopbreakcomponent) 与中间变量回写。
+循环组件，继承自 [WorkflowComponent](../../base.md#class-openjiuwencoreworkflowcomponentsbaseworkflowcomponent)。根据输入中的 `loop_type`、`loop_array` / `loop_number` / `bool_expression` 等构建条件，驱动 [LoopGroup](loop_comp.md#class-loopgroup) 重复执行，并支持 [LoopBreakComponent](loop_comp.md#class-loopbreakcomponent) 与中间变量回写。
 
 ### \_\_init\_\_
 
@@ -116,7 +116,7 @@ def __init__(self, loop_group: LoopGroup, output_schema: dict) -> None
 async def invoke(self, inputs: Input, session: Session, context: ModelContext) -> Output
 ```
 
-执行循环：从 `inputs` 中解析 `INPUTS_KEY` 得到 LoopInput（含 `loop_type`、`loop_array`、`loop_number`、`bool_expression`、`intermediate_var` 等），根据类型构建 [Condition](condition/condition.md)（如 [ArrayConditionInSession](condition/array.md)、[NumberConditionInSession](condition/number.md)、[AlwaysTrue](condition/condition.md)、[ExpressionCondition](condition/expression.md)），驱动 [LoopGroup](loop_comp.md#class-loopgroup) 执行直至条件不满足或遇到 break。
+执行循环：从 `inputs` 中解析 `INPUTS_KEY` 得到 LoopInput（含 `loop_type`、`loop_array`、`loop_number`、`bool_expression`、`intermediate_var` 等），根据类型构建 [Condition](../../condition/condition.md)（如 [ArrayConditionInSession](../../condition/array.md)、[NumberConditionInSession](../../condition/number.md)、[AlwaysTrue](../../condition/condition.md)、[ExpressionCondition](../../condition/expression.md)），驱动 [LoopGroup](loop_comp.md#class-loopgroup) 执行直至条件不满足或遇到 break。
 
 **参数**：
 
@@ -130,7 +130,7 @@ async def invoke(self, inputs: Input, session: Session, context: ModelContext) -
 
 **异常**：
 
-- **JiuWenBaseException**：输入无效、缺少 `INPUTS_KEY`、`loop_type` 非法、`loop_number` 超限或循环体为空等，错误码参见 [StatusCode](../../common/exception/status_code.md)（如 `COMPONENT_LOOP_INPUT_INVALID`、`NUMBER_CONDITION_ERROR`、`COMPONENT_LOOP_EXECUTION_ERROR`）。若子图抛出 GraphInterrupt，会原样上抛。
+- **JiuWenBaseException**：输入无效、缺少 `INPUTS_KEY`、`loop_type` 非法、`loop_number` 超限或循环体为空等，错误码参见 [StatusCode](../../../../common/exception/status_code.md)（如 `COMPONENT_LOOP_INPUT_INVALID`、`NUMBER_CONDITION_ERROR`、`COMPONENT_LOOP_EXECUTION_ERROR`）。若子图抛出 GraphInterrupt，会原样上抛。
 
 ### graph_invoker
 
@@ -195,7 +195,7 @@ async def on_invoke(self, inputs: Input, session: BaseSession, **kwargs) -> Outp
 class openjiuwen.core.workflow.components.flow.loop.loop_comp.LoopSetVariableComponent(WorkflowComponent)
 ```
 
-循环内设置变量组件，继承自 [WorkflowComponent](base.md#class-openjiuwencoreworkflowcomponentsbaseworkflowcomponent)。根据 `variable_mapping` 将右侧表达式的值（可为引用路径）写入会话状态中左侧路径对应的节点输出，用于在循环体内更新变量供后续节点或下一轮使用。
+循环内设置变量组件，继承自 [WorkflowComponent](../../base.md#class-openjiuwencoreworkflowcomponentsbaseworkflowcomponent)。根据 `variable_mapping` 将右侧表达式的值（可为引用路径）写入会话状态中左侧路径对应的节点输出，用于在循环体内更新变量供后续节点或下一轮使用。
 
 ### \_\_init\_\_
 

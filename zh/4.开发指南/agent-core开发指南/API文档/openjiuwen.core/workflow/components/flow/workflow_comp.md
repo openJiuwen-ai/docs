@@ -1,6 +1,6 @@
 # openjiuwen.core.workflow.components.flow.workflow_comp
 
-`openjiuwen.core.workflow.components.flow.workflow_comp` 模块提供子工作流组件，用于将另一个 [Workflow](../base.md) 作为当前工作流中的一个节点执行。输入中的 `inputs` 会作为子工作流的输入，`config` 会传递给子工作流。组件通过 `openjiuwen.core.workflow` 导出，建议使用 `from openjiuwen.core.workflow import SubWorkflowComponent` 导入。更多组件说明见 [components](../components.README.md)。
+`openjiuwen.core.workflow.components.flow.workflow_comp` 模块提供子工作流组件，用于将另一个 [Workflow](../base.md) 作为当前工作流中的一个节点执行。输入中的 `inputs` 会作为子工作流的输入，`config` 会传递给子工作流。组件通过 `openjiuwen.core.workflow` 导出，建议使用 `from openjiuwen.core.workflow import SubWorkflowComponent` 导入。更多组件说明见 [components](../../components.README.md)。
 
 ## class SubWorkflowComponent
 
@@ -8,7 +8,7 @@
 class openjiuwen.core.workflow.components.flow.workflow_comp.SubWorkflowComponent(WorkflowComponent)
 ```
 
-子工作流组件，继承自 [WorkflowComponent](base.md#class-openjiuwencoreworkflowcomponentsbaseworkflowcomponent)。封装一个 [Workflow](../base.md) 实例，在 `invoke` 和 `stream` 中调用该子工作流的执行接口，并标记为“图内调用”以便框架正确调度。
+子工作流组件，继承自 [WorkflowComponent](../base.md#class-openjiuwencoreworkflowcomponentsbaseworkflowcomponent)。封装一个 [Workflow](../base.md) 实例，在 `invoke` 和 `stream` 中调用该子工作流的执行接口，并标记为“图内调用”以便框架正确调度。
 
 ### \_\_init\_\_
 
@@ -22,7 +22,7 @@ def __init__(self, sub_workflow: Workflow) -> None
 
 **异常**：
 
-- **JiuWenBaseException**：当 `sub_workflow` 为 `None` 时，错误码参见 [StatusCode](../../common/exception/status_code.md) 中的 `COMPONENT_SUB_WORKFLOW_INIT_FAILED`。
+- **JiuWenBaseException**：当 `sub_workflow` 为 `None` 时，错误码参见 [StatusCode](../../../common/exception/status_code.md) 中的 `COMPONENT_SUB_WORKFLOW_INIT_FAILED`。
 
 ### invoke
 

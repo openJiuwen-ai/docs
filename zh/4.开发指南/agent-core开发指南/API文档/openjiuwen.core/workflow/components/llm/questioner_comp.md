@@ -1,6 +1,6 @@
 # openjiuwen.core.workflow.components.llm.questioner_comp
 
-`openjiuwen.core.workflow.components.llm.questioner_comp` 模块提供工作流中的提问器组件，用于根据配置的字段信息通过大模型从用户输入或对话历史中抽取参数，并在缺失必填项时通过人机交互（[session.interact](../../session/interaction.md)）向用户追问，直至收齐或达到最大追问次数。组件通过 `openjiuwen.core.workflow` 导出，建议使用 `from openjiuwen.core.workflow import QuestionerComponent, QuestionerConfig, FieldInfo` 导入。更多组件说明见 [components](../components.README.md)。
+`openjiuwen.core.workflow.components.llm.questioner_comp` 模块提供工作流中的提问器组件，用于根据配置的字段信息通过大模型从用户输入或对话历史中抽取参数，并在缺失必填项时通过人机交互（[session.interact](../../../session/interaction.md)）向用户追问，直至收齐或达到最大追问次数。组件通过 `openjiuwen.core.workflow` 导出，建议使用 `from openjiuwen.core.workflow import QuestionerComponent, QuestionerConfig, FieldInfo` 导入。更多组件说明见 [components](../../components.README.md)。
 
 ## class FieldInfo
 
@@ -53,7 +53,7 @@ class openjiuwen.core.workflow.components.llm.questioner_comp.QuestionerConfig(C
 class openjiuwen.core.workflow.components.llm.questioner_comp.QuestionerComponent(ComponentComposable)
 ```
 
-提问器组件，实现 [ComponentComposable](base.md)。根据 [QuestionerConfig](questioner_comp.md#class-questionerconfig) 构造 QuestionerExecutable；可执行对象在 `invoke` 时加载/恢复会话中的提问器状态，按状态与配置决定是直接提问、从历史抽取还是结束并输出，必要时调用 [session.interact](../../session/interaction.md) 进行人机交互。
+提问器组件，实现 [ComponentComposable](../base.md)。根据 [QuestionerConfig](questioner_comp.md#class-questionerconfig) 构造 QuestionerExecutable；可执行对象在 `invoke` 时加载/恢复会话中的提问器状态，按状态与配置决定是直接提问、从历史抽取还是结束并输出，必要时调用 [session.interact](../../../session/interaction.md) 进行人机交互。
 
 ### \_\_init\_\_
 
@@ -81,8 +81,8 @@ def to_executable(self) -> Executable
 
 ## QuestionerExecutable 与状态机
 
-可执行实现内部使用状态机（**QuestionerState**、**QuestionerStartState**、**QuestionerInteractState**、**QuestionerEndState**）与事件（**QuestionerEvent**：START_EVENT、USER_INTERACT_EVENT、END_EVENT）管理“开始 → 追问/抽取 → 结束”的流程；状态会序列化到 [session](../../session/session.md) 的 `questioner_state` 中以便跨轮恢复。
+可执行实现内部使用状态机（**QuestionerState**、**QuestionerStartState**、**QuestionerInteractState**、**QuestionerEndState**）与事件（**QuestionerEvent**：START_EVENT、USER_INTERACT_EVENT、END_EVENT）管理“开始 → 追问/抽取 → 结束”的流程；状态会序列化到 [session](../../../session/session.md) 的 `questioner_state` 中以便跨轮恢复。
 
 - **invoke**：从 session 恢复或初始化状态，根据 `response_type` 调用直接回复处理器；若当前处于“正在交互”状态，会在返回前调用 `session.interact(question)` 向用户展示问题并等待输入。
 - 输出：通常包含 **user_response**、**question** 以及已抽取的字段（与 [FieldInfo](questioner_comp.md#class-fieldinfo) 的 `field_name` 对应）；结束时为最终收集到的参数。
-- **异常**：配置错误（如 `max_response <= 0`、抽取模式下 `field_names` 为空、`response_type` 非法）错误码为 `COMPONENT_QUESTIONER_CONFIG_ERROR`；输入校验失败为 `COMPONENT_QUESTIONER_INPUT_PARAM_ERROR`；运行时错误（如达到 `max_response` 仍未收齐必填项）为 `COMPONENT_QUESTIONER_RUNTIME_ERROR`；其他参见 [StatusCode](../../common/exception/status_code.md) 中的提问器相关项。
+- **异常**：配置错误（如 `max_response <= 0`、抽取模式下 `field_names` 为空、`response_type` 非法）错误码为 `COMPONENT_QUESTIONER_CONFIG_ERROR`；输入校验失败为 `COMPONENT_QUESTIONER_INPUT_PARAM_ERROR`；运行时错误（如达到 `max_response` 仍未收齐必填项）为 `COMPONENT_QUESTIONER_RUNTIME_ERROR`；其他参见 [StatusCode](../../../common/exception/status_code.md) 中的提问器相关项。

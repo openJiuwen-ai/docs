@@ -1,6 +1,6 @@
 # openjiuwen.core.workflow.components.tool.tool_comp
 
-`openjiuwen.core.workflow.components.tool.tool_comp` 模块提供工作流中的工具（插件）组件，用于绑定并执行通过 [Runner](../../runner/runner.md) 注册的工具。组件根据配置的 `tool_id` 从资源管理器获取 [Tool](../../foundation/tool.README.md) 实例，将节点输入校验后传给工具执行，并将结果封装为统一输出格式。组件通过 `openjiuwen.core.workflow` 导出，建议使用 `from openjiuwen.core.workflow import ToolComponent, ToolComponentConfig` 导入。更多组件说明见 [components](../components.README.md)。
+`openjiuwen.core.workflow.components.tool.tool_comp` 模块提供工作流中的工具（插件）组件，用于绑定并执行通过 [Runner](../../../runner/runner.md) 注册的工具。组件根据配置的 `tool_id` 从资源管理器获取 [Tool](../../../foundation/tool.README.md) 实例，将节点输入校验后传给工具执行，并将结果封装为统一输出格式。组件通过 `openjiuwen.core.workflow` 导出，建议使用 `from openjiuwen.core.workflow import ToolComponent, ToolComponentConfig` 导入。更多组件说明见 [components](../../components.README.md)。
 
 ## class ToolComponentConfig
 
@@ -9,11 +9,11 @@
 class openjiuwen.core.workflow.components.tool.tool_comp.ToolComponentConfig(ComponentConfig)
 ```
 
-工具组件的配置数据类，继承自 [ComponentConfig](base.md)。当前主要用于指定要绑定的工具 id，其余为预留扩展。
+工具组件的配置数据类，继承自 [ComponentConfig](../base.md)。当前主要用于指定要绑定的工具 id，其余为预留扩展。
 
 ### 字段
 
-- **tool_id**（str | None）：要绑定的工具 id，对应 [Runner](../../runner/runner.md) 资源管理器中注册的工具。构造 [ToolComponent](tool_comp.md#class-toolcomponent) 时必填，否则初始化会抛异常。
+- **tool_id**（str | None）：要绑定的工具 id，对应 [Runner](../../../runner/runner.md) 资源管理器中注册的工具。构造 [ToolComponent](tool_comp.md#class-toolcomponent) 时必填，否则初始化会抛异常。
 
 ---
 
@@ -23,7 +23,7 @@ class openjiuwen.core.workflow.components.tool.tool_comp.ToolComponentConfig(Com
 class openjiuwen.core.workflow.components.tool.tool_comp.ToolComponent(ComponentComposable)
 ```
 
-工具组件，实现 [ComponentComposable](base.md)。在构造时根据 [ToolComponentConfig](tool_comp.md#class-toolcomponentconfig) 的 `tool_id` 从 `Runner.resource_mgr` 获取工具实例；[to_executable](tool_comp.md#to_executable) 返回 [ToolExecutable](tool_comp.md#class-toolexecutable) 实例，由该可执行对象在运行时校验输入并调用工具。
+工具组件，实现 [ComponentComposable](../base.md)。在构造时根据 [ToolComponentConfig](tool_comp.md#class-toolcomponentconfig) 的 `tool_id` 从 `Runner.resource_mgr` 获取工具实例；[to_executable](tool_comp.md#to_executable) 返回 [ToolExecutable](tool_comp.md#class-toolexecutable) 实例，由该可执行对象在运行时校验输入并调用工具。
 
 ### \_\_init\_\_
 
@@ -37,7 +37,7 @@ def __init__(self, config: ToolComponentConfig) -> None
 
 **异常**：
 
-- **JiuWenBaseException**：当 `tool_id` 为空或 Runner 中找不到对应工具时，错误码参见 [StatusCode](../../common/exception/status_code.md) 中的 `COMPONENT_TOOL_INIT_FAILED`。
+- **JiuWenBaseException**：当 `tool_id` 为空或 Runner 中找不到对应工具时，错误码参见 [StatusCode](../../../common/exception/status_code.md) 中的 `COMPONENT_TOOL_INIT_FAILED`。
 
 ### to_executable
 
@@ -59,7 +59,7 @@ def to_executable(self) -> Executable
 class openjiuwen.core.workflow.components.tool.tool_comp.ToolExecutable(ComponentExecutable)
 ```
 
-工具组件的可执行实现。使用 [ToolComponentConfig](tool_comp.md#class-toolcomponentconfig) 构造，由 [ToolComponent](tool_comp.md#class-toolcomponent) 通过 `set_tool` 注入已获取的 [Tool](../../foundation/tool.README.md) 实例；`invoke` 时校验输入并调用工具，将结果封装为统一结构（含 `errCode`、`errMessage`、`data` 等）。
+工具组件的可执行实现。使用 [ToolComponentConfig](tool_comp.md#class-toolcomponentconfig) 构造，由 [ToolComponent](tool_comp.md#class-toolcomponent) 通过 `set_tool` 注入已获取的 [Tool](../../../foundation/tool.README.md) 实例；`invoke` 时校验输入并调用工具，将结果封装为统一结构（含 `errCode`、`errMessage`、`data` 等）。
 
 ### invoke
 
@@ -89,7 +89,7 @@ async def invoke(self, inputs: Input, session: Session, context: ModelContext) -
 def set_tool(self, tool: Tool) -> Self
 ```
 
-设置要执行的 [Tool](../../foundation/tool.README.md) 实例，通常由 [ToolComponent](tool_comp.md#class-toolcomponent) 在构造可执行对象后调用。
+设置要执行的 [Tool](../../../foundation/tool.README.md) 实例，通常由 [ToolComponent](tool_comp.md#class-toolcomponent) 在构造可执行对象后调用。
 
 **参数**：
 

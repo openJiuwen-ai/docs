@@ -1,6 +1,6 @@
 # openjiuwen.core.workflow.components.condition.array
 
-`openjiuwen.core.workflow.components.condition.array` 模块提供基于数组的循环条件实现，用于在 [LoopComponent](../loop_comp.md#class-loopcomponent) 中按数组（或输入中的数组引用）逐元素迭代，并在每轮将当前索引对应的值写入会话状态。与 [loop_comp](../loop_comp.md) 配合使用。条件类通过 `openjiuwen.core.workflow` 导出，建议使用 `from openjiuwen.core.workflow import ArrayCondition` 导入。
+`openjiuwen.core.workflow.components.condition.array` 模块提供基于数组的循环条件实现，用于在 [LoopComponent](../flow/loop/loop_comp.md#class-loopcomponent) 中按数组（或输入中的数组引用）逐元素迭代，并在每轮将当前索引对应的值写入会话状态。与 [loop_comp](../flow/loop/loop_comp.md) 配合使用。条件类通过 `openjiuwen.core.workflow` 导出，建议使用 `from openjiuwen.core.workflow import ArrayCondition` 导入。
 
 ## class ArrayCondition
 

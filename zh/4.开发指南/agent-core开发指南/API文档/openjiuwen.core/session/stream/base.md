@@ -24,7 +24,7 @@ openJiuwen 标准流式输出数据格式的数据类。
 
 - **type** (str)：流式数据的类型。当前支持两种内置的流式消息类型：
   - `'INTERACTION'`：表示流式消息为中断交互的中断流式消息
-  - `'end node stream'`：表示流式消息为 [End](../../workflow/components/end_comp.md) 组件的流式消息。
+  - `'end node stream'`：表示流式消息为 [End](../../workflow/components/flow/end_comp.md) 组件的流式消息。
 - **index** (int)：流式数据的下标。
 - **payload** (Any)：流式数据的数据内容。
 
