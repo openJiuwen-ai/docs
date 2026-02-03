@@ -20,9 +20,6 @@ def __init__(self, sub_workflow: Workflow) -> None
 
 - **sub_workflow**（Workflow）：要作为本节点执行的子工作流实例，不可为 `None`。
 
-**异常**：
-
-- **JiuWenBaseException**：当 `sub_workflow` 为 `None` 时，错误码参见 [StatusCode](../../../common/exception/status_code.md) 中的 `COMPONENT_SUB_WORKFLOW_INIT_FAILED`。
 
 ### invoke
 
