@@ -1,6 +1,6 @@
 # openjiuwen.core.workflow.components.llm.questioner_comp
 
-`openjiuwen.core.workflow.components.llm.questioner_comp` 模块提供工作流中的提问器组件，用于根据配置的字段信息通过大模型从用户输入或对话历史中抽取参数，并在缺失必填项时通过人机交互（[session.interact](../../../session/interaction.md)）向用户追问，直至收齐或达到最大追问次数。组件通过 `openjiuwen.core.workflow` 导出，建议使用 `from openjiuwen.core.workflow import QuestionerComponent, QuestionerConfig, FieldInfo` 导入。更多组件说明见 [components](../../components.README.md)。
+`openjiuwen.core.workflow.components.llm.questioner_comp` 模块提供工作流中的提问器组件，用于根据配置的字段信息通过大模型从用户输入或对话历史中抽取参数，并在缺失必填项时通过人机交互（[session.interact](../../workflow.md#class-openjiuwencoreworkflowsesssion)）向用户追问，直至收齐或达到最大追问次数。组件通过 `openjiuwen.core.workflow` 导出，建议使用 `from openjiuwen.core.workflow import QuestionerComponent, QuestionerConfig, FieldInfo` 导入。更多组件说明见 [components](../../components.README.md)。
 
 ## class FieldInfo
 
@@ -53,7 +53,7 @@ class openjiuwen.core.workflow.components.llm.questioner_comp.QuestionerConfig(C
 class openjiuwen.core.workflow.components.llm.questioner_comp.QuestionerComponent(ComponentComposable)
 ```
 
-提问器组件，实现 [ComponentComposable](../components.md)。根据 [QuestionerConfig](questioner_comp.md#class-questionerconfig) 构造 QuestionerExecutable；可执行对象在 `invoke` 时加载/恢复会话中的提问器状态，按状态与配置决定是直接提问、从历史抽取还是结束并输出，必要时调用 [session.interact](../../../session/interaction.md) 进行人机交互。
+提问器组件，实现 [ComponentComposable](../components.md)。根据 [QuestionerConfig](questioner_comp.md#class-questionerconfig) 构造 QuestionerExecutable；可执行对象在 `invoke` 时加载/恢复会话中的提问器状态，按状态与配置决定是直接提问、从历史抽取还是结束并输出，必要时调用 [session.interact](../../workflow.md#class-openjiuwencoreworkflowsesssion) 进行人机交互。
 
 ### \_\_init\_\_
 
