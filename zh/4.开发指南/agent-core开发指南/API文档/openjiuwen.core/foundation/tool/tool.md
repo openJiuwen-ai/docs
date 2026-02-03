@@ -1,140 +1,146 @@
 # openjiuwen.core.foundation.tool
 
-`openjiuwen.core.foundation.tool` 是 openJiuwen 的**工具模块**，负责：
+`openjiuwen.core.foundation.tool` 模块提供了工具（Tool）的抽象定义及多种实现，支持本地函数、RESTful API 和 MCP（Model Context Protocol）工具。工具是 Agent 与外部世界交互的桥梁。
 
-- 定义工具抽象基类 `Tool` 与工具卡片 `ToolCard`，供 LLM 或工作流调用；
-- 提供 `tool` 装饰器，将普通函数快速封装为 `LocalFunction` 工具；
-- 支持本地函数（`LocalFunction`）、RESTful API（`RestfulApi`）、MCP（`MCPTool`）等实现；
-- 提供 `ToolInfo` Schema，供 LLM 工具调用转换为 OpenAI 等 API 的 tools 格式。
+## alias Input
 
-
-## class ToolCard
 ```python
-class openjiuwen.core.foundation.tool.ToolCard(BaseCard)
+Input = TypeVar('Input', contravariant=True)
 ```
-工具的元信息数据类，用于描述工具的基本属性。
 
-* **id**(str)：工具的ID，唯一标识。默认为随机的uuid值。
-* **name**(str)：工具的名字。默认值：`""`。
-* **description**(str)：工具描述信息。默认值：`""`。
-* **input_params**(Dict[str,Any] | Type[BaseModel])：工具的入参描述，为标准JsonSchema格式。
+工具输入的泛型类型变量。
 
-## class Tool
+## alias Output
+
 ```python
-class openjiuwen.core.foundation.tool.Tool(card: ToolCard)
+Output = TypeVar('Output', contravariant=True)
 ```
-Tool基类，定义的抽象接口实现了Function Calling的能力。开发者实现自定义工具时，需要继承Tool基类。
 
-对应源码：`openjiuwen.core.foundation.tool.base`。
+工具输出的泛型类型变量。
 
+## class openjiuwen.core.foundation.tool.base.ToolCard
+
+```python
+class ToolCard(BaseCard)
+```
+
+工具卡片类，用于定义工具的元数据。
+
+继承自 `BaseCard`，包含工具的基本信息和参数定义。
 
 **参数**：
 
-- `card: ToolCard`：工具卡片，不可为 `None`，且须有 `card.id`。默认值：无。
-    - 若 `card` 为 `None`，抛出 `build_error(StatusCode.TOOL_CARD_NOT_SUPPORTED)`； 
-    - 若 `not card.id`，抛出 `build_error(StatusCode.TOOL_CARD_ID_NOT_SUPPORTED, card=card)`；
+* **name**(str, 可选)：工具名称。
+* **description**(str, 可选)：工具描述。
+* **id**(str, 可选)：工具的唯一标识符。
+* **input_params**(Dict[str, Any] | Type[BaseModel], 可选)：工具的输入参数模式（Schema）。可以是 JSON Schema 字典或 Pydantic 模型类。默认为空字典。
 
-**样例**：
+### tool_info() -> ToolInfo
 
-```python
-
-```
-
-### card
-
-```python
-@property
-def card(self) -> ToolCard
-```
-
-返回构造时传入的 ToolCard。
-
-### invoke
-
-```python
-async def invoke(self, inputs: Input, **kwargs) -> Output
-```
-调用工具的异步接口。
-
-**参数**：
-
-* **inputs**(Input)：工具接口的输入参数对象，包含接口调用所需的具体参数值。
-* **kwargs**：可变关键字参数，用于传递额外的请求配置或参数。
+将工具卡片转换为 `ToolInfo` 对象，供 LLM 调用使用。
 
 **返回**：
 
-**Output**，工具调用的响应结果。
+**ToolInfo**，包含工具名称、描述和参数的 ToolInfo 对象。
 
-### stream
+## class openjiuwen.core.foundation.tool.base.Tool
 
 ```python
-async def stream(self, inputs: Input, **kwargs) -> AsyncIterator[Output]
+class Tool(ABC)
 ```
 
-调用工具的流式异步接口。
+工具的抽象基类。
+
+定义了工具的基本行为，所有具体工具实现都应继承此类。
 
 **参数**：
 
-* **inputs**(Input)：工具接口的输入参数对象，包含接口调用所需的具体参数值。
-* **kwargs**：可变关键字参数，用于传递额外的请求配置或参数。
+* **card**(ToolCard)：工具卡片，定义了工具的行为和参数。不可为 None，且必须包含 id。
+
+### card() -> ToolCard
+
+获取工具对应的卡片。
 
 **返回**：
 
-**AsyncIterator[Output]**，工具异步调用的流式结果。
+**ToolCard**，工具的配置卡片。
 
+### invoke(inputs: Input, **kwargs) -> Output
 
+执行工具并返回完整结果。
 
-
-## class LocalFunction
-
-```python
-class openjiuwen.core.foundation.tool.LocalFunction(card: ToolCard, func: Callable)
-```
-
-将可调用对象封装为 Tool：持有 `ToolCard` 与 `func`，实现 `invoke`、`stream`；invoke 时支持同步/异步函数，stream 时要求 func 为 generator 或 async generator。
-
-对应源码：`openjiuwen.core.foundation.tool.function.function.LocalFunction`。
+这是一个抽象方法，子类必须实现具体的执行逻辑。
 
 **参数**：
 
-- `card: ToolCard`：工具卡片。
-- `func: Callable`：可调用对象，不可为 `None`；若为 `None` 抛出异常。
+* **inputs**(Input)：符合工具输入模式的结构化输入数据。
+* **\*\*kwargs**：额外的执行参数，如超时、重试策略或特定于工具的选项。
 
+**返回**：
 
-### invoke
+**Output**，工具执行的完整结果。
 
-```python
-async def invoke(self, inputs: Input, **kwargs) -> Output
-```
+### stream(inputs: Input, **kwargs) -> AsyncIterator[Output]
 
-使用 inputs 执行工具，返回完整结果。
+执行工具并流式返回结果。
+
+这是一个抽象方法，支持长运行操作的部分结果返回。
 
 **参数**：
 
-- `inputs: Input`：输入，通常为 dict 或与 input_params 兼容的结构；若 card 有 input_params，会经 `SchemaUtils.format_with_schema` 格式化。
-- `**kwargs`：可传 `skip_none_value`、`skip_inputs_validate` 等。
+* **inputs**(Input)：符合工具输入模式的结构化输入数据。
+* **\*\*kwargs**：额外的流式执行参数。
 
 **返回**：
 
-- `Output`：`func(**inputs)` 的返回值（若 func 为协程则 `await self._func(**inputs)`）。
+**AsyncIterator[Output]**，工具执行过程中的增量结果迭代器。
 
-
-### stream
+## class openjiuwen.core.foundation.tool.function.function.LocalFunction
 
 ```python
-async def stream(self, inputs: Input, **kwargs) -> AsyncIterator[Output]
+class LocalFunction(Tool)
 ```
 
-使用 inputs 流式执行工具，逐块返回结果。
+本地函数工具类。
 
-**参数**：同 `invoke`。
+将本地的可调用对象（函数、协程等）封装为 `Tool`。
+
+**参数**：
+
+* **card**(ToolCard)：工具卡片。
+* **func**(Callable)：要封装的本地可调用对象。不可为 None。
+
+### invoke(inputs: Input, **kwargs) -> Output
+
+执行本地函数。
+
+支持同步函数和异步协程函数。如果在 `kwargs` 中指定了 `skip_inputs_validate=False`（默认），会先根据 `input_params` 格式化输入。
+
+**参数**：
+
+* **inputs**(Input)：输入数据。
+* **\*\*kwargs**：可选参数，支持 `skip_none_value` (bool) 和 `skip_inputs_validate` (bool)。
 
 **返回**：
 
-- `AsyncIterator[Output]`：逐块 yield 的结果。
+**Output**，函数的返回值。
 
+### stream(inputs: Input, **kwargs) -> AsyncIterator[Output]
 
-## @tool
+流式执行本地函数。
+
+仅支持生成器函数（Generator）或异步生成器函数（AsyncGenerator）。
+
+**参数**：
+
+* **inputs**(Input)：输入数据。
+* **\*\*kwargs**：可选参数，同 `invoke`。
+
+**返回**：
+
+**AsyncIterator[Output]**，函数 yield 的值的异步迭代器。
+
+## method openjiuwen.core.foundation.tool.tool.tool
 
 ```python
 def tool(
@@ -144,59 +150,218 @@ def tool(
     description: Optional[str] = None,
     input_params: Optional[Union[Dict[str, Any], Type[BaseModel]]] = None,
     card: Optional[ToolCard] = None,
-    auto_extract: bool = True,
+    auto_extract: bool = True
 ) -> LocalFunction | Callable[[Callable], LocalFunction]
 ```
 
-将普通函数装饰为 `LocalFunction` 工具；支持无参 `@tool`、带参 `@tool(name="xxx")`、预构建 `ToolCard`、非装饰器用法 `tool(my_func)` 等。
+通用装饰器，用于将函数转换为 `LocalFunction` 工具。
+
+支持多种用法：作为无参装饰器、带参装饰器或直接函数调用。
 
 **参数**：
 
-- `func: Callable | None`：被装饰函数；省略时返回装饰器函数。默认值：`None`。
-- `name: Optional[str]`：覆盖工具名称，未传时使用函数名。默认值：`None`。
-- `description: Optional[str]`：覆盖工具描述；未传时优先从自动提取、docstring 获取。默认值：`None`。
-- `input_params: Optional[Union[Dict[str, Any], Type[BaseModel]]]`：参数 schema（jsonschema 或 Pydantic 模型）；未传且 `auto_extract=True` 时从函数签名自动提取。默认值：`None`。
-- `card: Optional[ToolCard]`：预构建的 ToolCard；若提供，可再通过 name/description/input_params 覆盖部分字段。默认值：`None`。
-- `auto_extract: bool`：是否从函数签名自动提取描述与参数 schema。默认值：`True`。
+* **func**(Callable, 可选)：要装饰的函数。如果作为装饰器使用，此参数由 Python 自动传递。
+* **name**(str, 可选)：覆盖函数的名称。如果未提供，默认使用函数名。
+* **description**(str, 可选)：覆盖函数的描述。如果未提供，尝试从文档字符串或自动提取中获取。
+* **input_params**(Dict[str, Any] | Type[BaseModel], 可选)：自定义参数模式。
+* **card**(ToolCard, 可选)：预构建的 `ToolCard`。
+* **auto_extract**(bool, 可选)：是否从函数签名自动提取参数模式。默认为 True。
 
 **返回**：
 
-- 若传入 `func`：返回 `LocalFunction` 实例；
-- 若未传 `func`：返回装饰器函数，对被装饰函数应用后得到 `LocalFunction` 实例。
+**LocalFunction | Callable[[Callable], LocalFunction]**，返回 `LocalFunction` 实例（如果是直接调用或无参装饰器）或装饰器函数。
 
+**样例**：
 
-## class RestfulApiCard
 ```python
-class openjiuwen.core.foundation.tool.RestfulApiCard(ToolCard)
+>>> import asyncio
+>>> from openjiuwen.core.foundation.tool import tool
+>>> 
+>>> # 1. 基本用法
+>>> @tool
+>>> def add(a: int, b: int) -> int:
+>>>     """两数相加"""
+>>>     return a + b
+>>> 
+>>> # 2. 自定义元数据
+>>> @tool(name="multiply", description="Multiply two numbers")
+>>> def mul(x: int, y: int) -> int:
+>>>     return x * y
+>>> 
+>>> # 3. 异步流式工具
+>>> @tool
+>>> async def count_up(n: int):
+>>>     for i in range(n):
+>>>         yield i
+>>> 
+>>> async def main():
+>>>     print(await add.invoke({"a": 1, "b": 2}))
+>>>     print(await mul.invoke({"x": 3, "y": 4}))
+>>>     async for i in count_up.stream({"n": 3}):
+>>>         print(i, end=" ")
+>>> 
+>>> # 运行样例（实际使用时请在 async 环境中运行）
+>>> # asyncio.run(main())
 ```
-RestfulApi工具的元信息数据类。
 
-* **id**(str)：工具的ID，唯一标识。默认为随机的uuid值。
-* **name**(str)：工具的名字。默认值：`""`。
-* **description**(str)：工具描述信息。默认值：`""`。
-* **input_params**(Dict[str,Any] | Type[BaseModel])：工具的入参描述，为标准JsonSchema格式。
-* todo
+## class openjiuwen.core.foundation.tool.service_api.restful_api.RestfulApiCard
 
-
-## class RestfulApi
 ```python
-class openjiuwen.core.foundation.tool.RestualApi(card: RestfulApiCard)
+class RestfulApiCard(ToolCard)
 ```
 
+RESTful API 工具卡片配置。
 
-### invoke
+**参数**：
 
-### stream
+* **url**(str)：API 的路径，例如 `/api/v1/users`。必须是有效的 URL。
+* **method**(Literal["POST", "GET"])：HTTP 方法，仅支持 POST 或 GET。默认为 "POST"。
+* **headers**(Dict[str, Any], 可选)：请求头。
+* **queries**(Dict[str, Any], 可选)：请求查询参数。
+* **paths**(Dict[str, Any], 可选)：URL 路径参数。
+* **timeout**(float, 可选)：请求超时时间（秒）。默认为 60.0。
+* **max_response_byte_size**(int, 可选)：最大响应字节数。默认为 10MB。
+* **name**(str, 可选)：工具名称。
+* **description**(str, 可选)：工具描述。
+* **input_params**(Dict[str, Any] | Type[BaseModel], 可选)：输入参数模式。
 
+## class openjiuwen.core.foundation.tool.service_api.restful_api.RestfulApi
 
-## class McpToolCard
 ```python
-class openjiuwen.core.foundation.tool.McpToolCard(card: ToolCard)
+class RestfulApi(Tool)
 ```
 
+RESTful API 工具实现。
 
-## class MCPTool
+通过 HTTP 请求调用远程 API。不支持 `stream` 方法。
 
+**参数**：
 
+* **card**(RestfulApiCard)：API 配置卡片。
 
+### invoke(inputs: Input, **kwargs) -> Output
 
+发送 HTTP 请求并返回响应结果。
+
+**参数**：
+
+* **inputs**(Input)：输入参数，将根据配置映射到 Body、Query、Path 或 Header。
+* **\*\*kwargs**：支持 `timeout` (float) 覆盖默认超时。
+
+**返回**：
+
+**Output**，API 响应的 JSON 数据。
+
+**样例**：
+
+```python
+>>> from openjiuwen.core.foundation.tool.service_api.restful_api import RestfulApi, RestfulApiCard
+>>> 
+>>> card = RestfulApiCard(
+>>>     name="get_user",
+>>>     description="Get user info",
+>>>     url="https://api.example.com/users/{user_id}",
+>>>     method="GET",
+>>>     paths={"user_id": 123}, # 默认路径参数
+>>>     input_params={"type": "object", "properties": {"user_id": {"type": "integer"}}}
+>>> )
+>>> 
+>>> api_tool = RestfulApi(card)
+>>> # await api_tool.invoke({"user_id": 456})
+```
+
+## class openjiuwen.core.foundation.tool.mcp.base.McpToolCard
+
+```python
+class McpToolCard(ToolCard)
+```
+
+MCP 工具卡片配置。
+
+**参数**：
+
+* **server_name**(str)：MCP 服务器名称。
+* **server_id**(str, 可选)：服务器 ID，默认为空字符串。
+* **name**(str, 可选)：工具名称。
+* **description**(str, 可选)：工具描述。
+* **input_params**(Dict[str, Any] | Type[BaseModel], 可选)：输入参数模式。
+
+## class openjiuwen.core.foundation.tool.mcp.base.MCPTool
+
+```python
+class MCPTool(Tool)
+```
+
+MCP（Model Context Protocol）工具实现。
+
+包装 MCP 客户端以调用远程 MCP 工具。不支持 `stream` 方法。
+
+**参数**：
+
+* **mcp_client**(Any)：MCP 客户端实例（如 `McpClient` 子类）。
+* **tool_info**(McpToolCard)：MCP 工具配置卡片。
+
+### invoke(inputs: Input, **kwargs) -> Output
+
+调用 MCP 工具。
+
+**参数**：
+
+* **inputs**(Input)：输入参数。
+* **\*\*kwargs**：额外参数。
+
+**返回**：
+
+**Output**，包含结果的字典 `{"result": ...}`。
+
+**样例**：
+
+```python
+>>> from openjiuwen.core.foundation.tool.mcp.base import MCPTool, McpToolCard
+>>> from unittest.mock import AsyncMock
+>>> 
+>>> # 模拟 MCP Client
+>>> mock_client = AsyncMock()
+>>> mock_client.call_tool.return_value = "Result"
+>>> 
+>>> card = McpToolCard(
+>>>     name="mcp_tool",
+>>>     server_name="test_server"
+>>> )
+>>> 
+>>> mcp_tool = MCPTool(mcp_client=mock_client, tool_info=card)
+>>> # await mcp_tool.invoke({})
+```
+
+## class openjiuwen.core.foundation.tool.mcp.base.McpServerConfig
+
+```python
+class McpServerConfig(BaseModel)
+```
+
+MCP 服务器配置类。
+
+**参数**：
+
+* **server_name**(str)：服务器名称。
+* **server_path**(str)：服务器路径或命令。
+* **client_type**(str, 可选)：客户端类型，如 'sse'。默认为 'sse'。
+* **server_id**(str, 可选)：服务器 ID。默认生成 UUID。
+* **params**(Dict[str, Any], 可选)：额外参数。
+* **auth_headers**(dict, 可选)：认证头。
+* **auth_query_params**(Dict[str, str], 可选)：认证查询参数。
+
+## class openjiuwen.core.foundation.tool.schema.ToolInfo
+
+```python
+class ToolInfo(BaseModel)
+```
+
+工具信息模型，用于 LLM API 交互。
+
+**参数**：
+
+* **type**(str, 可选)：工具类型，默认为 "function"。
+* **name**(str, 可选)：工具名称。
+* **description**(str, 可选)：工具描述。
+* **parameters**(Union[Dict[str, Any], Type[BaseModel]], 可选)：参数模式。

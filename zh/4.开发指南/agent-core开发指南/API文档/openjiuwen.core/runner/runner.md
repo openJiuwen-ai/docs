@@ -60,8 +60,11 @@ async def run_agent(
 
 **参数**:
 
-* **agent(str|Agent)**：agent的ID或agent实例。
-* **inputs(Any)**：输入数据。
+* **agent(str|Agent)**：agent的ID或agent实例。不可取值为`None`或`''`。
+* **inputs(Any)**：执行agent的输入数据。
+* **session(str|Session)**：会话ID或会话实例。默认为`None`，表示使用默认会话。
+* **context(ModelContext)**：用于存储用户对话信息的上下文引擎。默认为`None`，表示不开启上下文引擎功能。
+* **envs(dict[str, Any])**：执行环境配置，例如模型参数、系统变量等。默认为`None`。
 
 **返回**：
 
@@ -80,22 +83,18 @@ async def run_agent(
 >>> from openjiuwen.agent.common.schema import WorkflowSchema
 >>> from openjiuwen.agent.config.workflow_config import WorkflowAgentConfig
 >>> from openjiuwen.agent.workflow_agent.workflow_agent import WorkflowAgent
->>> from openjiuwen.core.component.end_comp import End
->>> from openjiuwen.core.component.start_comp import Start
->>> from openjiuwen.core.runner.runner import resource_mgr
->>> from openjiuwen.core.workflow.base import Workflow
->>> from openjiuwen.core.workflow.workflow_config import WorkflowConfig, WorkflowMetadata
+>>> from openjiuwen.core.runner import Runner
+>>> from openjiuwen.core.single_agent import AgentCard
+>>> from openjiuwen.core.workflow import Start, End, Workflow, WorkflowCard
 >>> 
 >>> # 创建工作流flow, 将flow注册到资源管理器
->>> flow = Workflow(workflow_config=WorkflowConfig(
-...     metadata=WorkflowMetadata(id="workflow_id", version="1", name="简单工作流",
-...                               description="this_is_a_demo")))
-... 
+>>> flow = Workflow(card=WorkflowCard(id="workflow_id", version="1", name="简单工作流", description="this_is_a_demo"))
+>>> 
 >>> flow.set_start_comp("start", Start(), inputs_schema={"query": "${query}"})
 >>> flow.set_end_comp("end", End(), inputs_schema={"result": "${start.query}"})
 >>> flow.add_connection("start", "end")
 >>> 
->>> resource_mgr.workflow().add_workflow("workflow_id_1", flow)
+>>> Runner.resource_mgr.add_workflow(WorkflowCard(id="workflow_id", version="1", name="简单工作流"), lambda _: flow)
 >>> 
 >>> # 创建Agent
 >>> 
@@ -112,15 +111,15 @@ async def run_agent(
 ...
 >>> agent = WorkflowAgent(agent_config=workflow_agent_config)
 >>> 
->>> from openjiuwen.core.runner.runner import Runner
+>>> from openjiuwen.core.runner import Runner
 >>> 
 >>> # 直接调用agent实例
->>> print(asyncio.run(Runner.run_agent(agent, inputs={"conversion_id": "id1", "query": "哈哈"})))
+>>> print(asyncio.run(Runner.run_agent(agent, inputs={"conversation_id": "id1", "query": "哈哈"})))
 {'output': WorkflowOutput(result={'output': {'result': '哈哈'}}, state=<WorkflowExecutionState.COMPLETED: 'COMPLETED'>), 'result_type': 'answer'}
 >>> 
 >>> # 通过id，调用agent，需要首先将agent注册
->>> Runner.add_agent("agent_id", agent)
->>> print(asyncio.run(Runner.run_agent("agent_id", inputs={"conversion_id": "id1", "query": "哈哈"})))
+>>> Runner.resource_mgr.add_agent(AgentCard(id="agent_id"), lambda _: agent)
+>>> print(asyncio.run(Runner.run_agent("agent_id", inputs={"conversation_id": "id1", "query": "哈哈"})))
 {'output': WorkflowOutput(result={'output': {'result': '哈哈'}}, state=<WorkflowExecutionState.COMPLETED: 'COMPLETED'>), 'result_type': 'answer'}
 ```
 
@@ -142,8 +141,12 @@ async def run_agent_streaming(
 
 **参数**:
 
-* **agent(str|Agent)**：agent的ID或agent实例。
-* **inputs(Any)**：输入数据。
+* **agent(str|Agent)**：agent的ID或agent实例。不可取值为`None`或`''`。
+* **inputs(Any)**：执行agent的输入数据。
+* **session(str|Session)**：会话ID或会话实例。默认为`None`，表示使用默认会话。
+* **context(ModelContext)**：用于存储用户对话信息的上下文引擎。默认为`None`，表示不开启上下文引擎功能。
+* **stream_modes(list[BaseStreamMode])**：流式输出的类型列表。默认为`None`，表示使用默认流式模式。
+* **envs(dict[str, Any])**：执行环境配置，例如模型参数、系统变量等。默认为`None`。
 
 **返回**:
 
@@ -162,23 +165,19 @@ async def run_agent_streaming(
 >>> from openjiuwen.agent.common.schema import WorkflowSchema
 >>> from openjiuwen.agent.config.workflow_config import WorkflowAgentConfig
 >>> from openjiuwen.agent.workflow_agent.workflow_agent import WorkflowAgent
->>> from openjiuwen.core.component.end_comp import End
->>> from openjiuwen.core.component.start_comp import Start
->>> from openjiuwen.core.runner.runner import resource_mgr
->>> from openjiuwen.core.stream.base import OutputSchema
->>> from openjiuwen.core.workflow.base import Workflow
->>> from openjiuwen.core.workflow.workflow_config import WorkflowConfig, WorkflowMetadata
+>>> from openjiuwen.core.runner import Runner
+>>> from openjiuwen.core.single_agent import AgentCard
+>>> from openjiuwen.core.session.stream import OutputSchema
+>>> from openjiuwen.core.workflow import Start, End, Workflow, WorkflowCard
 >>> 
 >>> # 创建工作流flow, 将flow注册到资源管理器
->>> flow = Workflow(workflow_config=WorkflowConfig(
-...     metadata=WorkflowMetadata(id="workflow_id", version="1", name="简单工作流",
-...                               description="this_is_a_demo")))
-... 
+>>> flow = Workflow(card=WorkflowCard(id="workflow_id", version="1", name="简单工作流", description="this_is_a_demo"))
+>>> 
 >>> flow.set_start_comp("start", Start(), inputs_schema={"query": "${query}"})
 >>> flow.set_end_comp("end", End(), inputs_schema={"result": "${start.query}"})
 >>> flow.add_connection("start", "end")
 >>> 
->>> resource_mgr.workflow().add_workflow("workflow_id_1", flow)
+>>> Runner.resource_mgr.add_workflow(WorkflowCard(id="workflow_id", version="1", name="简单工作流"), lambda _: flow)
 >>> 
 >>> # 创建Agent
 >>> workflow_agent_config = WorkflowAgentConfig(id="agent_id", version="1", description="this_is_a_demo",
@@ -194,9 +193,9 @@ async def run_agent_streaming(
 ... 
 >>> agent = WorkflowAgent(agent_config=workflow_agent_config)
 >>> 
->>> from openjiuwen.core.runner.runner import Runner
+>>> from openjiuwen.core.runner import Runner
 >>> async def run_workflow():
-...     result = Runner.run_agent_streaming(agent, inputs={"conversion_id": "id1", "query": "哈哈"})
+...     result = Runner.run_agent_streaming(agent, inputs={"conversation_id": "id1", "query": "哈哈"})
 ...     async for chunk in result:
 ...         if isinstance(chunk, OutputSchema):
 ...             print(chunk)
@@ -205,9 +204,9 @@ async def run_agent_streaming(
 type='workflow_final' index=0 payload={'output': {'result': '哈哈'}}
 >>> 
 >>> # 通过id，调用agent，需要首先将agent注册
->>> Runner.add_agent("agent_id", agent)
+>>> Runner.resource_mgr.add_agent(AgentCard(id="agent_id"), lambda _: agent)
 >>> async def run_workflow():
-...     result = Runner.run_agent_streaming("agent_id", inputs={"conversion_id": "id1", "query": "哈哈"})
+...     result = Runner.run_agent_streaming("agent_id", inputs={"conversation_id": "id1", "query": "哈哈"})
 ...     async for chunk in result:
 ...         if isinstance(chunk, OutputSchema):
 ...             print(chunk)
@@ -236,8 +235,9 @@ async def run_workflow(
 
 * **workflow(str|Workflow)**：工作流ID或者工作流实例。不可取值为`None`或`''`。
 * **inputs(Any)**：执行工作流的输入数据。
-* **runtime(Runtime|WorkflowRuntime)**：运行时实例。若提供的运行时来源于Agent的运行时，则`workflow`必须被Agent绑定。默认为`None`。
-* **context(Context)**：用于存储用户对话信息的上下文引擎。默认为`None`，表示不开启上下文引擎功能。
+* **session(str|Session)**：会话ID或会话实例。默认为`None`，表示使用默认会话。
+* **context(ModelContext)**：用于存储用户对话信息的上下文引擎。默认为`None`，表示不开启上下文引擎功能。
+* **envs(dict[str, Any])**：执行环境配置，例如模型参数、系统变量等。默认为`None`。
 
 **返回**：
 
@@ -260,8 +260,9 @@ async def run_workflow(
 >>> from openjiuwen.core.runtime.runtime import Runtime
 >>> from openjiuwen.core.runtime.workflow import WorkflowRuntime
 >>> from openjiuwen.core.workflow.base import Workflow
+>>> from openjiuwen.core.workflow import WorkflowCard
 >>> from openjiuwen.core.workflow.workflow_config import WorkflowConfig, WorkflowMetadata
->>> from openjiuwen.core.runner.runner import Runner, resource_mgr
+>>> from openjiuwen.core.runner import Runner
 >>> 
 >>> # 自定义组件Node
 >>> class Node(ComponentExecutable, WorkflowComponent):
@@ -301,7 +302,7 @@ async def run_workflow(
 >>> print(result)
 result={'output': {'result': 'query workflow'}} state=<WorkflowExecutionState.COMPLETED: 'COMPLETED'>
 >>> # 指定workflow的id，执行工作流，首先需要将workflow添加到资源管理器中
->>> resource_mgr.workflow().add_workflow("test_workflow", workflow)
+>>> Runner.resource_mgr.add_workflow(WorkflowCard(id="test_workflow", version="1", name="test_workflow"), lambda _: workflow)
 >>> result = asyncio.run(Runner.run_workflow(workflow="test_workflow", inputs={"query": "query workflow"}, runtime=WorkflowRuntime()))
 >>> print(result)
 result={'output': {'result': 'query workflow'}} state=<WorkflowExecutionState.COMPLETED: 'COMPLETED'>
@@ -328,9 +329,10 @@ async def run_workflow_streaming(
 
 * **workflow(str|Workflow)**：工作流ID或者工作流实例。不可取值为`None`或`''`。
 * **inputs(Any)**：执行工作流的输入数据。
-* **runtime(Runtime|WorkflowRuntime)**：运行时实例。若提供的运行时来源于Agent的运行时，则入参中`workflow`必须被Agent绑定。默认为`None`。
-* **stream_modes(list[BaseStreamMode])**：流式输出的类型。默认为`None`。
-* **context(Context)**：用于存储用户对话信息的上下文引擎。默认为`None`，表示不开启上下文引擎功能。
+* **session(str|Session)**：会话ID或会话实例。默认为`None`，表示使用默认会话。
+* **context(ModelContext)**：用于存储用户对话信息的上下文引擎。默认为`None`，表示不开启上下文引擎功能。
+* **stream_modes(list[BaseStreamMode])**：流式输出的类型列表。默认为`None`，表示使用默认流式模式。
+* **envs(dict[str, Any])**：执行环境配置，例如模型参数、系统变量等。默认为`None`。
 
 **返回**：
 
@@ -349,7 +351,7 @@ async def run_workflow_streaming(
 >>> from openjiuwen.core.component.end_comp import End
 >>> from openjiuwen.core.component.start_comp import Start
 >>> from openjiuwen.core.context_engine.base import Context
->>> from openjiuwen.core.runner.runner import Runner
+>>> from openjiuwen.core.runner import Runner
 >>> from openjiuwen.core.runtime.base import ComponentExecutable, Input, Output
 >>> from openjiuwen.core.runtime.runtime import Runtime
 >>> from openjiuwen.core.runtime.workflow import WorkflowRuntime
@@ -403,8 +405,8 @@ async def run_workflow_streaming(
 2='2'
 >>> 
 >>> # 指定id运行workflow, 前提必须将workflow添加到资源管理器
->>> from openjiuwen.core.runner.runner import resource_mgr
->>> resource_mgr.workflow().add_workflow("test_workflow", workflow)
+>>> from openjiuwen.core.workflow import WorkflowCard
+>>> Runner.resource_mgr.add_workflow(WorkflowCard(id="test_workflow", version="1", name="test_workflow"), lambda _: workflow)
 >>> async def run_workflow():
 ...     result = Runner.run_workflow_streaming(workflow="test_workflow", inputs={"query": "query workflow"}, runtime=WorkflowRuntime())
 ...     async for chunk in result:
@@ -433,8 +435,11 @@ async def run_agent_group(
 
 **参数**：
 
-* **agent_group(str|AgentGroup)**：ID或AgentGroup实例。不可取值为`None`或`''`。
-* **inputs**: 输入数据。
+* **agent_group(str|AgentGroup)**：AgentGroup的ID或AgentGroup实例。不可取值为`None`或`''`。
+* **inputs(Any)**: 执行AgentGroup的输入数据。
+* **session(str|Session)**：会话ID或会话实例。默认为`None`，表示使用默认会话。
+* **context(ModelContext)**：用于存储用户对话信息的上下文引擎。默认为`None`，表示不开启上下文引擎功能。
+* **envs(dict[str, Any])**：执行环境配置，例如模型参数、系统变量等。默认为`None`。
 
 **返回**：
 
