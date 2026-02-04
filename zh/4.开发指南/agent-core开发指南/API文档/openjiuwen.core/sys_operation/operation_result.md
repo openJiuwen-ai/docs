@@ -2,289 +2,346 @@
 
 `openjiuwen.core.sys_operation.operation_result` 模块定义了系统操作的所有返回结果数据结构。
 
-## 基础结果类
-
-### class BaseResult
+## class openjiuwen.core.sys_operation.result.base_result.BaseResult
 
 ```python
-class BaseResult(BaseModel, Generic[T], ABC):
-    code: int = Field(..., description="Status code: 0 = success, non-0 = failure")
-    message: str = Field(..., description="Message details")
-    data: Optional[T] = Field(None, description="Business data (returned only on success)")
+class openjiuwen.core.sys_operation.result.base_result.(BaseModel, Generic[T], ABC)
 ```
 
 所有操作结果的通用泛型基类。
 
-- `code: int`: 状态码。`0` 表示成功，非 `0` 表示失败。
-- `message: str`: 消息详情。
-- `data: Optional[T]`: 业务数据载荷（仅在成功时返回）。
+**参数**：
 
-## 代码执行结果
+* **code**(int)：状态码。0 表示成功，非 0 表示失败。
+* **message**(str)：消息详情。
+* **data**(Optional[T], 可选)：业务数据载荷（仅在成功时返回）。默认值：None。
 
-### class ExecuteCodeData
+## class openjiuwen.core.sys_operation.result.code_operation_result.ExecuteCodeData
 
 ```python
-class ExecuteCodeData(BaseModel):
-    code_content: str = Field(..., description="Original code executed")
-    language: str = Field(..., description="Programming language of the original code")
-    exit_code: int = Field(default=0, description="Execution exit code")
-    stdout: str = Field(default="", description="The code's standard output (stdout) stream")
-    stderr: str = Field(default="", description="The code's standard error (stderr) stream")
+class openjiuwen.core.sys_operation.result.code_operation_result.ExecuteCodeData(BaseModel)
 ```
 
 代码执行结果数据。
 
-### class ExecuteCodeChunkData
+**参数**：
+
+* **code_content**(str)：执行的原始代码。
+* **language**(str)：原始代码的编程语言。
+* **exit_code**(int, 可选)：执行退出码。默认值：0。
+* **stdout**(str, 可选)：标准输出流。默认值：""。
+* **stderr**(str, 可选)：标准错误流。默认值：""。
+
+## class openjiuwen.core.sys_operation.result.code_operation_result.ExecuteCodeChunkData
 
 ```python
-class ExecuteCodeChunkData(BaseModel):
-    text: str = Field(default="", description="Raw content of the output chunk")
-    type: Literal["stdout", "stderr"] = Field(..., description="Type of the output chunk")
-    chunk_index: int = Field(..., description="Index of current chunk (starting from 0)")
-    exit_code: int = Field(default=0, description="Execution exit code")
-    metadata: Optional[Dict[str, Any]] = Field(default=None, description="Data for execution")
+class openjiuwen.core.sys_operation.result.code_operation_result.ExecuteCodeChunkData(BaseModel)
 ```
 
 流式执行时的分片数据。
 
-### class ExecuteCodeResult
+**参数**：
+
+* **text**(str, 可选)：输出分片的原始内容。默认值：""。
+* **type**(Literal["stdout", "stderr"])：输出分片的类型。
+* **chunk_index**(int)：当前分片的索引（从 0 开始）。
+* **exit_code**(int, 可选)：执行退出码。默认值：0。
+* **metadata**(Dict[str, Any], 可选)：执行数据。默认值：None。
+
+## class openjiuwen.core.sys_operation.result.code_operation_result.ExecuteCodeResult
 
 ```python
-class ExecuteCodeResult(BaseResult[ExecuteCodeData])
+class openjiuwen.core.sys_operation.result.code_operation_result.ExecuteCodeResult(BaseResult[ExecuteCodeData])
 ```
 
 代码执行的最终结果类型。
 
-### class ExecuteCodeStreamResult
+## class openjiuwen.core.sys_operation.result.code_operation_result.ExecuteCodeStreamResult
 
 ```python
-class ExecuteCodeStreamResult(BaseResult[ExecuteCodeChunkData])
+class openjiuwen.core.sys_operation.result.code_operation_result.ExecuteCodeStreamResult(BaseResult[ExecuteCodeChunkData])
 ```
 
 代码流式执行的结果类型。
 
-## Shell 操作结果
-
-### class ExecuteCmdData
+## class openjiuwen.core.sys_operation.result.shell_operation_result.ExecuteCmdData
 
 ```python
-class ExecuteCmdData(BaseModel):
-    command: str = Field(..., description="Original shell command executed")
-    cwd: str = Field(default=".", description="Current working directory")
-    exit_code: int = Field(default=0, description="Command exit code")
-    stdout: str = Field(default="", description="The command's standard output (stdout) stream")
-    stderr: str = Field(default="", description="The command's standard error (stderr) stream")
+class openjiuwen.core.sys_operation.result.shell_operation_result.ExecuteCmdData(BaseModel)
 ```
 
 Shell 命令执行结果数据。
 
-### class ExecuteCmdChunkData
+**参数**：
+
+* **command**(str)：执行的原始 Shell 命令。
+* **cwd**(str, 可选)：当前工作目录。默认值："."。
+* **exit_code**(int, 可选)：命令退出码。默认值：0。
+* **stdout**(str, 可选)：标准输出流。默认值：""。
+* **stderr**(str, 可选)：标准错误流。默认值：""。
+
+## class openjiuwen.core.sys_operation.result.shell_operation_result.ExecuteCmdChunkData
 
 ```python
-class ExecuteCmdChunkData(BaseModel):
-    text: str = Field(default="", description="Raw content of the output chunk")
-    type: Literal["stdout", "stderr"] = Field(..., description="Type of the output chunk")
-    chunk_index: int = Field(..., description="Index of current chunk (starting from 0)")
-    exit_code: int = Field(default=0, description="Command exit code")
-    metadata: Optional[Dict[str, Any]] = Field(default=None, description="Data for command")
+class openjiuwen.core.sys_operation.result.shell_operation_result.ExecuteCmdChunkData(BaseModel)
 ```
 
 Shell 流式执行分片数据。
 
-### class ExecuteCmdResult
+**参数**：
+
+* **text**(str, 可选)：输出分片的原始内容。默认值：""。
+* **type**(Literal["stdout", "stderr"])：输出分片的类型。
+* **chunk_index**(int)：当前分片的索引（从 0 开始）。
+* **exit_code**(int, 可选)：命令退出码。默认值：0。
+* **metadata**(Dict[str, Any], 可选)：命令数据。默认值：None。
+
+## class openjiuwen.core.sys_operation.result.shell_operation_result.ExecuteCmdResult
 
 ```python
-class ExecuteCmdResult(BaseResult[ExecuteCmdData])
+class openjiuwen.core.sys_operation.result.shell_operation_result.ExecuteCmdResult(BaseResult[ExecuteCmdData])
 ```
 
 Shell 执行的最终结果类型。
 
-### class ExecuteCmdStreamResult
+## class openjiuwen.core.sys_operation.result.shell_operation_result.ExecuteCmdStreamResult
 
 ```python
-class ExecuteCmdStreamResult(BaseResult[ExecuteCmdChunkData])
+class openjiuwen.core.sys_operation.result.shell_operation_result.ExecuteCmdStreamResult(BaseResult[ExecuteCmdChunkData])
 ```
 
 Shell 流式执行的结果类型。
 
-## 文件系统操作结果
-
-### 通用数据结构
-
-#### class FileSystemItem
+## class openjiuwen.core.sys_operation.result.fs_operation_result.FileSystemItem
 
 ```python
-class FileSystemItem(BaseModel):
-    name: str = Field(..., description="Name of the file/directory")
-    path: str = Field(..., description="Full absolute path of the file/directory")
-    size: int = Field(..., description="Size in bytes")
-    modified_time: str = Field(..., description="Last modification time")
-    is_directory: bool = Field(..., description="Whether the item is a directory")
-    type: Optional[str] = Field(default=None, description="File extension (only for files)")
+class openjiuwen.core.sys_operation.result.fs_operation_result.FileSystemItem(BaseModel)
 ```
 
 文件或目录的基本属性。
 
-#### class FileSystemData
+**参数**：
+
+* **name**(str)：文件/目录名称。
+* **path**(str)：文件/目录的完整绝对路径。
+* **size**(int)：大小（字节）。
+* **modified_time**(str)：最后修改时间。
+* **is_directory**(bool)：是否为目录。
+* **type**(str, 可选)：文件扩展名（仅文件有）。默认值：None。
+
+## class openjiuwen.core.sys_operation.result.fs_operation_result.FileSystemData
 
 ```python
-class FileSystemData(BaseModel):
-    total_count: int = Field(..., description="Total number of items")
-    list_items: List[FileSystemItem] = Field(..., description="List of file/directory details")
-    root_path: str = Field(..., description="Original input directory path")
-    recursive: bool = Field(..., description="Actual recursive status used")
-    max_depth: Optional[int] = Field(default=None, description="Actual maximum recursion depth used")
+class openjiuwen.core.sys_operation.result.fs_operation_result.FileSystemData(BaseModel)
 ```
 
 列出文件或目录的结果数据。
 
-#### class SearchFilesData
+**参数**：
+
+* **total_count**(int)：项目总数。
+* **list_items**(List[FileSystemItem])：文件/目录详情列表。
+* **root_path**(str)：原始输入目录路径。
+* **recursive**(bool)：是否递归。
+* **max_depth**(int, 可选)：最大递归深度。默认值：None。
+
+## class openjiuwen.core.sys_operation.result.fs_operation_result.SearchFilesData
 
 ```python
-class SearchFilesData(BaseModel):
-    total_matches: int = Field(..., description="Total number of files matching the search pattern")
-    matching_files: List[FileSystemItem] = Field(..., description="List of matching files")
-    search_path: str = Field(..., description="Original base path used for the search")
-    search_pattern: str = Field(..., description="Original search pattern used")
-    exclude_patterns: Optional[List[str]] = Field(default=None, description="Original exclude patterns used")
+class openjiuwen.core.sys_operation.result.fs_operation_result.SearchFilesData(BaseModel)
 ```
 
 搜索文件的结果数据。
 
-### 读文件结果
+**参数**：
 
-#### class ReadFileData
+* **total_matches**(int)：匹配文件总数。
+* **matching_files**(List[FileSystemItem])：匹配文件列表。
+* **search_path**(str)：搜索起始路径。
+* **search_pattern**(str)：搜索模式。
+* **exclude_patterns**(List[str], 可选)：排除模式列表。默认值：None。
 
-```python
-class ReadFileData(BaseModel):
-    path: str = Field(..., description="File path of the read file")
-    content: Union[str, bytes] = Field(..., description="File content")
-    mode: Literal['text', 'bytes'] = Field(..., description="File read mode")
-```
-
-#### class ReadFileChunkData
+## class openjiuwen.core.sys_operation.result.fs_operation_result.ReadFileData
 
 ```python
-class ReadFileChunkData(BaseModel):
-    path: str = Field(..., description="File path of the read file")
-    chunk_content: Union[str, bytes] = Field(..., description="Current chunk content")
-    mode: Literal['text', 'bytes'] = Field(..., description="File read mode")
-    chunk_size: int = Field(..., description="Size of each chunk")
-    chunk_index: int = Field(..., description="Index of current chunk")
-    is_last_chunk: bool = Field(..., description="Whether current chunk is the last one")
+class openjiuwen.core.sys_operation.result.fs_operation_result.ReadFileData(BaseModel)
 ```
 
-#### class ReadFileResult
+读取文件数据。
+
+**参数**：
+
+* **path**(str)：文件路径。
+* **content**(Union[str, bytes])：文件内容。
+* **mode**(Literal['text', 'bytes'])：读取模式。
+
+## class openjiuwen.core.sys_operation.result.fs_operation_result.ReadFileChunkData
 
 ```python
-class ReadFileResult(BaseResult[ReadFileData])
+class openjiuwen.core.sys_operation.result.fs_operation_result.ReadFileChunkData(BaseModel)
 ```
 
-#### class ReadFileStreamResult
+读取文件分片数据。
+
+**参数**：
+
+* **path**(str)：文件路径。
+* **chunk_content**(Union[str, bytes])：当前分片内容。
+* **mode**(Literal['text', 'bytes'])：读取模式。
+* **chunk_size**(int)：分片大小。
+* **chunk_index**(int)：分片索引。
+* **is_last_chunk**(bool)：是否为最后一个分片。
+
+## class openjiuwen.core.sys_operation.result.fs_operation_result.WriteFileData
 
 ```python
-class ReadFileStreamResult(BaseResult[ReadFileChunkData])
+class openjiuwen.core.sys_operation.result.fs_operation_result.WriteFileData(BaseModel)
 ```
 
-### 写文件结果
+写入文件数据。
 
-#### class WriteFileData
+**参数**：
+
+* **path**(str)：文件路径。
+* **size**(int)：文件内容大小（字节）。
+* **mode**(Literal['text', 'bytes'])：写入模式。
+
+## class openjiuwen.core.sys_operation.result.fs_operation_result.UploadFileData
 
 ```python
-class WriteFileData(BaseModel):
-    path: str = Field(..., description="File path of the write file")
-    size: int = Field(..., description="File content size in bytes")
-    mode: Literal['text', 'bytes'] = Field(..., description="File write mode")
+class openjiuwen.core.sys_operation.result.fs_operation_result.UploadFileData(BaseModel)
 ```
 
-#### class WriteFileResult
+上传文件数据。
+
+**参数**：
+
+* **local_path**(str)：本地文件路径。
+* **target_path**(str)：目标文件路径。
+* **size**(int)：文件内容大小（字节）。
+
+## class openjiuwen.core.sys_operation.result.fs_operation_result.UploadFileChunkData
 
 ```python
-class WriteFileResult(BaseResult[WriteFileData])
+class openjiuwen.core.sys_operation.result.fs_operation_result.UploadFileChunkData(BaseModel)
 ```
 
-### 上传/下载文件结果
+上传文件分片数据。
 
-#### class UploadFileData
+**参数**：
+
+* **local_path**(str)：本地文件路径。
+* **target_path**(str)：目标文件路径。
+* **chunk_size**(int)：分片大小。
+* **chunk_index**(int)：分片索引。
+* **is_last_chunk**(bool)：是否为最后一个分片。
+
+## class openjiuwen.core.sys_operation.result.fs_operation_result.DownloadFileData
 
 ```python
-class UploadFileData(BaseModel):
-    local_path: str = Field(..., description="File path of the local file")
-    target_path: str = Field(..., description="File path of the target file")
-    size: int = Field(..., description="File content size in bytes")
+class openjiuwen.core.sys_operation.result.fs_operation_result.DownloadFileData(BaseModel)
 ```
 
-#### class UploadFileChunkData
+下载文件数据。
+
+**参数**：
+
+* **source_path**(str)：源文件路径。
+* **local_path**(str)：本地文件路径。
+* **size**(int)：文件内容大小（字节）。
+
+## class openjiuwen.core.sys_operation.result.fs_operation_result.DownloadFileChunkData
 
 ```python
-class UploadFileChunkData(BaseModel):
-    local_path: str = Field(..., description="File path of the local file")
-    target_path: str = Field(..., description="File path of the target file")
-    chunk_size: int = Field(..., description="Size of each chunk")
-    chunk_index: int = Field(..., description="Index of current chunk")
-    is_last_chunk: bool = Field(..., description="Whether current chunk is the last one")
+class openjiuwen.core.sys_operation.result.fs_operation_result.DownloadFileChunkData(BaseModel)
 ```
 
-#### class UploadFileResult
+下载文件分片数据。
+
+**参数**：
+
+* **source_path**(str)：源文件路径。
+* **local_path**(str)：本地文件路径。
+* **chunk_size**(int)：分片大小。
+* **chunk_index**(int)：分片索引。
+* **is_last_chunk**(bool)：是否为最后一个分片。
+
+## class openjiuwen.core.sys_operation.result.fs_operation_result.ReadFileResult
 
 ```python
-class UploadFileResult(BaseResult[UploadFileData])
+class openjiuwen.core.sys_operation.result.fs_operation_result.ReadFileResult(BaseResult[ReadFileData])
 ```
 
-#### class UploadFileStreamResult
+读取文件结果。
+
+## class openjiuwen.core.sys_operation.result.fs_operation_result.ReadFileStreamResult
 
 ```python
-class UploadFileStreamResult(BaseResult[UploadFileChunkData])
+class openjiuwen.core.sys_operation.result.fs_operation_result.ReadFileStreamResult(BaseResult[ReadFileChunkData])
 ```
 
-#### class DownloadFileData
+流式读取文件结果。
+
+## class openjiuwen.core.sys_operation.result.fs_operation_result.WriteFileResult
 
 ```python
-class DownloadFileData(BaseModel):
-    source_path: str = Field(..., description="File path of the source file")
-    local_path: str = Field(..., description="File path of the local file")
-    size: int = Field(..., description="File content size in bytes")
+class openjiuwen.core.sys_operation.result.fs_operation_result.WriteFileResult(BaseResult[WriteFileData])
 ```
 
-#### class DownloadFileChunkData
+写入文件结果。
+
+## class openjiuwen.core.sys_operation.result.fs_operation_result.UploadFileResult
 
 ```python
-class DownloadFileChunkData(BaseModel):
-    source_path: str = Field(..., description="File path of the source file")
-    local_path: str = Field(..., description="File path of the local file")
-    chunk_size: int = Field(..., description="Size of each chunk")
-    chunk_index: int = Field(..., description="Index of current chunk")
-    is_last_chunk: bool = Field(..., description="Whether current chunk is the last one")
+class openjiuwen.core.sys_operation.result.fs_operation_result.UploadFileResult(BaseResult[UploadFileData])
 ```
 
-#### class DownloadFileResult
+上传文件结果。
+
+## class openjiuwen.core.sys_operation.result.fs_operation_result.UploadFileStreamResult
 
 ```python
-class DownloadFileResult(BaseResult[DownloadFileData])
+class openjiuwen.core.sys_operation.result.fs_operation_result.UploadFileStreamResult(BaseResult[UploadFileChunkData])
 ```
 
-#### class DownloadFileStreamResult
+流式上传文件结果。
+
+## class openjiuwen.core.sys_operation.result.fs_operation_result.DownloadFileResult
 
 ```python
-class DownloadFileStreamResult(BaseResult[DownloadFileChunkData])
+class openjiuwen.core.sys_operation.result.fs_operation_result.DownloadFileResult(BaseResult[DownloadFileData])
 ```
 
-### 列表/搜索结果
+下载文件结果。
 
-#### class ListFilesResult
+## class openjiuwen.core.sys_operation.result.fs_operation_result.DownloadFileStreamResult
 
 ```python
-class ListFilesResult(BaseResult[FileSystemData])
+class openjiuwen.core.sys_operation.result.fs_operation_result.DownloadFileStreamResult(BaseResult[DownloadFileChunkData])
 ```
 
-#### class ListDirsResult
+流式下载文件结果。
+
+## class openjiuwen.core.sys_operation.result.fs_operation_result.ListFilesResult
 
 ```python
-class ListDirsResult(BaseResult[FileSystemData])
+class openjiuwen.core.sys_operation.result.fs_operation_result.ListFilesResult(BaseResult[FileSystemData])
 ```
 
-#### class SearchFilesResult
+列出文件结果。
+
+## class openjiuwen.core.sys_operation.result.fs_operation_result.ListDirsResult
 
 ```python
-class SearchFilesResult(BaseResult[SearchFilesData])
+class openjiuwen.core.sys_operation.result.fs_operation_result.ListDirsResult(BaseResult[FileSystemData])
 ```
+
+列出目录结果。
+
+## class openjiuwen.core.sys_operation.result.fs_operation_result.SearchFilesResult
+
+```python
+class openjiuwen.core.sys_operation.result.fs_operation_result.SearchFilesResult(BaseResult[SearchFilesData])
+```
+
+搜索文件结果。

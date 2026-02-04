@@ -1,6 +1,6 @@
-# openjiuwen.core.runner.Runner
+# openjiuwen.core.runner
 
-## class openjiuwen.core.runner.Runner
+## class openjiuwen.core.runner
 Runner提供了Workflow、Agent、Tool和Group的统一执行接口。
 
 
@@ -15,7 +15,7 @@ async def start(self) -> bool
 ```python
 >>> import asyncio
 >>>
->>> from openjiuwen.core.runner.runner import Runner
+>>> from openjiuwen.core.runner import Runner
 >>> 
 >>> asyncio.run(Runner.start())
 ```
@@ -31,7 +31,7 @@ async def stop(self)
 ```python
 >>> import asyncio
 >>>
->>> from openjiuwen.core.runner.runner import Runner
+>>> from openjiuwen.core.runner import Runner
 >>> 
 >>> asyncio.run(Runner.stop())
 ```
@@ -41,7 +41,7 @@ async def stop(self)
 @property
 def resource_mgr(self) -> ResourceMgr:
 ```
-
+返回Resource Manager。
 
 ### run_agent
 
@@ -60,7 +60,7 @@ async def run_agent(
 
 **参数**:
 
-* **agent(str|Agent)**：agent的ID或agent实例。不可取值为`None`或`''`。
+* **agent(str|BaseAgent|LegacyBaseAgent)**：agent的ID或agent实例。不可取值为`None`或`''`。
 * **inputs(Any)**：执行agent的输入数据。
 * **session(str|Session)**：会话ID或会话实例。默认为`None`，表示使用默认会话。
 * **context(ModelContext)**：用于存储用户对话信息的上下文引擎。默认为`None`，表示不开启上下文引擎功能。
@@ -69,10 +69,6 @@ async def run_agent(
 **返回**：
 
 **Any**，agent执行结果。
-
-**异常**：
-
-- **JiuWenBaseException**：openJiuwen异常基类，具体详细信息和解决方法，参见[StatusCode](../common/exception/status_code.md)。
 
 **样例**：
 
@@ -141,7 +137,7 @@ async def run_agent_streaming(
 
 **参数**:
 
-* **agent(str|Agent)**：agent的ID或agent实例。不可取值为`None`或`''`。
+* **agent(str|BaseAgent)**：agent的ID或agent实例。不可取值为`None`或`''`。
 * **inputs(Any)**：执行agent的输入数据。
 * **session(str|Session)**：会话ID或会话实例。默认为`None`，表示使用默认会话。
 * **context(ModelContext)**：用于存储用户对话信息的上下文引擎。默认为`None`，表示不开启上下文引擎功能。
@@ -151,10 +147,6 @@ async def run_agent_streaming(
 **返回**:
 
 **AsyncGenerator**，流式结果生成器。
-
-**异常**：
-
-- **JiuWenBaseException**：openJiuwen异常基类，具体详细信息和解决方法，参见[StatusCode](../common/exception/status_code.md)。
 
 **样例**：
 
@@ -242,10 +234,6 @@ async def run_workflow(
 **返回**：
 
 **Any**，工作流执行结果。
-
-**异常**：
-
-- **JiuWenBaseException**：openJiuwen异常基类，具体详细信息和解决方法，参见[StatusCode](../common/exception/status_code.md)。
 
 **样例**：
 
@@ -337,10 +325,6 @@ async def run_workflow_streaming(
 **返回**：
 
 **AsyncGenerator**，流式结果生成器。
-
-**异常**：
-
-- **JiuWenBaseException**：openJiuwen异常基类，具体详细信息和解决方法，参见[StatusCode](../common/exception/status_code.md)。
 
 **样例**：
 
@@ -444,10 +428,6 @@ async def run_agent_group(
 **返回**：
 
 **Any**，AgentGroup执行结果。
-
-**异常**：
-
-- **JiuWenBaseException**：openJiuwen异常基类，具体详细信息和解决方法，参见[StatusCode](../common/exception/status_code.md)。
 
 **样例**：
 
@@ -664,7 +644,7 @@ async def run_agent_group(
 >>> hierarchical_group.add_agent("invest_agent", invest_agent)
 >>> 
 >>> from openjiuwen.core.agent.message.message import Message
->>> from openjiuwen.core.runner.runner import Runner
+>>> from openjiuwen.core.runner import Runner
 >>> import asyncio
 >>> 
 >>> asyncio.run(Runner.start())
@@ -705,14 +685,14 @@ async def run_agent_group_streaming(
 
 * **agent_group(str|AgentGroup)**：ID或AgentGroup实例。不可取值为`None`或`''`。
 * **inputs**: 输入数据。
+* **session(str|Session)**：会话ID或会话实例。默认为`None`，表示使用默认会话。
+* **context(ModelContext)**：用于存储用户对话信息的上下文引擎。默认为`None`，表示不开启上下文引擎功能。
+* **stream_modes(list[BaseStreamMode])**：流式输出的类型列表。默认为`None`，表示使用默认流式模式。
+* **envs(dict[str, Any])**：执行环境配置，例如模型参数、系统变量等。默认为`None`。
 
 **返回**：
 
 **AsyncGenerator**，流式结果生成器。
-
-**异常**：
-
-- **JiuWenBaseException**：openJiuwen异常基类，具体详细信息和解决方法，参见[StatusCode](../common/exception/status_code.md)。
 
 **样例**：
 
@@ -743,7 +723,7 @@ async def run_agent_group_streaming(
 ... )
 ... 
 >>> from openjiuwen.agent_group.hierarchical_group.agents.main_controller import HierarchicalMainController
->>> from openjiuwen.core.runner.runner import Runner
+>>> from openjiuwen.core.runner import Runner
 >>> 
 >>> API_BASE = os.getenv("API_BASE", "your api base")
 >>> API_KEY = os.getenv("API_KEY", "your api key")
@@ -1002,7 +982,7 @@ async def release(self, session_id: str)
 >>> workflow.add_connection("interact_node", "end")
 >>> 
 >>> # 调用工作流，第一次中断
->>> from openjiuwen.core.runner.runner import Runner
+>>> from openjiuwen.core.runner import Runner
 >>> input1 = {"user_input": "天气"}
 >>> result1 = asyncio.run(Runner.run_workflow(workflow, inputs=input1, runtime=WorkflowRuntime(session_id="session_1")))
 >>> print(f'result1: {result1}')
