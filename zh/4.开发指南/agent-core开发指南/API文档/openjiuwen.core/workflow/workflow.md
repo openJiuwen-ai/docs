@@ -5,7 +5,7 @@
 工作流执行`invoke`的输出结果的数据类。
 
 * **result**(Union(list[[WorkflowChunk](./workflow.md#class-workflowchunk)], dict))：输出结果数据，对于执行状态不同，`result`的类型不同。
-* **state**([WorkflowExecutionState](./workflow.md#class-workflowexecutionstate))：当前执行结果的状态。
+* **state**([WorkflowExecutionState](./workflow.md#enum-workflowexecutionstate))：当前执行结果的状态。
 
 > **说明**
 >
@@ -16,7 +16,7 @@
 
 工作流执行`stream`返回的数据帧的数据类，类型为[CustomSchema]()，[TraceSchema]()，[OutputSchema]()其中之一。
 
-## class WorkflowExecutionState
+## enum WorkflowExecutionState
 
 工作流执行`invoke`的执行状态的枚举类。
 
@@ -25,32 +25,45 @@
 
 
 ## class WorkflowCard
+工作流卡片数据类，继承自 `BaseCard`，包含工作流的基本信息和参数定义。
+
+* **id**(str, 可选)：工作流的唯一标识符，默认为随机的UUID。
+* **name**(str, 可选)：工作流名称，默认为`""`。
+* **description**(str, 可选)：工作流描述，默认为`""`。
+* **version**(str，可选)：工作流的版本，默认为`""`。
+* **input_params**(Dict[str, Any] | Type[BaseModel], 可选)：工作流的输入参数模式（Schema）。可以是 JSON Schema 字典或 Pydantic 模型类。默认为空字典，表示没有输入参数模式，接受任何输入。
 
 ## class Workflow
-```
-Workflow(workflow_config: WorkflowConfig = None)
+```python
+Workflow(card: WorkflowCard = None，**kwargs)
 ```
 
 `Workflow`类是用于定义和执行异步计算图的核心类，作为有状态的执行引擎负责管理和运行由节点和边定义的计算图。创建`Workflow` 时，需首先定义工作流再添加节点和边，确保计算逻辑的有序执行。
 
 ​**参数**​：
 
-* ​**workflow_config**​([WorkflowConfig](./workflow.md), 可选)：工作流配置类，包含定义组件参数、流式处理规则及超时控制等运行时的配置。默认值：`None`，使用workflow_config默认参数配置。
+* ​**card**​([WorkflowCard](./workflow.md), 可选)：工作流卡片，用于定义工作流的基本信息和输入定义，默认为`None`。
+* **\*\*kwargs**：工作流环境变量配置，当前支持：
+  * **workflow_max_nesting_depth**(int)：用于控制工作流的最大嵌套次数。默认为5，取值范围(0, 10]。
 
 ​**样例**​：
 
 ```python
->>> from openjiuwen.core.workflow import Workflow
->>> from openjiuwen.core.workflow.workflow_config import WorkflowConfig, WorkflowMetadata
+>>> from openjiuwen.core.workflow import Workflow, WorkflowCard
 >>> 
->>> # 建一个工作流配置包含工作流的ID、名称、版本信息
->>> workflow_config = WorkflowConfig(metadata=WorkflowMetadata(name="workflow_name", id="workflow_id", version="version-1"))
->>> workflow = Workflow(workflow_config=workflow_config)
+>>> # 建一个工作流卡片包含工作流的ID、名称、版本信息
+>>> workflowCard = WorkflowCard(name="workflow_name", id="workflow_id", version="version-1")
+>>> workflow = Workflow(workflow_config=workflowCard)
 ```
 
 ### set_start_comp
-```
-set_start_comp(self, start_comp_id: str, component: Union[Executable, WorkflowComponent], inputs_schema: dict = None, outputs_schema: dict = None, inputs_transformer: Transformer = None, outputs_transformer: Transformer = None)->Self
+```python
+def set_start_comp(self,
+            start_comp_id: str,
+            component: ComponentComposable,
+            inputs_schema: dict | Transformer = None,
+            outputs_schema: dict | Transformer = None
+    )->Self
 ```
 
 定义工作流的起始组件及数据转换规则，是工作流执行的入口。
@@ -58,20 +71,10 @@ set_start_comp(self, start_comp_id: str, component: Union[Executable, WorkflowCo
 ​**参数**​：
 
 * ​**start_comp_id**​(str)：起始组件的唯一标识符，用于在工作流中引用此组件。
-* ​**component**​(Union[Executable, WorkflowComponent])：待添加的工作流组件实例，支持两种类型：
-  
-  * `Executable`：基础可执行组件（如函数、脚本、工具调用实例）。
-  * `WorkflowComponent`：工作流组件（即已定义的完整工作流，可作为当前工作流的一个子节点）。
-* ​**inputs_schema**​(dict,  可选)：起始组件输入参数的结构定义，键名应与组件输入参数名匹配，值为对应的输入参数类型。默认值：`None`。
-* ​**outputs_schema**​(dict, 可选)：起始组件输出结果的结构定义，用于定义输出数据的格式规范，便于后续组件解析。默认值：`None`。
-* ​**inputs_transformer**​(Transformer, 可选)：起始组件输入数据转换器，负责在将数据传递给组件前进行格式转换或预处理，允许开发者注入自定义逻辑。默认值：`None`。
-* ​**outputs_transformer**​(Transformer, 可选)：起始组件输出数据转换器，负责在组件产生结果后进行格式转换或后处理，允许开发者注入自定义逻辑。默认值：`None`。
+* ​**component**​(ComponentComposable)：待添加的工作流组件实例。
+* ​**inputs_schema**​(dict|Transformer,  可选)：起始组件输入参数的结构定义，键名应与组件输入参数名匹配，值为对应的输入参数类型。默认值：`None`。
+* ​**outputs_schema**​(dict|Transformer, 可选)：起始组件输出结果的结构定义，用于定义输出数据的格式规范，便于后续组件解析。默认值：`None`。
 
-> **说明**
->
-> * inputs_schema和inputs_transformer的配置可参见待添加起始组件的要求，取值可引用工作流的输入；outputs_schema和outputs_transformer的配置取值可使用组件本身输出。
-> * inputs_schema和inputs_transformer均未配置时表示透传所有输入；outputs_schema和outputs_transformer均未配置时表示输出格式为组件自身输出。
-> * schema和transform同时配置时，只有transformer生效。
 
 ​**样例**​：
 
@@ -84,8 +87,16 @@ set_start_comp(self, start_comp_id: str, component: Union[Executable, WorkflowCo
 
 
 ### set_end_comp
-```
-set_end_comp(self, end_comp_id: str, component: Union[Executable, WorkflowComponent], inputs_schema: dict = None, outputs_schema: dict = None, inputs_transformer: Transformer = None, outputs_transformer: Transformer = None, stream_inputs_schema: dict = None, stream_outputs_schema: dict = None, stream_inputs_transformer: Transformer = None, stream_outputs_transformer: Transformer = None, response_mode: str = None)
+```python
+def set_end_comp(self,
+            end_comp_id: str,
+            component: ComponentComposable,
+            inputs_schema: dict | Transformer = None,
+            outputs_schema: dict | Transformer = None,
+            stream_inputs_schema: dict | Transformer = None,
+            stream_outputs_schema: dict | Transformer = None,
+            response_mode: str = None
+    ) -> Self:
 ```
 
 定义工作流的结束组件，即工作流执行的最终节点，负责处理最终结果将数据传到graph外并终止工作流。
@@ -93,18 +104,11 @@ set_end_comp(self, end_comp_id: str, component: Union[Executable, WorkflowCompon
 ​**参数**​：
 
 * ​**end_comp_id**​(str)：结束组件的唯一标识符，用于在工作流中引用此组件。
-* ​**component**(Union[Executable, WorkflowComponent)：待添加的工作流组件实例，具体配置可参看相应组件要求。支持两种类型：
-  
-  * `Executable`：基础可执行组件（如函数、脚本、工具调用实例）。
-  * `WorkflowComponent`：工作流组件（即已定义的完整工作流，可作为当前工作流的一个子节点）。
-* ​**inputs_schema**​(dict, 可选)：结束组件组件输入参数的结构定义，键名应与组件输入参数名匹配，值为对应的输入参数类型。默认值：`None`。
-* ​**outputs_schema**​(dict, 可选)：结束组件输出结果的结构定义，用于定义工作流最终返回结果的格式。默认值：`None`。
-* ​**inputs_transformer**​(Transformer, 可选)：输入数据转换器，负责在将数据传递给组件前进行格式转换或预处理，允许开发者注入自定义逻辑。默认值：`None`。
-* ​**outputs_transformer**​(Transformer, 可选)：输出数据转换器，负责在组件产生结果后进行格式转换或后处理，允许开发者注入自定义逻辑。默认值：`None`。
-* ​**stream_inputs_schema**​(dict, 可选)：结束组件输入参数的结构定义。仅适用于支持流式数据输入的组件，作用同`inputs_schema`；默认值：`None`。
-* ​**stream_outputs_schema**​(dict, 可选)：结束组件输出结果的结构定义。仅适用于支持流式数据输出的组件，作用同`outputs_schema`。默认值：`None`。
-* ​**stream_inputs_transformer**​(Transformer, 可选)：对流式输入数据进行实时转换。默认值：`None`。
-* ​**stream_outputs_transformer**​(Transformer, 可选)：对流式输出数据进行实时转换。默认值：`None`。
+* ​**component**(ComponentComposablet)：待添加的工作流组件实例。
+* ​**inputs_schema**​(dict|Transformer, 可选)：结束组件组件输入参数的结构定义，键名应与组件输入参数名匹配，值为对应的输入参数类型。默认值：`None`。
+* ​**outputs_schema**​(dict|Transformer, 可选)：结束组件输出结果的结构定义，用于定义工作流最终返回结果的格式。默认值：`None`。
+* ​**stream_inputs_schema**​(dict|Transformer, 可选)：结束组件输入参数的结构定义。仅适用于支持流式数据输入的组件，作用同`inputs_schema`；默认值：`None`。
+* ​**stream_outputs_schema**​(dict|Transformer, 可选)：结束组件输出结果的结构定义。仅适用于支持流式数据输出的组件，作用同`outputs_schema`。默认值：`None`。
 * ​**response_mode**​(str, 可选)：指定end组件支持的ComponentAbility)， 当前支持仅两种模式，默认值：`None`。
   
   * 若设置为`'streaming'`，表示使用结束组件的`ComponentAbility.STREAM`或`ComponentAbility.TRANSFORM`能力进行输出。
@@ -112,15 +116,12 @@ set_end_comp(self, end_comp_id: str, component: Union[Executable, WorkflowCompon
 
 > **说明**
 >
-> * inputs_schema和inputs_transformer的配置可参见待添加结束组件)的要求，取值可引用上游组件的输出；outputs_schema和outputs_transformer的配置取值可使用组件本身输出。
-> * inputs_schema和inputs_transformer均未配置时表示透传所有输入；outputs_schema和outputs_transformer均未配置时表示输出格式为组件自身输出。
-> * schema和transform同时配置时，只有transformer生效。
-> * 当组件与上游组件连边是流式边的时候，可按需配置stream_inputs_schema或stream_inputs_transformer；当组件与下游组件连边是流式边的时候，可按需配置stream_outputs_schema或stream_outputs_transformer。配置非stream前缀的schema和transformer不生效。
+> * 当组件与上游组件连边是流式边的时候，可按需配置stream_inputs_schema。
 
 ​**样例**​：
 
 ```python
->>> from openjiuwen.core.workflow.end_comp import End
+>>> from openjiuwen.core.workflow import End
 >>> # 创建End组件（指定输出模板）
 >>> end = End({"responseTemplate": "结果:{{final_output}}"})
 >>> 
@@ -129,8 +130,19 @@ set_end_comp(self, end_comp_id: str, component: Union[Executable, WorkflowCompon
 ```
 
 ### add_workflow_comp
-```
-add_workflow_comp(self, comp_id: str, workflow_comp: Union[Executable, WorkflowComponent], *, wait_for_all: bool = False, inputs_schema: dict = None, outputs_schema: dict = None, inputs_transformer: Transformer = None, outputs_transformer: Transformer = None, stream_inputs_schema: dict = None, stream_outputs_schema: dict = None, stream_inputs_transformer: Transformer = None, stream_outputs_transformer: Transformer = None, comp_ability: list[ComponentAbility] = None)->Self
+```python
+def add_workflow_comp(
+            self,
+            comp_id: str,
+            workflow_comp: ComponentComposable,
+            *,
+            wait_for_all: bool = None,
+            inputs_schema: dict | Transformer = None,
+            outputs_schema: dict | Transformer = None,
+            stream_inputs_schema: dict | Transformer = None,
+            stream_outputs_schema: dict | Transformer = None,
+            comp_ability: list[ComponentAbility] = None
+    ) -> Self
 ```
 
 工作流组件添加接口，用于向当前工作流实例中添加一个具体的可执行组件或子工作流组件，并配置该组件的输入输出规则、数据流转换逻辑及能力属性。
@@ -138,28 +150,17 @@ add_workflow_comp(self, comp_id: str, workflow_comp: Union[Executable, WorkflowC
 ​**参数**​：
 
 * ​**comp_id**​(str)：组件的唯一标识符，用于在工作流中引用此组件。
-* ​**workflow_comp**(Union[Executable, WorkflowComponent)：待添加的工作流组件实例，具体配置可参看相应组件要求。支持两种类型：
-  
-  * `Executable`：基础可执行组件（如函数、脚本、工具调用实例）。
-  * `WorkflowComponent`：工作流组件（即已定义的完整工作流，可作为当前工作流的一个子节点）。
-* ​*​：参数分隔符
+* ​**workflow_comp**(ComponentComposable)：待添加的工作流组件实例。
 * ​**wait_for_all**​(bool, 可选)：是否等待所有前置依赖组件执行完成后再执行此组件。`True`表示需要等待所有前置依赖组件执行完成，`False`表示不需要。默认值：`False`。
-* ​**inputs_schema**​(dict, 可选)：组件输入参数的结构定义，键名应与组件输入参数名匹配，值为对应的输入参数类型。默认值：`None`。
-* ​**outputs_schema**​(dict, 可选)：组件输出结果的结构定义，用于定义输出数据的格式规范，便于后续组件解析。默认值：`None`。
-* ​**inputs_transformer**​(Transformer, 可选)：输入数据转换器，负责在将数据传递给组件前进行格式转换或预处理，允许开发者注入自定义逻辑。默认值：`None`。
-* ​**outputs_transformer**​(Transformer, 可选)：输出数据转换器，负责在组件产生结果后进行格式转换或后处理，允许开发者注入自定义逻辑。默认值：`None`。
-* ​**stream_inputs_schema**​(dict, 可选)：组件输入参数的结构定义。仅适用于支持流式数据输入的组件，作用同`inputs_schema`；默认值：`None`。
-* ​**stream_outputs_schema**​(dict, 可选)：组件输出结果的结构定义。仅适用于支持流式数据输出的组件，作用同`outputs_schema`。默认值：`None`。
-* ​**stream_inputs_transformer**​(Transformer, 可选)：对流式输入数据进行实时转换。默认值：`None`。
-* ​**stream_outputs_transformer**​(Transformer, 可选)：对流式输出数据进行实时转换。默认值：`None`。
+* ​**inputs_schema**​(dict|Transformer, 可选)：组件输入参数的结构定义，键名应与组件输入参数名匹配，值为对应的输入参数类型。默认值：`None`。
+* ​**outputs_schema**​(dict|Transformer, 可选)：组件输出结果的结构定义，用于定义输出数据的格式规范，便于后续组件解析。默认值：`None`。
+* ​**stream_inputs_schema**​(dict|Transformer, 可选)：组件输入参数的结构定义。仅适用于支持流式数据输入的组件，作用同`inputs_schema`；默认值：`None`。
+* ​**stream_outputs_schema**​(dict|Transformer, 可选)：组件输出结果的结构定义。仅适用于支持流式数据输出的组件，作用同`outputs_schema`。默认值：`None`。
 * ​**comp_ability**​(list[ComponentAbility)], 可选)：指定组件支持的操作。当组件上下游既有流式又有批时，组件无法自行判断使用transform、invoke、collect、stream中的哪些能力，需指定该值。默认值：`None`，表示只使用invoke能力。
 
 > **说明**
 >
-> * inputs_schema和inputs_transformer的配置可参见待添加组件的要求，取值可引用上游组件的输出；outputs_schema和outputs_transformer的配置取值可使用组件本身输出。
-> * inputs_schema和inputs_transformer均未配置时表示透传所有输入；outputs_schema和outputs_transformer均未配置时表示输出格式为组件自身输出。
-> * schema和transform同时配置时，只有transformer生效。
-> * 当组件与上游组件连边是流式边的时候，可按需配置stream_inputs_schema或stream_inputs_transformer；当组件与下游组件连边是流式边的时候，可按需配置stream_outputs_schema或stream_outputs_transformer。配置非stream前缀的schema和transformer不生效。
+> * 当组件与上游组件连边是流式边的时候，可按需配置stream_inputs_schema；当组件与下游组件连边是流式边的时候，可按需配置stream_outputs_schema。
 
 
 
@@ -223,15 +224,15 @@ add_workflow_comp(self, comp_id: str, workflow_comp: Union[Executable, WorkflowC
 ```
 
 ### add_connection
-```
-add_connection(self, src_comp_id: str,  target_comp_id: str) -> Self
+```python
+def add_connection(self, src_comp_id: str | list[str], target_comp_id: str) -> Self
 ```
 
 工作流组件连接接口，用于在源组件和目标组件间建立依赖关系，定义数据流和控制流的传递方向。
 
 ​**参数**​：
 
-* ​**src_comp_id**​(str)：源组件的唯一标识符，表示连接的起点。
+* ​**src_comp_id**​(str | list[str])：源组件的标识符，代表连接的起点。当传入字符串时表示单个起点；当传入字符串列表时，表示多个起点并行执行，共同指向同一目标组件。
 * ​**target_comp_id**​(str)：目标组件的唯一标识符，表示连接的终点。
 
 ​**样例**​：
@@ -240,12 +241,12 @@ add_connection(self, src_comp_id: str,  target_comp_id: str) -> Self
 >>> # 添加普通连接：从"start"组件指向"llm"
 >>> workflow.add_connection("start", "llm")
 >>> 
->>> # 添加普通连接：从"llm"指向"end"
->>> workflow.add_connection("llm", "end")
+>>> # 添加普通连接：从"llm1", "llm2", "llm3"并行执行，并指向"end"
+>>> workflow.add_connection(["llm", "llm2", "llm3"], "end")
 ```
 
 ### add_conditional_connection
-```
+```python
 add_conditional_connection(self, src_comp_id: str, router: Router) -> Self
 ```
 
@@ -259,11 +260,9 @@ add_conditional_connection(self, src_comp_id: str, router: Router) -> Self
 ​**样例**​：
 
 ```python
->>> from openjiuwen.core.runtime.runtime import Runtime
->>> 
 >>> # 从Context中获取"start"组件输出的"query"字段值，基于query的大小决定下一执行的组件
->>> def router(runtime: Runtime):
-...     num = runtime.get_global_state("start.query")
+>>> def router(session):
+...     num = session.get_global_state("start.query")
 ...     if num == 0:
 ...         return "llm"
 ...     elif num == 1:
@@ -276,7 +275,7 @@ add_conditional_connection(self, src_comp_id: str, router: Router) -> Self
 ```
 
 ### add_stream_connection
-```
+```python
 add_stream_connection(self,  src_comp_id: str,  target_comp_id: str) -> Self
 ```
 
@@ -300,8 +299,14 @@ add_stream_connection(self,  src_comp_id: str,  target_comp_id: str) -> Self
 
 ### invoke
 
-```
-async invoke(self, inputs: Input, session: Session,  context: Context = None) -> Output
+```python
+async def invoke(
+            self,
+            inputs: Input,
+            session: Session,
+            context: ModelContext = None,
+            **kwargs
+    ) -> WorkflowOutput
 ```
 
 一次性处理完整批次数据的工作流执行方式。它接收一组完整数据作为输入，经过工作流处理后，一次性返回完整的处理结果。
@@ -310,8 +315,10 @@ async invoke(self, inputs: Input, session: Session,  context: Context = None) ->
 
 * ​**inputs**​(Input)：工作流的输入数据，作为执行的初始参数。
 * ​**session**​(Session)：工作流运行时环境，提供执行上下文和状态管理。
-* **context**(Context, 可选)：用于存储用户对话信息的上下文引擎对象。默认值：`None`，表示不开启上下文引擎功能。
-
+* **context**(ModelContext, 可选)：用于存储用户对话信息的上下文引擎对象。默认值：`None`，表示不开启上下文引擎功能。
+* **kwargs**: 可选参数，当前支持：
+    * **is_sub**(bool)：用于指定是否为嵌套的子工作流执行，默认为`False`，表示非子工作流执行。
+    * **skip_inputs_validate**(bool)：用于指定是否跳过基于card指定的`input_params`的入参校验。默认为`False`，表示需要进行校验。
 ​**返回**​：
 
 **WorkflowOutput**，工作流的执行结果，可能是普通输出或交互式输出。
@@ -330,8 +337,15 @@ async invoke(self, inputs: Input, session: Session,  context: Context = None) ->
 
 ### stream
 
-```
-async stream(self,  inputs: Input,  session: WorkflowSession, context: Context = None， stream_modes: list[StreamMode] = None) -> AsyncIterator[WorkflowChunk]
+```python
+aasync def stream(
+            self,
+            inputs: Input,
+            session: Session,
+            context: ModelContext = None,
+            stream_modes: list[StreamMode] = None,
+            **kwargs
+    ) -> AsyncIterator[WorkflowChunk]
 ```
 
 一个异步生成器方法。通过stream执行工作流后返回一个异步生成器，该生成器以流式方式逐步产生整个过程中的各个chunk；支持多种流模式和实时数据传递，使用户能即时看到进展并持续接收补充内容直至流程结束。
@@ -339,10 +353,13 @@ async stream(self,  inputs: Input,  session: WorkflowSession, context: Context =
 ​**参数**​：
 
 * ​**inputs**​(Input)：工作流的输入数据，作为执行的初始参数 。
-* ​**runtime**​(BaseRuntime)：工作流运行时环境，提供执行上下文和状态管理。
-* **context**(Context, 可选)：用于存储用户对话信息的上下文引擎对象。默认值：`None`，表示不开启上下文引擎功能。
+* ​**session**​(Session)：工作流运行时环境，提供执行上下文和状态管理。
+* **context**(ModelContext, 可选)：用于存储用户对话信息的上下文引擎对象。默认值：`None`，表示不开启上下文引擎功能。
 * ​**stream_modes**​(list[StreamMode])], 可选)：流模式列表，指定流式处理的行为和输出内容。默认值：`None`，同`TRACE`逻辑。
-
+* **kwargs**: 可选参数，当前支持：
+    * **is_sub**(bool)：用于指定是否为嵌套的子工作流执行，默认为`False`，表示非子工作流执行。
+    * **skip_inputs_validate**(bool)：用于指定是否跳过基于card指定的`input_params`的入参校验。默认为`False`，表示需要进行校验。
+  
 ​**返回**​：
 
 **AsyncIterator(WorkflowChunk)**，异步迭代器，逐步产生工作流处理的数据块。
@@ -685,19 +702,72 @@ openJiuwen提供了**三种流式输出方式**，提供了对于流式信息的
 ### draw
 
 ```python
-draw(self,title: str = "",output_format: str = "mermaid",  expand_subgraph: int | bool = False,enable_animation: bool = False,**kwargs) -> str | bytes:
+def draw(
+        self,
+        title: str = "",
+        output_format: str = "mermaid",  # "mermaid", "png", "svg"
+        expand_subgraph: int | bool = False,
+        enable_animation: bool = False,  # only works for "mermaid" format
+        **kwargs
+    ) -> str | bytes
 ```
 生成工作流的可视化图表，支持导出 Mermaid 语法文本、PNG 静态图片、SVG 矢量图三种格式，统一封装工作流结构可视化能力，适用于工作流调试、文档生成与可视化展示场景。
 
 ​**参数**​：
 
 * ​**title**​(str, 可选)：可视化图表标题，渲染后展示在图表顶部。默认值：""。
-* ​**output_format**​(str, 可选)：指定输出格式，仅支持mermaid/png/svg三种类型。默认值："mermaid"。
-* ​**expand_subgraph**​(int | bool, 可选)：子工作流展开配置，布尔值控制全展开 / 不展开，非负整数控制子图展开深度。默认值：False。
-* ​**enable_animation**​(bool, 可选)：Mermaid 格式动画开关，仅对 Mermaid 语法生效，开启后流式边可展示动态效果。默认值：False。
+* ​**output_format**​(str, 可选)：指定输出格式，仅支持`"mermaid"`/`"png"`/`"svg"`三种类型。默认值：`"mermaid"`。
+* ​**expand_subgraph**​(int | bool, 可选)：子工作流展开配置，布尔值控制全展开 / 不展开，非负整数控制子图展开深度。默认值：`False`。
+* ​**enable_animation**​(bool, 可选)：Mermaid 格式动画开关，仅对 Mermaid 语法生效，开启后流式边可展示动态效果。默认值：`False`。
 * ​**kwargs**​(dict, 可选)：额外渲染配置项，用于传递底层渲染器自定义参数。
 
 ​**返回**​：
 * ​**str**​：当output_format="mermaid"时，返回标准 Mermaid 流程图语法字符串；
 * ​**bytes**​：当output_format="png"或output_format="svg"时，返回对应格式图片的二进制数据流。
 
+**样例**：
+
+```python
+>>> from openjiuwen.core.workflow import End
+>>> from openjiuwen.core.workflow import Start
+>>> from openjiuwen.core.context_engine.base import ModelContext
+>>> from openjiuwen.core.graph.executable import Output
+>>> from openjiuwen.core.session.node import Session
+>>> from openjiuwen.core.workflow import Input, Workflow, WorkflowComponent
+>>> 
+>>> 
+>>> # 自定义的组件
+>>> class Node1(WorkflowComponent):
+...     def __init__(self):
+...         super().__init__()
+... 
+...     async def invoke(self, inputs: Input, session: Session, context: ModelContext) -> Output:
+...         return {}
+... 
+>>> 
+>>> # 设置环境变量，启用工作流可视化功能
+>>> import os
+>>> os.environ["WORKFLOW_DRAWABLE"] = "true"
+>>> 
+>>> # 构建工作流
+>>> flow = Workflow()
+>>> flow.set_start_comp("start", Start())
+>>> flow.add_workflow_comp("a", Node1())
+>>> flow.set_end_comp("end", End())
+>>> flow.add_connection("start", "a")
+>>> flow.add_connection("a", "end")
+>>> 
+>>> # 打印工作流的mermaid脚本
+>>> print(flow.draw(title="simple workflow",output_format="mermaid"))
+...
+---
+title: simple workflow
+---
+flowchart TB
+	node_1("start")
+	node_2["a"]
+	node_3("end")
+	node_1 --> node_2
+	node_2 --> node_3
+
+```
