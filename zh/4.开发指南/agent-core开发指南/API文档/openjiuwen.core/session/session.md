@@ -90,7 +90,7 @@ update(self, node_id: str, value: Any)
 **参数**：
 
 - **node_id**(str)：中断组件的id。传入None会抛出异常。
-- **value**(Any)：用户输入，会作为[interact](../workflow/workflow.md#class-openjiuwencoreworkflowsesssion)接口的返回值。传入None会抛出异常。
+- **value**(Any)：用户输入，会作为[interact]接口的返回值。传入None会抛出异常。
 
 **异常**:
 
