@@ -23,7 +23,7 @@
 
 ### 创建WorkflowAgent配置
 
-首先使用`WorkflowAgentConfig`创建智能体配置。该配置支持多工作流场景，可以在创建时传入空的工作流列表，后续通过`add_workflows`方法动态添加，也可以在创建的时候直接绑定工作流，参考[构建与执行WorkflowAgent](../智能体/构建与执行WorkflowAgent.md)。
+首先使用`WorkflowAgentConfig`创建智能体配置。该配置支持多工作流场景，可以在创建时传入空的工作流列表，后续通过`add_workflows`方法动态添加，参考[构建WorkflowAgent](../智能体/构建WorkflowAgent.md)。
 
 ```python
 import os
