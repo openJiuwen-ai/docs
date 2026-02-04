@@ -23,16 +23,16 @@ BadCasePromptBuilder(model_config: ModelRequestConfig, model_client_config: Mode
 ## build
 
 ```python
-async build(prompt: str | Template, cases: List[EvaluatedCase]) -> Optional[str]
+async build(prompt: str | PromptTemplate, cases: List[EvaluatedCase]) -> Optional[str]
 ```
 
 基于坏例对提示词进行定向优化（非流式）。
 
 **参数**：
 
-- **prompt** (str | [Template](../../../openjiuwen.core/foundation/prompt/template.md#class-prompttemplate))：原始提示词。
+- **prompt** (str | [PromptTemplate](../../../openjiuwen.core/foundation/prompt/template.md#class-openjiuwencorefoundationprompttemplateprompttemplate))：原始提示词。
   - 不能为空且不能全空白。
-  - 若是 `Template`，会先抽取成纯字符串内容参与优化。
+  - 若是 `PromptTemplate`，会先抽取成纯字符串内容参与优化。
 - **cases** (List[[EvaluatedCase](../../tune/base.md#class-openjiuwendev_toolstunebaseevaluatedcase)])：评测结果用例列表。
   - 必须非空；否则会抛出异常。
   - 框架默认限制 cases 数量上限（源码默认 10），避免一次性塞入过多 bad cases 导致上下文过长。
@@ -89,16 +89,16 @@ async build(prompt: str | Template, cases: List[EvaluatedCase]) -> Optional[str]
 ### stream_build
 
 ```python
-async stream_build(prompt: str | Template, cases: List[EvaluatedCase]) -> AsyncGenerator
+async stream_build(prompt: str | PromptTemplate, cases: List[EvaluatedCase]) -> AsyncGenerator
 ```
 
 基于用户提供的原始提示词及若干典型错误示例，通过系统化分析与重构，对提示词内容进行精准优化，流式生成优化后的提示词。
 
 **参数**：
 
-- **prompt** (str | [Template](../../../openjiuwen.core/foundation/prompt/template.md#class-prompttemplate)：原始提示词。
+- **prompt** (str | [PromptTemplate](../../../openjiuwen.core/foundation/prompt/template.md#class-openjiuwencorefoundationprompttemplateprompttemplate)：原始提示词。
   - 不能为空且不能全空白。
-  - 若是 `Template`，会先抽取成纯字符串内容参与优化。
+  - 若是 `PromptTemplate`，会先抽取成纯字符串内容参与优化。
 - **cases** (List[[EvaluatedCase](../../tune/base.md#class-openjiuwendev_toolstunebaseevaluatedcase)])：评测结果用例列表。
   - 必须非空；否则会抛出异常。
   - 框架默认限制 cases 数量上限（源码默认 10），避免一次性塞入过多 bad cases 导致上下文过长。

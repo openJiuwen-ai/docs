@@ -17,16 +17,16 @@ FeedbackPromptBuilder(model_config: ModelRequestConfig, model_client_config: Mod
 ## build
 
 ```python
-async build(prompt: str | Template, feedback: str, mode: Literal["general", "insert", "select"] = "general", start_pos: Optional[int] = None, end_pos: Optional[int] = None) -> Optional[str]
+async build(prompt: str | PromptTemplate, feedback: str, mode: Literal["general", "insert", "select"] = "general", start_pos: Optional[int] = None, end_pos: Optional[int] = None) -> Optional[str]
 ```
 
 基于反馈生成“优化后的提示词文本”（非流式）。
 
 **参数**：
 
-- **prompt** (str | [Template](../../../openjiuwen.core/foundation/prompt/template.md#class-prompttemplate))：原始提示词。
+- **prompt** (str | [PromptTemplate](../../../openjiuwen.core/foundation/prompt/template.md#class-openjiuwencorefoundationprompttemplateprompttemplate))：原始提示词。
   - 不能为空且不能全空白。
-  - 若是 `Template`，会先抽取成纯字符串内容参与优化。
+  - 若是 `PromptTemplate`，会先抽取成纯字符串内容参与优化。
 - **feedback** (str)：反馈信息。
   - 不能为空且不能全空白。
   - 建议写成“问题 + 改进建议”的形式（例如：哪里模糊、哪里遗漏、希望增加什么约束）。
@@ -78,16 +78,16 @@ async build(prompt: str | Template, feedback: str, mode: Literal["general", "ins
 ## stream_build
 
 ```python
-async stream_build(prompt: str | Template, feedback: str, mode: Literal["general", "insert", "select"] = "general", start_pos: Optional[int] = None, end_pos: Optional[int] = None) -> AsyncGenerator
+async stream_build(prompt: str | PromptTemplate, feedback: str, mode: Literal["general", "insert", "select"] = "general", start_pos: Optional[int] = None, end_pos: Optional[int] = None) -> AsyncGenerator
 ```
 
 根据用户提供的原始提示词及对应的反馈信息，通过智能分析与重构，流式生成优化后的提示词，从而提升提示词的准确性。
 
 **参数**：
 
-- **prompt** (str | [Template](../../../openjiuwen.core/foundation/prompt/template.md#class-prompttemplate))：原始提示词。
+- **prompt** (str | [PromptTemplate](../../../openjiuwen.core/foundation/prompt/template.md#class-openjiuwencorefoundationprompttemplateprompttemplate))：原始提示词。
   - 不能为空且不能全空白。
-  - 若是 `Template`，会先抽取成纯字符串内容参与优化。
+  - 若是 `PromptTemplate`，会先抽取成纯字符串内容参与优化。
 - **feedback** (str)：反馈信息。
   - 不能为空且不能全空白。
   - 建议写成“问题 + 改进建议”的形式（例如：哪里模糊、哪里遗漏、希望增加什么约束）。
