@@ -27,6 +27,7 @@
 
 ```python
 import os
+
 from openjiuwen.core.application.workflow_agent import WorkflowAgentConfig
 from openjiuwen.core.foundation.llm import ModelConfig, BaseModelInfo
 
@@ -35,7 +36,7 @@ API_KEY = os.getenv("API_KEY", "your api key")
 MODEL_NAME = os.getenv("MODEL_NAME", "")
 MODEL_PROVIDER = os.getenv("MODEL_PROVIDER", "")
 
-def _create_model_config() -> ModelConfig:
+def create_model_config() -> ModelConfig:
     """根据环境变量构造模型配置。"""
     return ModelConfig(
         model_provider=MODEL_PROVIDER,
@@ -49,12 +50,11 @@ def _create_model_config() -> ModelConfig:
         ),
     )
 
-# 创建最小化配置
+# 创建最小化配置（workflows 为空列表）
 config = WorkflowAgentConfig(
-    id="test_multi_workflow_agent",
+    id="test_multi_workflow_jump_agent",
     version="0.1.0",
-    description="多工作流测试智能体",
-    workflows=[],  # 空列表，通过 add_workflows 自动填充
+    description="多工作流跳转恢复测试",
     model=_create_model_config(),
 )
 ```
@@ -78,18 +78,20 @@ agent = WorkflowAgent(config)
 使用`add_workflows`方法将工作流实例添加到`WorkflowAgent`中：
 
 ```python
-from openjiuwen.core.application.workflow_agent import WorkflowAgentConfig, WorkflowAgent
+from openjiuwen.core.application.workflow_agent import WorkflowAgent
 from openjiuwen.core.workflow import (
     End, QuestionerComponent, QuestionerConfig, FieldInfo, Start, Workflow,
-    WorkflowCard,
+    WorkflowCard
 )
-from openjiuwen.core.workflow.workflow_config import WorkflowConfig
 
 def _create_start_component():
-    return Start({"inputs": [{"id": "query", "type": "String", "required": "true", "sourceType": "ref"}]})
+    return Start()
 
-def _build_questioner_workflow(workflow_id: str, workflow_name: str,
-                               question_field: str, question_desc: str) -> Workflow:
+def _build_questioner_workflow(workflow_id: str,
+                               workflow_name: str,
+                               workflow_description: str,
+                               question_field: str,
+                               question_desc: str) -> Workflow:
     """
     构建包含提问器的简单工作流。
 
@@ -102,14 +104,18 @@ def _build_questioner_workflow(workflow_id: str, workflow_name: str,
     Returns:
         Workflow: 包含 start -> questioner -> end 的工作流
     """
-    workflow_config = WorkflowConfig(
-        card=WorkflowCard(
-            id=workflow_id,
-            name=workflow_name,
-            version="1.0",
-        )
+    workflow_card = WorkflowCard(
+        id=workflow_id,
+        name=workflow_name,
+        version="1.0",
+        description=workflow_description,
+        input_params={
+            "type": "object",
+            "properties": {"query": {"type": "string", "description": "用户输入"}},
+            "required": ['query']
+        }
     )
-    flow = Workflow(workflow_config=workflow_config)
+    flow = Workflow(card=workflow_card)
 
     # 创建组件
     start = _create_start_component()
@@ -118,9 +124,23 @@ def _build_questioner_workflow(workflow_id: str, workflow_name: str,
     key_fields = [
         FieldInfo(field_name=question_field, description=question_desc, required=True),
     ]
-    model_config = _create_model_config()
+    model_config = ModelRequestConfig(
+        model=MODEL_NAME,
+        temperature=0.8,
+        top_p=0.9
+    )
+
+    model_client_config = ModelClientConfig(
+        client_provider=MODEL_PROVIDER,
+        api_key=API_KEY,
+        api_base=API_BASE,
+        timeout=30,
+        verify_ssl=False,
+    )
+
     questioner_config = QuestionerConfig(
-        model=model_config,
+        model_client_config=model_client_config,
+        model_config=model_config,
         question_content="",
         extract_fields_from_response=True,
         field_names=key_fields,
@@ -148,26 +168,23 @@ def _build_questioner_workflow(workflow_id: str, workflow_name: str,
 weather_workflow = _build_questioner_workflow(
     workflow_id="weather_flow",
     workflow_name="天气查询",
+    workflow_description="查询某地的天气情况、温度、气象信息",
     question_field="location",
     question_desc="地点"
 )
 stock_workflow = _build_questioner_workflow(
     workflow_id="stock_flow",
     workflow_name="股票查询",
+    workflow_description="查询股票价格、股市行情、股票走势等金融信息",
     question_field="stock_code",
     question_desc="股票代码"
 )
-
-# 更新 workflow 的 metadata，添加详细描述（用于意图识别）
-weather_workflow.config().metadata.description = "查询某地的天气情况、温度、气象信息"
-stock_workflow.config().metadata.description = "查询股票价格、股市行情、股票走势等金融信息"
 
 # 创建最小化配置（workflows 为空列表）
 config = WorkflowAgentConfig(
     id="test_multi_workflow_jump_agent",
     version="0.1.0",
     description="多工作流跳转恢复测试",
-    workflows=[],  # 空列表，通过 add_workflows 自动填充
     model=_create_model_config(),
 )
 agent = WorkflowAgent(config)
@@ -336,34 +353,30 @@ if __name__ == "__main__":
 
 # 完整示例代码
 ```python
-import os
 import asyncio
-from datetime import datetime
+import os
 
-from openjiuwen.core.application.workflow_agent import WorkflowAgentConfig, WorkflowAgent
-from openjiuwen.core.foundation.llm import ModelConfig, BaseModelInfo
+from openjiuwen.core.application.workflow_agent import WorkflowAgent
+from openjiuwen.core.foundation.llm import ModelConfig, BaseModelInfo, ModelRequestConfig, ModelClientConfig
+from openjiuwen.core.runner import Runner
 from openjiuwen.core.workflow import (
     End, QuestionerComponent, QuestionerConfig, FieldInfo, Start, Workflow,
-    WorkflowCard,
+    WorkflowCard
 )
-from openjiuwen.core.workflow.workflow_config import WorkflowConfig
+from openjiuwen.core.single_agent.legacy import WorkflowAgentConfig
 
-API_BASE = os.getenv("API_BASE", "your api base")
-API_KEY = os.getenv("API_KEY", "your api key")
-MODEL_NAME = os.getenv("MODEL_NAME", "")
-MODEL_PROVIDER = os.getenv("MODEL_PROVIDER", "")
-os.environ["LLM_SSL_VERIFY"] = "false"
-os.environ["RESTFUL_SSL_VERIFY"] = "false"
+
+API_BASE = os.getenv("API_BASE", "your api url")
+API_KEY = os.getenv("API_KEY", "your model token")
+MODEL_NAME = os.getenv("MODEL_NAME", "your model name")
+MODEL_PROVIDER = os.getenv("MODEL_PROVIDER", "your model provider")
+os.environ.setdefault("LLM_SSL_VERIFY", "false")
+os.environ.setdefault("IS_SENSITIVE", "false")
 
 SYSTEM_PROMPT_TEMPLATE = "你是一个query改写的AI助手。今天的日期是{}。"
 
 
-def build_current_date():
-    current_datetime = datetime.now()
-    return current_datetime.strftime("%Y-%m-%d")
-
-
-def _create_model_config() -> ModelConfig:
+def create_model_config() -> ModelConfig:
     """根据环境变量构造模型配置。"""
     return ModelConfig(
         model_provider=MODEL_PROVIDER,
@@ -378,39 +391,13 @@ def _create_model_config() -> ModelConfig:
     )
 
 def _create_start_component():
-    return Start({"inputs": [{"id": "query", "type": "String", "required": "true", "sourceType": "ref"}]})
+    return Start()
 
-def _build_prefixed_workflow(workflow_id: str, workflow_name: str, prefix: str) -> Workflow:
-    """
-    构建简单的工作流，输出带指定前缀的结果。
-    用于测试工作流路由。
-    """
-    workflow_config = WorkflowConfig(
-        card=WorkflowCard(
-            id=workflow_id,
-            name=workflow_name,
-            version="1.0",
-        )
-    )
-    flow = Workflow(workflow_config=workflow_config)
-    start = _create_start_component()
-    end = End({"responseTemplate": f"{prefix}{{{{output}}}}"})
-
-    flow.set_start_comp(
-        "start",
-        start,
-        inputs_schema={"query": "${query}"},
-    )
-    flow.set_end_comp(
-        "end",
-        end,
-        inputs_schema={"output": "${start.query}"},
-    )
-    flow.add_connection("start", "end")
-    return flow
-
-def _build_questioner_workflow(workflow_id: str, workflow_name: str,
-                               question_field: str, question_desc: str) -> Workflow:
+def _build_questioner_workflow(workflow_id: str,
+                               workflow_name: str,
+                               workflow_description: str,
+                               question_field: str,
+                               question_desc: str) -> Workflow:
     """
     构建包含提问器的简单工作流。
 
@@ -423,14 +410,18 @@ def _build_questioner_workflow(workflow_id: str, workflow_name: str,
     Returns:
         Workflow: 包含 start -> questioner -> end 的工作流
     """
-    workflow_config = WorkflowConfig(
-        card=WorkflowCard(
-            id=workflow_id,
-            name=workflow_name,
-            version="1.0",
-        )
+    workflow_card = WorkflowCard(
+        id=workflow_id,
+        name=workflow_name,
+        version="1.0",
+        description=workflow_description,
+        input_params={
+            "type": "object",
+            "properties": {"query": {"type": "string", "description": "用户输入"}},
+            "required": ['query']
+        }
     )
-    flow = Workflow(workflow_config=workflow_config)
+    flow = Workflow(card=workflow_card)
 
     # 创建组件
     start = _create_start_component()
@@ -439,9 +430,23 @@ def _build_questioner_workflow(workflow_id: str, workflow_name: str,
     key_fields = [
         FieldInfo(field_name=question_field, description=question_desc, required=True),
     ]
-    model_config = _create_model_config()
+    model_config = ModelRequestConfig(
+        model=MODEL_NAME,
+        temperature=0.8,
+        top_p=0.9
+    )
+
+    model_client_config = ModelClientConfig(
+        client_provider=MODEL_PROVIDER,
+        api_key=API_KEY,
+        api_base=API_BASE,
+        timeout=30,
+        verify_ssl=False,
+    )
+
     questioner_config = QuestionerConfig(
-        model=model_config,
+        model_client_config=model_client_config,
+        model_config=model_config,
         question_content="",
         extract_fields_from_response=True,
         field_names=key_fields,
@@ -465,10 +470,11 @@ def _build_questioner_workflow(workflow_id: str, workflow_name: str,
 
     return flow
 
+
 async def main():
     """
     测试多工作流间的跳转和恢复功能。
-    
+
     场景：
     1. query1 -> workflow1（天气查询）-> 提问器中断（询问地点）
     2. query2 -> 意图识别 -> workflow2（股票查询）-> 提问器中断（询问股票代码）
@@ -476,32 +482,28 @@ async def main():
     4. query4（InteractiveInput）-> 恢复 workflow2，提供股票代码 -> 完成
     """
 
-
     # 创建两个带提问器的工作流
     weather_workflow = _build_questioner_workflow(
         workflow_id="weather_flow",
         workflow_name="天气查询",
+        workflow_description="查询某地的天气情况、温度、气象信息",
         question_field="location",
         question_desc="地点"
     )
     stock_workflow = _build_questioner_workflow(
         workflow_id="stock_flow",
         workflow_name="股票查询",
+        workflow_description="查询股票价格、股市行情、股票走势等金融信息",
         question_field="stock_code",
         question_desc="股票代码"
     )
-
-    # 更新 workflow 的 metadata，添加详细描述（用于意图识别）
-    weather_workflow.config().metadata.description = "查询某地的天气情况、温度、气象信息"
-    stock_workflow.config().metadata.description = "查询股票价格、股市行情、股票走势等金融信息"
 
     # 创建最小化配置（workflows 为空列表）
     config = WorkflowAgentConfig(
         id="test_multi_workflow_jump_agent",
         version="0.1.0",
         description="多工作流跳转恢复测试",
-        workflows=[],  # 空列表，通过 add_workflows 自动填充
-        model=_create_model_config(),
+        model=create_model_config(),
     )
     agent = WorkflowAgent(config)
 
@@ -512,23 +514,24 @@ async def main():
 
     # ========== 步骤1: query1 -> workflow1 -> 中断 ==========
     print("\n【步骤1】发送 query1: 查询天气")
-    result1 = await agent.invoke({"query": "查询天气", "conversation_id": conversation_id})
+    result1 = await Runner.run_agent(agent=agent, inputs={"query": "查询天气", "conversation_id": conversation_id})
     print("步骤1 结果: ", result1)
 
     # ========== 步骤2: query2 -> workflow2 -> 中断 ==========
     print("\n【步骤2】发送 query2: 查看股票")
-    result2 = await agent.invoke({"query": "查看股票", "conversation_id": conversation_id})
+    result2 = await Runner.run_agent(agent=agent, inputs={"query": "查看股票", "conversation_id": conversation_id})
     print(f"步骤2 结果: {result2}")
 
     # ========== 步骤3: query3 -> 恢复 workflow1 ==========
     print("\n【步骤3】发送 query3: 提供地点信息，恢复 workflow1")
-    result3 = await agent.invoke({"query": "查询北京天气", "conversation_id": conversation_id})
+    result3 = await Runner.run_agent(agent=agent, inputs={"query": "查询北京天气", "conversation_id": conversation_id})
     print(f"步骤3 结果: {result3}")
 
     # ========== 步骤4: query4 -> 恢复 workflow2 ==========
     print("\n【步骤4】发送 query4: 提供股票代码，恢复 workflow2")
-    result4 = await agent.invoke({"query": "查看AAPL股票", "conversation_id": conversation_id})
+    result4 = await Runner.run_agent(agent=agent, inputs={"query": "查看AAPL股票", "conversation_id": conversation_id})
     print(f"步骤4 结果: {result4}")
+
 
 if __name__ == "__main__":
     asyncio.run(main())
