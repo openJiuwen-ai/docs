@@ -4,17 +4,16 @@
 
 Sparse retriever implementation based on BM25, using text matching for retrieval.
 
-### __init__
 
 ```python
-__init__(vector_store: VectorStore, **kwargs: Any)
+SparseRetriever(vector_store: VectorStore, **kwargs: Any)
 ```
 
 Initialize sparse retriever.
 
 **Parameters**:
 
-* **vector_store**(VectorStore): Vector store instance (needs to support sparse search). Default: None.
+* **vector_store**(VectorStore): Vector store instance (needs to support sparse search).
 * **kwargs**(Any): Variable arguments for passing additional configuration parameters.
 
 ### async retrieve
@@ -27,7 +26,7 @@ Retrieve documents (sparse retrieval/BM25).
 
 **Parameters**:
 
-* **query**(str): Query string. Default: None.
+* **query**(str): Query string.
 * **top_k**(int): Number of results to return. Default: 5.
 * **score_threshold**(float, optional): Score threshold (not supported for sparse retrieval). Default: None.
 * **mode**(Literal["vector", "sparse", "hybrid"]): Retrieval mode (only supports sparse). Default: "sparse".
@@ -67,7 +66,7 @@ Batch retrieval, concurrently executing multiple queries.
 
 **Parameters**:
 
-* **queries**(List[str]): List of query strings. Default: None.
+* **queries**(List[str]): List of query strings.
 * **top_k**(int): Number of results to return for each query. Default: 5.
 * **kwargs**(Any): Variable arguments for passing additional configuration parameters.
 
@@ -85,7 +84,7 @@ Retrieve documents.
 
 **Parameters**:
 
-* **query**(str): Query string. Default: None.
+* **query**(str): Query string.
 * **top_k**(int): Number of results to return. Default: 5.
 * **mode**(Literal["vector", "sparse", "hybrid"]): Retrieval mode, vector=vector retrieval, sparse=sparse retrieval/BM25, hybrid=hybrid retrieval. Default: "sparse".
 * **kwargs**(Any): Variable arguments for passing additional configuration parameters.

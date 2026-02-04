@@ -4,10 +4,9 @@
 
 文本分块器抽象基类，继承自Processor，提供文本分块接口。
 
-### __init__
 
 ```python
-__init__(chunk_size: int = 512, chunk_overlap: int = 50, length_function: Optional[Callable[[str], int]] = None, **kwargs: Any)
+Chunker(chunk_size: int = 512, chunk_overlap: int = 50, length_function: Optional[Callable[[str], int]] = None, **kwargs: Any)
 ```
 
 初始化文本分块器。
@@ -33,7 +32,7 @@ chunk_text(text: str) -> List[str]
 
 **参数**：
 
-* **text**(str)：待分块的文本。默认值：无。
+* **text**(str)：待分块的文本。
 
 **返回**：
 
@@ -49,7 +48,7 @@ chunk_documents(documents: List[Document]) -> List[TextChunk]
 
 **参数**：
 
-* **documents**(List[Document])：文档列表。默认值：无。
+* **documents**(List[Document])：文档列表。
 
 **返回**：
 

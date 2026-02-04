@@ -4,7 +4,6 @@
 
 智能检索器，在图检索的基础上增加LLM查询重写和多轮融合能力，通过多轮检索和查询优化提升检索效果。
 
-### __init__
 
 ```python
 __init__(graph_retriever: GraphRetriever, llm_client: Any, llm_model_name: Optional[str] = None, max_iter: int = 2, agent_topk: int = 15)
@@ -14,8 +13,8 @@ __init__(graph_retriever: GraphRetriever, llm_client: Any, llm_model_name: Optio
 
 **参数**：
 
-* **graph_retriever**(GraphRetriever)：图检索器实例。默认值：无。
-* **llm_client**(Any)：LLM客户端实例（用于查询重写）。默认值：无。
+* **graph_retriever**(GraphRetriever)：图检索器实例。
+* **llm_client**(Any)：LLM客户端实例（用于查询重写）。
 * **llm_model_name**(str, 可选)：LLM模型名称。默认值：None。
 * **max_iter**(int)：最大迭代轮数。默认值：2。
 * **agent_topk**(int)：每轮检索返回的结果数量。默认值：15。
@@ -30,7 +29,7 @@ retrieve(query: str, top_k: int = 5, score_threshold: Optional[float] = None, mo
 
 **参数**：
 
-* **query**(str)：查询字符串。默认值：无。
+* **query**(str)：查询字符串。
 * **top_k**(int)：最终返回结果数量。默认值：5。
 * **score_threshold**(float, 可选)：得分阈值。默认值：None。
 * **mode**(Literal["vector", "sparse", "hybrid"], 可选)：检索模式（如果未提供将根据index_type自动选择）。默认值：None。
@@ -77,7 +76,7 @@ batch_retrieve(queries: List[str], top_k: int = 5, **kwargs: Any) -> List[List[R
 
 **参数**：
 
-* **queries**(List[str])：查询字符串列表。默认值：无。
+* **queries**(List[str])：查询字符串列表。
 * **top_k**(int)：每个查询返回的结果数量。默认值：5。
 * **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。
 

@@ -4,19 +4,18 @@
 
 Fixed size chunker based on tokenizer.
 
-### __init__
 
 ```python
-__init__(chunk_size: int, chunk_overlap: int, tokenizer: Any, **kwargs: Any)
+TokenizerChunker(chunk_size: int, chunk_overlap: int, tokenizer: Any, **kwargs: Any)
 ```
 
 Initialize tokenizer-based chunker.
 
 **Parameters**:
 
-* **chunk_size**(int): Chunk size (number of tokens). Default: None.
-* **chunk_overlap**(int): Chunk overlap size (number of tokens). Default: None.
-* **tokenizer**(Any): Tokenizer, must have encode and decode methods. Default: None.
+* **chunk_size**(int): Chunk size (number of tokens).
+* **chunk_overlap**(int): Chunk overlap size (number of tokens).
+* **tokenizer**(Any): Tokenizer, must have encode and decode methods.
 * **kwargs**(Any): Variable arguments for passing additional configuration parameters.
 
 ### chunk_text
@@ -29,7 +28,7 @@ Chunk text.
 
 **Parameters**:
 
-* **text**(str): Text to be chunked. Default: None.
+* **text**(str): Text to be chunked.
 
 **Returns**:
 

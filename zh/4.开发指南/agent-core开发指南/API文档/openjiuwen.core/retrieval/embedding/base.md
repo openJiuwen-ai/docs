@@ -14,7 +14,7 @@ embed_query(text: str, **kwargs: Any) -> List[float]
 
 **参数**：
 
-* **text**(str)：查询文本。默认值：无。
+* **text**(str)：查询文本。
 * **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。
 
 **返回**：
@@ -31,7 +31,7 @@ embed_documents(texts: List[str], batch_size: Optional[int] = None, **kwargs: An
 
 **参数**：
 
-* **texts**(List[str])：文档文本列表。默认值：无。
+* **texts**(List[str])：文档文本列表。
 * **batch_size**(int, 可选)：批处理大小。默认值：None。
 * **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。
 

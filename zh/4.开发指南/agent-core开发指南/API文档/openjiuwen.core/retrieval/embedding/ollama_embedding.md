@@ -4,7 +4,6 @@
 
 Ollama嵌入模型实现。
 
-### __init__
 
 ```python
 __init__(config: EmbeddingConfig, hf_tokenizer_name: Optional[str] = None, timeout: int = 60, max_retries: int = 3, extra_headers: Optional[dict] = None, max_batch_size: int = 8, dimension: Optional[int] = None)
@@ -14,7 +13,7 @@ __init__(config: EmbeddingConfig, hf_tokenizer_name: Optional[str] = None, timeo
 
 **参数**：
 
-* **config**(EmbeddingConfig)：嵌入模型配置。默认值：无。
+* **config**(EmbeddingConfig)：嵌入模型配置。
 * **hf_tokenizer_name**(str, 可选)：HuggingFace tokenizer名称（可选）。默认值：None。
 * **timeout**(int)：请求超时时间（秒）。默认值：60。
 * **max_retries**(int)：最大重试次数。默认值：3。
@@ -60,7 +59,7 @@ embed_query(text: str, **kwargs: Any) -> List[float]
 
 **参数**：
 
-* **text**(str)：查询文本。默认值：无。
+* **text**(str)：查询文本。
 * **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。
 
 **返回**：
@@ -77,7 +76,7 @@ embed_documents(texts: List[str], batch_size: Optional[int] = None, **kwargs: An
 
 **参数**：
 
-* **texts**(List[str])：文档文本列表。默认值：无。
+* **texts**(List[str])：文档文本列表。
 * **batch_size**(int, 可选)：批处理大小。默认值：None。
 * **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。
 

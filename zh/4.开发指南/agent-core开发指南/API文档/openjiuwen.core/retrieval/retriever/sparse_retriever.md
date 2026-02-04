@@ -4,17 +4,16 @@
 
 基于BM25的稀疏检索器实现，使用文本匹配进行检索。
 
-### __init__
 
 ```python
-__init__(vector_store: VectorStore, **kwargs: Any)
+SparseRetriever(vector_store: VectorStore, **kwargs: Any)
 ```
 
 初始化稀疏检索器。
 
 **参数**：
 
-* **vector_store**(VectorStore)：向量存储实例（需要支持稀疏搜索）。默认值：无。
+* **vector_store**(VectorStore)：向量存储实例（需要支持稀疏搜索）。
 * **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。
 
 ### async retrieve
@@ -27,7 +26,7 @@ retrieve(query: str, top_k: int = 5, score_threshold: Optional[float] = None, mo
 
 **参数**：
 
-* **query**(str)：查询字符串。默认值：无。
+* **query**(str)：查询字符串。
 * **top_k**(int)：返回结果数量。默认值：5。
 * **score_threshold**(float, 可选)：得分阈值（稀疏检索不支持）。默认值：None。
 * **mode**(Literal["vector", "sparse", "hybrid"])：检索模式（仅支持sparse）。默认值："sparse"。
@@ -67,7 +66,7 @@ batch_retrieve(queries: List[str], top_k: int = 5, **kwargs: Any) -> List[List[R
 
 **参数**：
 
-* **queries**(List[str])：查询字符串列表。默认值：无。
+* **queries**(List[str])：查询字符串列表。
 * **top_k**(int)：每个查询返回的结果数量。默认值：5。
 * **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。
 
@@ -85,7 +84,7 @@ retrieve_search_results(query: str, top_k: int = 5, mode: Literal["vector", "spa
 
 **参数**：
 
-* **query**(str)：查询字符串。默认值：无。
+* **query**(str)：查询字符串。
 * **top_k**(int)：返回结果数量。默认值：5。
 * **mode**(Literal["vector", "sparse", "hybrid"])：检索模式，vector=向量检索，sparse=稀疏检索/BM25，hybrid=混合检索。默认值："sparse"。
 * **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。

@@ -14,8 +14,8 @@ Process data (abstract method, must be implemented by subclasses).
 
 **Parameters**:
 
-* **args**(Any): Positional arguments. Default: None.
-* **kwargs**(Any): Keyword arguments. Default: None.
+* **args**(Any): Positional arguments.
+* **kwargs**(Any): Keyword arguments.
 
 **Returns**:
 

@@ -4,17 +4,16 @@
 
 Graph-enhanced knowledge base implementation that supports graph indexing and retrieval. Can extract triples from documents and build graph indexes, supporting graph-based retrieval expansion.
 
-### __init__
 
 ```python
-__init__(config: KnowledgeBaseConfig, vector_store: Optional[VectorStore] = None, embed_model: Optional[Embedding] = None, parser: Optional[Parser] = None, chunker: Optional[Chunker] = None, extractor: Optional[Extractor] = None, index_manager: Optional[Indexer] = None, chunk_retriever: Optional[Retriever] = None, triple_retriever: Optional[Retriever] = None, llm_client: Optional[Any] = None, llm_model_name: Optional[Any] = None, **kwargs: Any)
+GraphKnowledgeBase(config: KnowledgeBaseConfig, vector_store: Optional[VectorStore] = None, embed_model: Optional[Embedding] = None, parser: Optional[Parser] = None, chunker: Optional[Chunker] = None, extractor: Optional[Extractor] = None, index_manager: Optional[Indexer] = None, chunk_retriever: Optional[Retriever] = None, triple_retriever: Optional[Retriever] = None, llm_client: Optional[Any] = None, llm_model_name: Optional[Any] = None, **kwargs: Any)
 ```
 
 Initialize graph knowledge base.
 
 **Parameters**:
 
-* **config**(KnowledgeBaseConfig): Knowledge base configuration, use_graph=True enables graph indexing. Default: None.
+* **config**(KnowledgeBaseConfig): Knowledge base configuration, use_graph=True enables graph indexing.
 * **vector_store**(VectorStore, optional): Vector store instance. Default: None.
 * **embed_model**(Embedding, optional): Embedding model instance. Default: None.
 * **parser**(Parser, optional): Document parser instance. Default: None.
@@ -37,8 +36,8 @@ Parse files from file paths and return a list of Document objects.
 
 **Parameters**:
 
-* **file_paths**(List[str]): List of file paths. Default: None.
-* **kwargs**(Any): Variable arguments that may include file_name and file_id parameters. Default: None.
+* **file_paths**(List[str]): List of file paths.
+* **kwargs**(Any): Variable arguments that may include file_name and file_id parameters.
 
 **Returns**:
 
@@ -54,8 +53,8 @@ Add documents to the knowledge base, including document chunk indexing and tripl
 
 **Parameters**:
 
-* **documents**(List[Document]): List of documents. Default: None.
-* **kwargs**(Any): Variable arguments for passing additional configuration parameters. Default: None.
+* **documents**(List[Document]): List of documents.
+* **kwargs**(Any): Variable arguments for passing additional configuration parameters.
 
 **Returns**:
 
@@ -90,9 +89,9 @@ Retrieve relevant documents, supporting graph retrieval. If config.use_graph is 
 
 **Parameters**:
 
-* **query**(str): Query string. Default: None.
+* **query**(str): Query string.
 * **config**(RetrievalConfig, optional): Retrieval configuration, use_graph=True enables graph retrieval, graph_expansion=True enables graph expansion. Default: None.
-* **kwargs**(Any): Variable arguments for passing additional configuration parameters. Default: None.
+* **kwargs**(Any): Variable arguments for passing additional configuration parameters.
 
 **Returns**:
 
@@ -126,8 +125,8 @@ Delete documents, including document chunk indexes and triple indexes (if they e
 
 **Parameters**:
 
-* **doc_ids**(List[str]): List of document IDs. Default: None.
-* **kwargs**(Any): Variable arguments for passing additional configuration parameters. Default: None.
+* **doc_ids**(List[str]): List of document IDs.
+* **kwargs**(Any): Variable arguments for passing additional configuration parameters.
 
 **Returns**:
 
@@ -143,8 +142,8 @@ Update documents, including re-chunking, re-extracting triples, and updating ind
 
 **Parameters**:
 
-* **documents**(List[Document]): List of documents. Default: None.
-* **kwargs**(Any): Variable arguments for passing additional configuration parameters. Default: None.
+* **documents**(List[Document]): List of documents.
+* **kwargs**(Any): Variable arguments for passing additional configuration parameters.
 
 **Returns**:
 
@@ -180,8 +179,8 @@ Perform retrieval on multiple knowledge bases (returns text list).
 
 **Parameters**:
 
-* **kbs**(List[KnowledgeBase]): List of knowledge bases. Default: None.
-* **query**(str): Query string. Default: None.
+* **kbs**(List[KnowledgeBase]): List of knowledge bases.
+* **query**(str): Query string.
 * **config**(RetrievalConfig, optional): Retrieval configuration. Default: None.
 * **top_k**(int, optional): Number of results to return. Default: None.
 
@@ -199,8 +198,8 @@ Perform retrieval on multiple knowledge bases (with source information).
 
 **Parameters**:
 
-* **kbs**(List[KnowledgeBase]): List of knowledge bases. Default: None.
-* **query**(str): Query string. Default: None.
+* **kbs**(List[KnowledgeBase]): List of knowledge bases.
+* **query**(str): Query string.
 * **config**(RetrievalConfig, optional): Retrieval configuration. Default: None.
 * **top_k**(int, optional): Number of results to return. Default: None.
 

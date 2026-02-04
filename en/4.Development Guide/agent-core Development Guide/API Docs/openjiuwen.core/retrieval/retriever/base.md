@@ -14,7 +14,7 @@ Retrieve documents.
 
 **Parameters**:
 
-* **query**(str): Query string. Default: None.
+* **query**(str): Query string.
 * **top_k**(int): Number of results to return. Default: 5.
 * **score_threshold**(float, optional): Score threshold, results below this threshold will be filtered. Default: None.
 * **mode**(Literal["vector", "sparse", "hybrid"]): Retrieval mode, vector=vector retrieval, sparse=sparse retrieval/BM25, hybrid=hybrid retrieval. Default: "hybrid".
@@ -34,7 +34,7 @@ Batch retrieval.
 
 **Parameters**:
 
-* **queries**(List[str]): List of query strings. Default: None.
+* **queries**(List[str]): List of query strings.
 * **top_k**(int): Number of results to return for each query. Default: 5.
 * **kwargs**(Any): Variable arguments for passing additional configuration parameters.
 
@@ -52,7 +52,7 @@ Retrieve documents.
 
 **Parameters**:
 
-* **query**(str): Query string. Default: None.
+* **query**(str): Query string.
 * **top_k**(int): Number of results to return. Default: 5.
 * **mode**(Literal["vector", "sparse", "hybrid"]): Retrieval mode, vector=vector retrieval, sparse=sparse retrieval/BM25, hybrid=hybrid retrieval. Default: "hybrid".
 * **kwargs**(Any): Variable arguments for passing additional configuration parameters.

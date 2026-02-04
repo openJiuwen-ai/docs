@@ -4,17 +4,16 @@
 
 混合检索器实现，结合向量检索和稀疏检索（BM25），使用RRF（Reciprocal Rank Fusion）算法融合结果。
 
-### __init__
 
 ```python
-__init__(vector_store: VectorStore, embed_model: Optional[Embedding] = None, alpha: float = 0.5, **kwargs: Any)
+HybridRetriever(vector_store: VectorStore, embed_model: Optional[Embedding] = None, alpha: float = 0.5, **kwargs: Any)
 ```
 
 初始化混合检索器。
 
 **参数**：
 
-* **vector_store**(VectorStore)：向量存储实例。默认值：无。
+* **vector_store**(VectorStore)：向量存储实例。
 * **embed_model**(Embedding, 可选)：嵌入模型实例（向量检索必需）。默认值：None。
 * **alpha**(float)：混合权重（0=纯稀疏检索，1=纯向量检索，0.5=平衡）。默认值：0.5。
 * **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。
@@ -29,11 +28,11 @@ retrieve(query: str, top_k: int = 5, score_threshold: Optional[float] = None, mo
 
 **参数**：
 
-* **query**(str)：查询字符串。默认值：无。
+* **query**(str)：查询字符串。
 * **top_k**(int)：返回结果数量。默认值：5。
 * **score_threshold**(float, 可选)：得分阈值（仅支持vector模式）。默认值：None。
 * **mode**(Literal["vector", "sparse", "hybrid"])：检索模式，支持hybrid、vector和sparse。默认值："hybrid"。
-* **kwargs**(Any)：可变参数，可包含alpha参数用于覆盖默认混合权重。默认值：无。
+* **kwargs**(Any)：可变参数，可包含alpha参数用于覆盖默认混合权重。
 
 **返回**：
 
@@ -73,7 +72,7 @@ batch_retrieve(queries: List[str], top_k: int = 5, **kwargs: Any) -> List[List[R
 
 **参数**：
 
-* **queries**(List[str])：查询字符串列表。默认值：无。
+* **queries**(List[str])：查询字符串列表。
 * **top_k**(int)：每个查询返回的结果数量。默认值：5。
 * **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。
 
@@ -91,7 +90,7 @@ retrieve_search_results(query: str, top_k: int = 5, mode: Literal["vector", "spa
 
 **参数**：
 
-* **query**(str)：查询字符串。默认值：无。
+* **query**(str)：查询字符串。
 * **top_k**(int)：返回结果数量。默认值：5。
 * **mode**(Literal["vector", "sparse", "hybrid"])：检索模式，vector=向量检索，sparse=稀疏检索/BM25，hybrid=混合检索。默认值："hybrid"。
 * **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。

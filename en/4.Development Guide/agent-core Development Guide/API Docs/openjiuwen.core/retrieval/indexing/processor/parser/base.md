@@ -14,7 +14,7 @@ Parse document.
 
 **Parameters**:
 
-* **doc**(str): Document source (file path, URL, etc.). Default: None.
+* **doc**(str): Document source (file path, URL, etc.).
 * **doc_id**(str): Document ID. Default: "".
 * **kwargs**(Any): Variable arguments for passing additional configuration parameters.
 
@@ -32,7 +32,7 @@ Lazy loading parse document (default implementation based on parse method).
 
 **Parameters**:
 
-* **doc**(str): Document source (file path, URL, etc.). Default: None.
+* **doc**(str): Document source (file path, URL, etc.).
 * **doc_id**(str): Document ID. Default: "".
 * **kwargs**(Any): Variable arguments for passing additional configuration parameters.
 
@@ -50,7 +50,7 @@ Check if the document source is supported.
 
 **Parameters**:
 
-* **doc**(str): Document source. Default: None.
+* **doc**(str): Document source.
 
 **Returns**:
 

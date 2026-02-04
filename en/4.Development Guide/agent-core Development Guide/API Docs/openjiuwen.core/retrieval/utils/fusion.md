@@ -10,7 +10,7 @@ RRF (Reciprocal Rank Fusion) fusion algorithm for fusing multiple retrieval resu
 
 **Parameters**:
 
-* **results_list**(List[List[RetrievalResult]]): List of multiple retrieval result lists. Default: None.
+* **results_list**(List[List[RetrievalResult]]): List of multiple retrieval result lists.
 * **k**(int): RRF parameter. Default: 60.
 
 **Returns**:

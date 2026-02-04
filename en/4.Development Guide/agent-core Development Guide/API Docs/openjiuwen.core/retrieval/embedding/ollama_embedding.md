@@ -4,7 +4,6 @@
 
 Ollama embedding model implementation.
 
-### __init__
 
 ```python
 __init__(config: EmbeddingConfig, hf_tokenizer_name: Optional[str] = None, timeout: int = 60, max_retries: int = 3, extra_headers: Optional[dict] = None,max_batch_size: int = 8, dimension: Optional[int] = None)
@@ -14,7 +13,7 @@ Initialize Ollama embedding model.
 
 **Parameters**:
 
-* **config**(EmbeddingConfig): Embedding model configuration. Default: None.
+* **config**(EmbeddingConfig): Embedding model configuration.
 * **hf_tokenizer_name**(str, optional): HuggingFace tokenizer name (optional). Default: None.
 * **timeout**(int): Request timeout (seconds). Default: 60.
 * **max_retries**(int): Maximum number of retries. Default: 3.
@@ -60,7 +59,7 @@ Get the embedding vector of text.
 
 **Parameters**:
 
-* **text**(str): Query text. Default: None.
+* **text**(str): Query text.
 * **kwargs**(Any): Variable arguments for passing additional configuration parameters.
 
 **Returns**:
@@ -77,7 +76,7 @@ Get embedding vectors for a list of documents.
 
 **Parameters**:
 
-* **texts**(List[str]): List of document texts. Default: None.
+* **texts**(List[str]): List of document texts.
 * **batch_size**(int, optional): Batch size. Default: None.
 * **kwargs**(Any): Variable arguments for passing additional configuration parameters.
 

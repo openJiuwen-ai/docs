@@ -4,17 +4,18 @@
 
 Knowledge base implementation based on vector retrieval, providing complete knowledge base functionality including document parsing, chunking, index building, and retrieval.
 
-### __init__
+> **Reference Implementation**: An example project based on `SimpleKnowledgeBase`. This project implements a continuously updated PEP (Python Enhancement Proposals) knowledge base for providing professional style and specification recommendations in code review and fixing. See [TomatoReviewer](https://gitcode.com/SushiNinja/TomatoReviewer) for details.
+
 
 ```python
-__init__(config: KnowledgeBaseConfig, vector_store: Optional[VectorStore] = None, embed_model: Optional[Embedding] = None, parser: Optional[Parser] = None, chunker: Optional[Chunker] = None, extractor: Optional[Extractor] = None, index_manager: Optional[Indexer] = None, retriever: Optional[Retriever] = None, llm_client: Optional[Any] = None, **kwargs: Any)
+SimpleKnowledgeBase(config: KnowledgeBaseConfig, vector_store: Optional[VectorStore] = None, embed_model: Optional[Embedding] = None, parser: Optional[Parser] = None, chunker: Optional[Chunker] = None, extractor: Optional[Extractor] = None, index_manager: Optional[Indexer] = None, retriever: Optional[Retriever] = None, llm_client: Optional[Any] = None, **kwargs: Any)
 ```
 
 Initialize simple knowledge base.
 
 **Parameters**:
 
-* **config**(KnowledgeBaseConfig): Knowledge base configuration. Default: None.
+* **config**(KnowledgeBaseConfig): Knowledge base configuration.
 * **vector_store**(VectorStore, optional): Vector store instance. Default: None.
 * **embed_model**(Embedding, optional): Embedding model instance. Default: None.
 * **parser**(Parser, optional): Document parser instance. Default: None.
@@ -35,8 +36,8 @@ Parse files from file paths and return a list of Document objects.
 
 **Parameters**:
 
-* **file_paths**(List[str]): List of file paths. Default: None.
-* **kwargs**(Any): Variable arguments that may include file_name and file_id parameters. Default: None.
+* **file_paths**(List[str]): List of file paths.
+* **kwargs**(Any): Variable arguments that may include file_name and file_id parameters.
 
 **Returns**:
 
@@ -70,8 +71,8 @@ Add documents to the knowledge base, including document chunking and index build
 
 **Parameters**:
 
-* **documents**(List[Document]): List of documents. Default: None.
-* **kwargs**(Any): Variable arguments for passing additional configuration parameters. Default: None.
+* **documents**(List[Document]): List of documents.
+* **kwargs**(Any): Variable arguments for passing additional configuration parameters.
 
 **Returns**:
 
@@ -108,9 +109,9 @@ Retrieve relevant documents. If retriever is not provided, the corresponding ret
 
 **Parameters**:
 
-* **query**(str): Query string. Default: None.
+* **query**(str): Query string.
 * **config**(RetrievalConfig, optional): Retrieval configuration. Default: None.
-* **kwargs**(Any): Variable arguments for passing additional configuration parameters. Default: None.
+* **kwargs**(Any): Variable arguments for passing additional configuration parameters.
 
 **Returns**:
 
@@ -143,8 +144,8 @@ Delete documents.
 
 **Parameters**:
 
-* **doc_ids**(List[str]): List of document IDs. Default: None.
-* **kwargs**(Any): Variable arguments for passing additional configuration parameters. Default: None.
+* **doc_ids**(List[str]): List of document IDs.
+* **kwargs**(Any): Variable arguments for passing additional configuration parameters.
 
 **Returns**:
 
@@ -160,8 +161,8 @@ Update documents, including re-chunking and updating indexes.
 
 **Parameters**:
 
-* **documents**(List[Document]): List of documents. Default: None.
-* **kwargs**(Any): Variable arguments for passing additional configuration parameters. Default: None.
+* **documents**(List[Document]): List of documents.
+* **kwargs**(Any): Variable arguments for passing additional configuration parameters.
 
 **Returns**:
 
@@ -189,8 +190,8 @@ Perform retrieval on multiple knowledge bases, deduplicate by text and merge res
 
 **Parameters**:
 
-* **kbs**(List[KnowledgeBase]): List of knowledge bases. Default: None.
-* **query**(str): Query string. Default: None.
+* **kbs**(List[KnowledgeBase]): List of knowledge bases.
+* **query**(str): Query string.
 * **config**(RetrievalConfig, optional): Retrieval configuration. Default: None.
 * **top_k**(int, optional): Number of results to return. Default: None.
 
@@ -208,8 +209,8 @@ Perform retrieval on multiple knowledge bases, returning results with source inf
 
 **Parameters**:
 
-* **kbs**(List[KnowledgeBase]): List of knowledge bases. Default: None.
-* **query**(str): Query string. Default: None.
+* **kbs**(List[KnowledgeBase]): List of knowledge bases.
+* **query**(str): Query string.
 * **config**(RetrievalConfig, optional): Retrieval configuration. Default: None.
 * **top_k**(int, optional): Number of results to return. Default: None.
 

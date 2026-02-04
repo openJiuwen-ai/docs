@@ -4,18 +4,17 @@
 
 Triple extractor implementation using LLM for OpenIE triple extraction.
 
-### __init__
 
 ```python
-__init__(llm_client: Any, model_name: str, temperature: float = 0.0, max_concurrent: int = 50, **kwargs: Any)
+TripleExtractor(llm_client: Any, model_name: str, temperature: float = 0.0, max_concurrent: int = 50, **kwargs: Any)
 ```
 
 Initialize triple extractor.
 
 **Parameters**:
 
-* **llm_client**(Any): LLM client instance. Default: None.
-* **model_name**(str): Model name. Default: None.
+* **llm_client**(Any): LLM client instance.
+* **model_name**(str): Model name.
 * **temperature**(float): Temperature parameter. Default: 0.0.
 * **max_concurrent**(int): Maximum concurrency. Default: 50.
 * **kwargs**(Any): Variable arguments for passing additional configuration parameters.
@@ -30,7 +29,7 @@ Extract triples.
 
 **Parameters**:
 
-* **chunks**(List[TextChunk]): List of text chunks. Default: None.
+* **chunks**(List[TextChunk]): List of text chunks.
 * **kwargs**(Any): Variable arguments for passing additional configuration parameters.
 
 **Returns**:

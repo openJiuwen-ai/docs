@@ -4,10 +4,9 @@
 
 Graph retriever implementation that combines document chunk retrieval and graph retrieval, supporting graph expansion and multi-hop retrieval based on triple relationships.
 
-### __init__
 
 ```python
-__init__(chunk_retriever: Optional[Retriever] = None, triple_retriever: Optional[Retriever] = None, vector_store: Optional[Any] = None, embed_model: Optional[Any] = None, chunk_collection: Optional[str] = None, triple_collection: Optional[str] = None, **kwargs: Any)
+GraphRetriever(chunk_retriever: Optional[Retriever] = None, triple_retriever: Optional[Retriever] = None, vector_store: Optional[Any] = None, embed_model: Optional[Any] = None, chunk_collection: Optional[str] = None, triple_collection: Optional[str] = None, **kwargs: Any)
 ```
 
 Initialize graph retriever.
@@ -49,11 +48,11 @@ Retrieve documents (graph retrieval), supporting graph expansion and multi-hop r
 
 **Parameters**:
 
-* **query**(str): Query string. Default: None.
+* **query**(str): Query string.
 * **top_k**(int): Number of results to return. Default: 5.
 * **score_threshold**(float, optional): Score threshold (only supports vector mode). Default: None.
 * **mode**(Literal["vector", "sparse", "hybrid"]): Retrieval mode (must be compatible with index_type). Default: "hybrid".
-* **kwargs**(Any): Variable arguments that may include topk_triples (number of triple retrievals) and graph_hops (number of graph expansion hops) parameters. Default: None.
+* **kwargs**(Any): Variable arguments that may include topk_triples (number of triple retrievals) and graph_hops (number of graph expansion hops) parameters.
 
 **Returns**:
 
@@ -99,8 +98,8 @@ Graph expansion: Based on initial document chunk retrieval results, expand retri
 
 **Parameters**:
 
-* **query**(str): Query string. Default: None.
-* **chunks**(List[RetrievalResult]): Initial document chunk retrieval results. Default: None.
+* **query**(str): Query string.
+* **chunks**(List[RetrievalResult]): Initial document chunk retrieval results.
 * **triples**(List[RetrievalResult], optional): Optional pre-fetched triples. Default: None.
 * **topk**(int, optional): Final number of results to return. Default: None.
 * **mode**(Literal["vector", "sparse", "hybrid"]): Retrieval mode. Default: "hybrid".
@@ -120,7 +119,7 @@ Batch retrieval, concurrently executing multiple queries.
 
 **Parameters**:
 
-* **queries**(List[str]): List of query strings. Default: None.
+* **queries**(List[str]): List of query strings.
 * **top_k**(int): Number of results to return for each query. Default: 5.
 * **kwargs**(Any): Variable arguments for passing additional configuration parameters.
 

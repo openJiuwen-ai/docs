@@ -7,7 +7,7 @@ Document data model, representing a document object.
 **Parameters**:
 
 * **id_**(str): Document ID, will be automatically generated as UUID if not provided. Default: Auto-generated.
-* **text**(str): Document text content. Default: None.
+* **text**(str): Document text content.
 * **metadata**(Dict[str, Any]): Document metadata. Default: {}.
 
 **Example**:
@@ -27,9 +27,9 @@ Text chunk data model, representing a text chunk of a document.
 
 **Parameters**:
 
-* **id_**(str): Text chunk ID. Default: None.
-* **text**(str): Text chunk text content. Default: None.
-* **doc_id**(str): Parent document ID. Default: None.
+* **id_**(str): Text chunk ID.
+* **text**(str): Text chunk text content.
+* **doc_id**(str): Parent document ID.
 * **metadata**(Dict[str, Any]): Text chunk metadata. Default: {}.
 * **embedding**(list[float] | None): Text chunk embedding vector. Default: None.
 
@@ -43,8 +43,8 @@ Create TextChunk from Document.
 
 **Parameters**:
 
-* **doc**(Document): Document object. Default: None.
-* **chunk_text**(str): Text chunk text content. Default: None.
+* **doc**(Document): Document object.
+* **chunk_text**(str): Text chunk text content.
 * **id_**(str): Text chunk ID, will be automatically generated as UUID if not provided. Default: "".
 
 **Returns**:

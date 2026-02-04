@@ -4,18 +4,18 @@
 
 ChromaDB向量存储实现，支持向量搜索、稀疏搜索（文本匹配）和混合搜索。
 
-### __init__
+> **参考**：向量数据库相似度分数计算参考 [VectorStoreScoring](https://gitcode.com/SushiNinja/VectorStoreScoring)。
 
 ```python
-__init__(config: VectorStoreConfig, chroma_path: str, text_field: str = "content", vector_field: str = "embedding", sparse_vector_field: str = "sparse_vector", metadata_field: str = "metadata", doc_id_field: str = "document_id", **kwargs: Any)
+ChromaVectorStore(config: VectorStoreConfig, chroma_path: str, text_field: str = "content", vector_field: str = "embedding", sparse_vector_field: str = "sparse_vector", metadata_field: str = "metadata", doc_id_field: str = "document_id", **kwargs: Any)
 ```
 
 初始化ChromaDB向量存储（持久化模式）。
 
 **参数**：
 
-* **config**(VectorStoreConfig)：向量存储配置。默认值：无。
-* **chroma_path**(str)：ChromaDB持久化路径（必需）。默认值：无。
+* **config**(VectorStoreConfig)：向量存储配置。
+* **chroma_path**(str)：ChromaDB持久化路径（必需）。
 * **text_field**(str)：文本字段名。默认值："content"。
 * **vector_field**(str)：向量字段名。默认值："embedding"。
 * **sparse_vector_field**(str)：稀疏向量字段名（在ChromaDB中作为元数据存储）。默认值："sparse_vector"。
@@ -61,7 +61,7 @@ add(data: dict | List[dict], batch_size: int | None = 128, **kwargs: Any) -> Non
 
 **参数**：
 
-* **data**(dict | List[dict])：向量数据，可以是单个字典或字典列表。默认值：无。
+* **data**(dict | List[dict])：向量数据，可以是单个字典或字典列表。
 * **batch_size**(int, 可选)：批处理大小。默认值：128。
 * **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。
 
@@ -75,7 +75,7 @@ search(query_vector: List[float], top_k: int = 5, filters: Optional[dict] = None
 
 **参数**：
 
-* **query_vector**(List[float])：查询向量。默认值：无。
+* **query_vector**(List[float])：查询向量。
 * **top_k**(int)：返回结果数量。默认值：5。
 * **filters**(dict, 可选)：元数据过滤条件。默认值：None。
 * **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。
@@ -94,7 +94,7 @@ sparse_search(query_text: str, top_k: int = 5, filters: Optional[dict] = None, *
 
 **参数**：
 
-* **query_text**(str)：查询文本。默认值：无。
+* **query_text**(str)：查询文本。
 * **top_k**(int)：返回结果数量。默认值：5。
 * **filters**(dict, 可选)：元数据过滤条件。默认值：None。
 * **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。
@@ -113,7 +113,7 @@ hybrid_search(query_text: str, query_vector: Optional[List[float]] = None, top_k
 
 **参数**：
 
-* **query_text**(str)：查询文本。默认值：无。
+* **query_text**(str)：查询文本。
 * **query_vector**(List[float], 可选)：查询向量（如果提供将直接使用，否则需要先嵌入）。默认值：None。
 * **top_k**(int)：返回结果数量。默认值：5。
 * **alpha**(float)：混合权重（0=纯稀疏检索，1=纯向量检索，0.5=平衡）。默认值：0.5。

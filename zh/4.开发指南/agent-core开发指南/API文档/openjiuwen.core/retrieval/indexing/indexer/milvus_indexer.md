@@ -4,17 +4,16 @@
 
 Milvus索引管理器实现，负责构建、更新和删除Milvus索引。
 
-### __init__
 
 ```python
-__init__(milvus_uri: str, milvus_token: Optional[str] = None, text_field: str = "content", vector_field: str = "embedding", sparse_vector_field: str = "sparse_vector", metadata_field: str = "metadata", doc_id_field: str = "document_id", **kwargs: Any)
+MilvusIndexer(milvus_uri: str, milvus_token: Optional[str] = None, text_field: str = "content", vector_field: str = "embedding", sparse_vector_field: str = "sparse_vector", metadata_field: str = "metadata", doc_id_field: str = "document_id", **kwargs: Any)
 ```
 
 初始化Milvus索引管理器。
 
 **参数**：
 
-* **milvus_uri**(str)：Milvus URI。默认值：无。
+* **milvus_uri**(str)：Milvus URI。
 * **milvus_token**(str, 可选)：Milvus Token。默认值：None。
 * **text_field**(str)：文本字段名。默认值："content"。
 * **vector_field**(str)：向量字段名。默认值："embedding"。
@@ -45,8 +44,8 @@ build_index(chunks: List[TextChunk], config: IndexConfig, embed_model: Optional[
 
 **参数**：
 
-* **chunks**(List[TextChunk])：文本块列表。默认值：无。
-* **config**(IndexConfig)：索引配置。默认值：无。
+* **chunks**(List[TextChunk])：文本块列表。
+* **config**(IndexConfig)：索引配置。
 * **embed_model**(Embedding, 可选)：嵌入模型实例（向量索引必需）。默认值：None。
 * **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。
 
@@ -64,9 +63,9 @@ update_index(chunks: List[TextChunk], doc_id: str, config: IndexConfig, embed_mo
 
 **参数**：
 
-* **chunks**(List[TextChunk])：文本块列表。默认值：无。
-* **doc_id**(str)：文档ID。默认值：无。
-* **config**(IndexConfig)：索引配置。默认值：无。
+* **chunks**(List[TextChunk])：文本块列表。
+* **doc_id**(str)：文档ID。
+* **config**(IndexConfig)：索引配置。
 * **embed_model**(Embedding, 可选)：嵌入模型实例（向量索引必需）。默认值：None。
 * **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。
 
@@ -84,8 +83,8 @@ delete_index(doc_id: str, index_name: str, **kwargs: Any) -> bool
 
 **参数**：
 
-* **doc_id**(str)：文档ID。默认值：无。
-* **index_name**(str)：索引名称。默认值：无。
+* **doc_id**(str)：文档ID。
+* **index_name**(str)：索引名称。
 * **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。
 
 **返回**：
@@ -102,7 +101,7 @@ index_exists(index_name: str) -> bool
 
 **参数**：
 
-* **index_name**(str)：索引名称。默认值：无。
+* **index_name**(str)：索引名称。
 
 **返回**：
 
@@ -118,7 +117,7 @@ get_index_info(index_name: str) -> Dict[str, Any]
 
 **参数**：
 
-* **index_name**(str)：索引名称。默认值：无。
+* **index_name**(str)：索引名称。
 
 **返回**：
 

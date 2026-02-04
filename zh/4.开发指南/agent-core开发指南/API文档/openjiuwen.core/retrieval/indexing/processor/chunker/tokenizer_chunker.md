@@ -4,19 +4,18 @@
 
 基于tokenizer的固定大小分块器。
 
-### __init__
 
 ```python
-__init__(chunk_size: int, chunk_overlap: int, tokenizer: Any, **kwargs: Any)
+TokenizerChunker(chunk_size: int, chunk_overlap: int, tokenizer: Any, **kwargs: Any)
 ```
 
 初始化基于tokenizer的分块器。
 
 **参数**：
 
-* **chunk_size**(int)：分块大小（token数）。默认值：无。
-* **chunk_overlap**(int)：分块重叠大小（token数）。默认值：无。
-* **tokenizer**(Any)：分词器，必须具有encode和decode方法。默认值：无。
+* **chunk_size**(int)：分块大小（token数）。
+* **chunk_overlap**(int)：分块重叠大小（token数）。
+* **tokenizer**(Any)：分词器，必须具有encode和decode方法。
 * **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。
 
 ### chunk_text
@@ -29,7 +28,7 @@ chunk_text(text: str) -> List[str]
 
 **参数**：
 
-* **text**(str)：待分块的文本。默认值：无。
+* **text**(str)：待分块的文本。
 
 **返回**：
 

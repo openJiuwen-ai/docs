@@ -4,10 +4,9 @@
 
 文本分块器，支持基于字符或token的分块，并可配置文本预处理选项。
 
-### __init__
 
 ```python
-__init__(chunk_size: int = 512, chunk_overlap: int = 50, chunk_unit: str = "char", embed_model: Optional[Any] = None, preprocess_options: Optional[Dict] = None, **kwargs: Any)
+TextChunker(chunk_size: int = 512, chunk_overlap: int = 50, chunk_unit: str = "char", embed_model: Optional[Any] = None, preprocess_options: Optional[Dict] = None, **kwargs: Any)
 ```
 
 初始化文本分块器。
@@ -31,7 +30,7 @@ chunk_documents(documents: List[Document]) -> List[TextChunk]
 
 **参数**：
 
-* **documents**(List[Document])：文档列表。默认值：无。
+* **documents**(List[Document])：文档列表。
 
 **返回**：
 

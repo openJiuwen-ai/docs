@@ -14,8 +14,8 @@ process(*args: Any, **kwargs: Any) -> Any
 
 **参数**：
 
-* **args**(Any)：位置参数。默认值：无。
-* **kwargs**(Any)：关键字参数。默认值：无。
+* **args**(Any)：位置参数。
+* **kwargs**(Any)：关键字参数。
 
 **返回**：
 

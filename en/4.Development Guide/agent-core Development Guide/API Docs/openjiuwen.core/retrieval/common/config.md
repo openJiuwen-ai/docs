@@ -6,7 +6,7 @@ Knowledge base configuration class, defining basic configuration parameters for 
 
 **Parameters**:
 
-* **kb_id**(str): Knowledge base identifier. Default: None.
+* **kb_id**(str): Knowledge base identifier.
 * **index_type**(Literal["hybrid", "bm25", "vector"]): Index type, hybrid=hybrid index, bm25=BM25 index, vector=vector index. Default: "hybrid".
 * **use_graph**(bool): Whether to use graph indexing. Default: False.
 * **chunk_size**(int): Chunk size. Default: 512.
@@ -31,7 +31,7 @@ Index configuration class, defining index-related configuration parameters.
 
 **Parameters**:
 
-* **index_name**(str): Index name. Default: None.
+* **index_name**(str): Index name.
 * **index_type**(Literal["hybrid", "bm25", "vector"]): Index type. Default: "hybrid".
 
 ## class openjiuwen.core.retrieval.common.config.VectorStoreConfig
@@ -40,7 +40,7 @@ Vector store configuration class, defining vector store-related configuration pa
 
 **Parameters**:
 
-* **collection_name**(str): Collection name. Default: None.
+* **collection_name**(str): Collection name.
 * **distance_metric**(Literal["cosine", "euclidean", "dot"]): Distance metric, cosine=cosine distance, euclidean=Euclidean distance, dot=dot product. Default: "cosine".
 
 ## class openjiuwen.core.retrieval.common.config.EmbeddingConfig
@@ -49,7 +49,7 @@ Embedding model configuration class, defining embedding model-related configurat
 
 **Parameters**:
 
-* **model_name**(str): Model name. Default: None.
-* **base_url**(str): API base URL. Default: None.
+* **model_name**(str): Model name.
+* **base_url**(str): API base URL.
 * **api_key**(str, optional): API key. Default: None.
 

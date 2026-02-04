@@ -14,7 +14,7 @@ Add vector data.
 
 **Parameters**:
 
-* **data**(dict | List[dict]): Vector data, can be a single dictionary or a list of dictionaries. Default: None.
+* **data**(dict | List[dict]): Vector data, can be a single dictionary or a list of dictionaries.
 * **batch_size**(int, optional): Batch size. Default: 128.
 * **kwargs**(Any): Variable arguments for passing additional configuration parameters.
 
@@ -28,7 +28,7 @@ Vector search.
 
 **Parameters**:
 
-* **query_vector**(List[float]): Query vector. Default: None.
+* **query_vector**(List[float]): Query vector.
 * **top_k**(int): Number of results to return. Default: 5.
 * **filters**(dict, optional): Metadata filter conditions. Default: None.
 * **kwargs**(Any): Variable arguments for passing additional configuration parameters.
@@ -47,7 +47,7 @@ Sparse search (BM25).
 
 **Parameters**:
 
-* **query_text**(str): Query text. Default: None.
+* **query_text**(str): Query text.
 * **top_k**(int): Number of results to return. Default: 5.
 * **filters**(dict, optional): Metadata filter conditions. Default: None.
 * **kwargs**(Any): Variable arguments for passing additional configuration parameters.
@@ -66,7 +66,7 @@ Hybrid search (sparse retrieval + vector retrieval).
 
 **Parameters**:
 
-* **query_text**(str): Query text. Default: None.
+* **query_text**(str): Query text.
 * **query_vector**(List[float], optional): Query vector (will be used directly if provided, otherwise needs to be embedded first). Default: None.
 * **top_k**(int): Number of results to return. Default: 5.
 * **alpha**(float): Hybrid weight (0=pure sparse retrieval, 1=pure vector retrieval, 0.5=balanced). Default: 0.5.
@@ -87,7 +87,7 @@ Delete vectors by IDs.
 
 **Parameters**:
 
-* **ids**(List[str]): List of vector IDs. Default: None.
+* **ids**(List[str]): List of vector IDs.
 * **kwargs**(Any): Variable arguments for passing additional configuration parameters.
 
 **Returns**:

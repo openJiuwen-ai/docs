@@ -6,9 +6,9 @@ Triple data model, representing a triple (subject-predicate-object) in a knowled
 
 **Parameters**:
 
-* **subject**(str): Subject. Default: None.
-* **predicate**(str): Predicate. Default: None.
-* **object**(str): Object. Default: None.
+* **subject**(str): Subject.
+* **predicate**(str): Predicate.
+* **object**(str): Object.
 * **confidence**(float, optional): Confidence. Default: None.
 * **metadata**(Dict[str, Any]): Metadata. Default: {}.
 

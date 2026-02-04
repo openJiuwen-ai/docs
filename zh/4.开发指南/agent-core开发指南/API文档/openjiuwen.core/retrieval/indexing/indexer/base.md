@@ -14,8 +14,8 @@ build_index(chunks: List[TextChunk], config: IndexConfig, embed_model: Optional[
 
 **参数**：
 
-* **chunks**(List[TextChunk])：文本块列表。默认值：无。
-* **config**(IndexConfig)：索引配置。默认值：无。
+* **chunks**(List[TextChunk])：文本块列表。
+* **config**(IndexConfig)：索引配置。
 * **embed_model**(Embedding, 可选)：嵌入模型实例（向量索引必需）。默认值：None。
 * **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。
 
@@ -33,9 +33,9 @@ update_index(chunks: List[TextChunk], doc_id: str, config: IndexConfig, embed_mo
 
 **参数**：
 
-* **chunks**(List[TextChunk])：文本块列表。默认值：无。
-* **doc_id**(str)：文档ID。默认值：无。
-* **config**(IndexConfig)：索引配置。默认值：无。
+* **chunks**(List[TextChunk])：文本块列表。
+* **doc_id**(str)：文档ID。
+* **config**(IndexConfig)：索引配置。
 * **embed_model**(Embedding, 可选)：嵌入模型实例（向量索引必需）。默认值：None。
 * **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。
 
@@ -53,8 +53,8 @@ delete_index(doc_id: str, index_name: str, **kwargs: Any) -> bool
 
 **参数**：
 
-* **doc_id**(str)：文档ID。默认值：无。
-* **index_name**(str)：索引名称。默认值：无。
+* **doc_id**(str)：文档ID。
+* **index_name**(str)：索引名称。
 * **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。
 
 **返回**：
@@ -71,7 +71,7 @@ index_exists(index_name: str) -> bool
 
 **参数**：
 
-* **index_name**(str)：索引名称。默认值：无。
+* **index_name**(str)：索引名称。
 
 **返回**：
 
@@ -87,7 +87,7 @@ get_index_info(index_name: str) -> Dict[str, Any]
 
 **参数**：
 
-* **index_name**(str)：索引名称。默认值：无。
+* **index_name**(str)：索引名称。
 
 **返回**：
 

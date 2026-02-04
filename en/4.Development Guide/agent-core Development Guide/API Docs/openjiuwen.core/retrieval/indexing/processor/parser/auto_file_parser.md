@@ -4,10 +4,9 @@
 
 Auto file parser that uses plugin architecture to automatically select appropriate parser based on file format. Supports registering new parsers via @register_parser decorator.
 
-### __init__
 
 ```python
-__init__(**kwargs: Any)
+AutoFileParser(**kwargs: Any)
 ```
 
 Initialize auto file parser.
@@ -26,7 +25,7 @@ Automatically select appropriate parser based on file format for parsing.
 
 **Parameters**:
 
-* **doc**(str): File path. Default: None.
+* **doc**(str): File path.
 * **doc_id**(str): Document ID. Default: "".
 * **kwargs**(Any): Variable arguments for passing additional configuration parameters.
 
@@ -49,7 +48,7 @@ Decorator: Register file format parser.
 
 **Parameters**:
 
-* **file_extensions**(List[str]): List of supported file extensions, e.g. [".pdf", ".PDF"]. Default: None.
+* **file_extensions**(List[str]): List of supported file extensions, e.g. [".pdf", ".PDF"].
 
 **Returns**:
 

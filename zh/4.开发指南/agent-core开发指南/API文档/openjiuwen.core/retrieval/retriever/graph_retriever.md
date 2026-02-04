@@ -4,10 +4,9 @@
 
 图检索器实现，结合文档块检索和图检索，支持基于三元组关系的图扩展和多跳检索。
 
-### __init__
 
 ```python
-__init__(chunk_retriever: Optional[Retriever] = None, triple_retriever: Optional[Retriever] = None, vector_store: Optional[Any] = None, embed_model: Optional[Any] = None, chunk_collection: Optional[str] = None, triple_collection: Optional[str] = None, **kwargs: Any)
+GraphRetriever(chunk_retriever: Optional[Retriever] = None, triple_retriever: Optional[Retriever] = None, vector_store: Optional[Any] = None, embed_model: Optional[Any] = None, chunk_collection: Optional[str] = None, triple_collection: Optional[str] = None, **kwargs: Any)
 ```
 
 初始化图检索器。
@@ -49,11 +48,11 @@ retrieve(query: str, top_k: int = 5, score_threshold: Optional[float] = None, mo
 
 **参数**：
 
-* **query**(str)：查询字符串。默认值：无。
+* **query**(str)：查询字符串。
 * **top_k**(int)：返回结果数量。默认值：5。
 * **score_threshold**(float, 可选)：得分阈值（仅支持vector模式）。默认值：None。
 * **mode**(Literal["vector", "sparse", "hybrid"])：检索模式（必须与index_type兼容）。默认值："hybrid"。
-* **kwargs**(Any)：可变参数，可包含topk_triples（三元组检索数量）和graph_hops（图扩展跳数）参数。默认值：无。
+* **kwargs**(Any)：可变参数，可包含topk_triples（三元组检索数量）和graph_hops（图扩展跳数）参数。
 
 **返回**：
 
@@ -99,8 +98,8 @@ graph_expansion(query: str, chunks: List[RetrievalResult], triples: Optional[Lis
 
 **参数**：
 
-* **query**(str)：查询字符串。默认值：无。
-* **chunks**(List[RetrievalResult])：初始文档块检索结果。默认值：无。
+* **query**(str)：查询字符串。
+* **chunks**(List[RetrievalResult])：初始文档块检索结果。
 * **triples**(List[RetrievalResult], 可选)：预先获取的三元组结果（可选）。默认值：None。
 * **topk**(int, 可选)：最终返回数量。默认值：None。
 * **mode**(Literal["vector", "sparse", "hybrid"])：检索模式。默认值："hybrid"。
@@ -120,7 +119,7 @@ batch_retrieve(queries: List[str], top_k: int = 5, **kwargs: Any) -> List[List[R
 
 **参数**：
 
-* **queries**(List[str])：查询字符串列表。默认值：无。
+* **queries**(List[str])：查询字符串列表。
 * **top_k**(int)：每个查询返回的结果数量。默认值：5。
 * **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。
 

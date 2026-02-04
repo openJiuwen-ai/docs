@@ -4,17 +4,16 @@
 
 知识库抽象基类，提供统一的接口用于知识库的文档解析、索引构建、检索等操作。
 
-### __init__
 
 ```python
-__init__(config: KnowledgeBaseConfig, vector_store: Optional[VectorStore] = None, embed_model: Optional[Embedding] = None, parser: Optional[Parser] = None, chunker: Optional[Chunker] = None, extractor: Optional[Extractor] = None, index_manager: Optional[Indexer] = None, llm_client: Optional[Any] = None, **kwargs: Any)
+KnowledgeBase(config: KnowledgeBaseConfig, vector_store: Optional[VectorStore] = None, embed_model: Optional[Embedding] = None, parser: Optional[Parser] = None, chunker: Optional[Chunker] = None, extractor: Optional[Extractor] = None, index_manager: Optional[Indexer] = None, llm_client: Optional[Any] = None, strict_validation: bool = True, **kwargs: Any)
 ```
 
 初始化知识库。
 
 **参数**：
 
-* **config**(KnowledgeBaseConfig)：知识库配置。默认值：无。
+* **config**(KnowledgeBaseConfig)：知识库配置。
 * **vector_store**(VectorStore, 可选)：向量存储实例。默认值：None。
 * **embed_model**(Embedding, 可选)：嵌入模型实例。默认值：None。
 * **parser**(Parser, 可选)：文档解析器实例。默认值：None。
@@ -22,6 +21,7 @@ __init__(config: KnowledgeBaseConfig, vector_store: Optional[VectorStore] = None
 * **extractor**(Extractor, 可选)：提取器实例（用于提取三元组等）。默认值：None。
 * **index_manager**(Indexer, 可选)：索引管理器实例。默认值：None。
 * **llm_client**(Any, 可选)：LLM客户端实例（用于图检索等）。默认值：None。
+* **strict_validation**(bool, 可选)：是否启用严格验证，启用时会验证向量存储和索引管理器的配置一致性。默认值：True。
 * **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。
 
 ### abstractmethod async parse_files
@@ -34,7 +34,7 @@ parse_files(file_paths: List[str], **kwargs: Any) -> List[Document]
 
 **参数**：
 
-* **file_paths**(List[str])：文件路径列表。默认值：无。
+* **file_paths**(List[str])：文件路径列表。
 * **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。
 
 **返回**：
@@ -51,7 +51,7 @@ add_documents(documents: List[Document], **kwargs: Any) -> List[str]
 
 **参数**：
 
-* **documents**(List[Document])：文档列表。默认值：无。
+* **documents**(List[Document])：文档列表。
 * **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。
 
 **返回**：
@@ -68,7 +68,7 @@ retrieve(query: str, config: Optional[RetrievalConfig] = None, **kwargs: Any) ->
 
 **参数**：
 
-* **query**(str)：查询字符串。默认值：无。
+* **query**(str)：查询字符串。
 * **config**(RetrievalConfig, 可选)：检索配置。默认值：None。
 * **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。
 
@@ -86,7 +86,7 @@ delete_documents(doc_ids: List[str], **kwargs: Any) -> bool
 
 **参数**：
 
-* **doc_ids**(List[str])：文档ID列表。默认值：无。
+* **doc_ids**(List[str])：文档ID列表。
 * **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。
 
 **返回**：
@@ -103,7 +103,7 @@ update_documents(documents: List[Document], **kwargs: Any) -> List[str]
 
 **参数**：
 
-* **documents**(List[Document])：文档列表。默认值：无。
+* **documents**(List[Document])：文档列表。
 * **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。
 
 **返回**：
@@ -121,6 +121,22 @@ get_statistics() -> Dict[str, Any]
 **返回**：
 
 **Dict[str, Any]**，返回知识库的统计信息字典。
+
+### async delete_collection
+
+```python
+delete_collection(collection: str) -> None
+```
+
+删除当前数据库中的集合。
+
+**参数**：
+
+* **collection**(str)：要删除的集合名称。
+
+**异常**：
+
+* **JiuWenBaseException**：当 vector_store 未设置时抛出。
 
 ### async close
 

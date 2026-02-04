@@ -14,7 +14,7 @@ parse(doc: str, doc_id: str = "", **kwargs: Any) -> List[Document]
 
 **参数**：
 
-* **doc**(str)：文档源（文件路径、URL等）。默认值：无。
+* **doc**(str)：文档源（文件路径、URL等）。
 * **doc_id**(str)：文档ID。默认值：""。
 * **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。
 
@@ -32,7 +32,7 @@ lazy_parse(doc: str, doc_id: str = "", **kwargs: Any) -> AsyncIterator[Document]
 
 **参数**：
 
-* **doc**(str)：文档源（文件路径、URL等）。默认值：无。
+* **doc**(str)：文档源（文件路径、URL等）。
 * **doc_id**(str)：文档ID。默认值：""。
 * **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。
 
@@ -50,7 +50,7 @@ supports(doc: str) -> bool
 
 **参数**：
 
-* **doc**(str)：文档源。默认值：无。
+* **doc**(str)：文档源。
 
 **返回**：
 

@@ -4,10 +4,9 @@
 
 基于字符长度的固定大小分块器。
 
-### __init__
 
 ```python
-__init__(chunk_size: int = 512, chunk_overlap: int = 50, **kwargs: Any)
+CharChunker(chunk_size: int = 512, chunk_overlap: int = 50, **kwargs: Any)
 ```
 
 初始化固定大小分块器。
@@ -28,7 +27,7 @@ chunk_text(text: str) -> List[str]
 
 **参数**：
 
-* **text**(str)：待分块的文本。默认值：无。
+* **text**(str)：待分块的文本。
 
 **返回**：
 

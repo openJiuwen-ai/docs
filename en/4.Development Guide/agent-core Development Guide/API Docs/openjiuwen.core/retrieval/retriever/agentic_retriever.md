@@ -4,7 +4,6 @@
 
 Agentic retriever that adds LLM query rewriting and multi-round fusion capabilities on top of graph retrieval, improving retrieval effectiveness through multi-round retrieval and query optimization.
 
-### __init__
 
 ```python
 __init__(graph_retriever: GraphRetriever, llm_client: Any, llm_model_name: Optional[str] = None, max_iter: int = 2, agent_topk: int = 15)
@@ -14,8 +13,8 @@ Initialize agentic retriever.
 
 **Parameters**:
 
-* **graph_retriever**(GraphRetriever): Graph retriever instance. Default: None.
-* **llm_client**(Any): LLM client instance (for query rewriting). Default: None.
+* **graph_retriever**(GraphRetriever): Graph retriever instance.
+* **llm_client**(Any): LLM client instance (for query rewriting).
 * **llm_model_name**(str, optional): LLM model name. Default: None.
 * **max_iter**(int): Maximum number of iterations. Default: 2.
 * **agent_topk**(int): Number of results to return per round of retrieval. Default: 15.
@@ -30,7 +29,7 @@ Retrieve documents (agentic retrieval), optimizing retrieval effectiveness throu
 
 **Parameters**:
 
-* **query**(str): Query string. Default: None.
+* **query**(str): Query string.
 * **top_k**(int): Final number of results to return. Default: 5.
 * **score_threshold**(float, optional): Score threshold. Default: None.
 * **mode**(Literal["vector", "sparse", "hybrid"], optional): Retrieval mode (will be automatically selected based on index_type if not provided). Default: None.
@@ -77,7 +76,7 @@ Batch retrieval, concurrently executing multiple queries.
 
 **Parameters**:
 
-* **queries**(List[str]): List of query strings. Default: None.
+* **queries**(List[str]): List of query strings.
 * **top_k**(int): Number of results to return for each query. Default: 5.
 * **kwargs**(Any): Variable arguments for passing additional configuration parameters.
 

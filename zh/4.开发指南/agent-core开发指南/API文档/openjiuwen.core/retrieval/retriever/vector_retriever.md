@@ -4,17 +4,16 @@
 
 基于向量存储的检索器实现，使用向量相似度进行检索。
 
-### __init__
 
 ```python
-__init__(vector_store: VectorStore, embed_model: Optional[Embedding] = None, **kwargs: Any)
+VectorRetriever(vector_store: VectorStore, embed_model: Optional[Embedding] = None, **kwargs: Any)
 ```
 
 初始化向量检索器。
 
 **参数**：
 
-* **vector_store**(VectorStore)：向量存储实例。默认值：无。
+* **vector_store**(VectorStore)：向量存储实例。
 * **embed_model**(Embedding, 可选)：嵌入模型实例（向量检索必需）。默认值：None。
 * **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。
 
@@ -28,7 +27,7 @@ retrieve(query: str, top_k: int = 5, score_threshold: Optional[float] = None, mo
 
 **参数**：
 
-* **query**(str)：查询字符串。默认值：无。
+* **query**(str)：查询字符串。
 * **top_k**(int)：返回结果数量。默认值：5。
 * **score_threshold**(float, 可选)：得分阈值，低于此阈值的结果将被过滤。默认值：None。
 * **mode**(Literal["vector", "sparse", "hybrid"])：检索模式（仅支持vector）。默认值："vector"。
@@ -72,7 +71,7 @@ batch_retrieve(queries: List[str], top_k: int = 5, **kwargs: Any) -> List[List[R
 
 **参数**：
 
-* **queries**(List[str])：查询字符串列表。默认值：无。
+* **queries**(List[str])：查询字符串列表。
 * **top_k**(int)：每个查询返回的结果数量。默认值：5。
 * **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。
 
@@ -90,7 +89,7 @@ retrieve_search_results(query: str, top_k: int = 5, mode: Literal["vector", "spa
 
 **参数**：
 
-* **query**(str)：查询字符串。默认值：无。
+* **query**(str)：查询字符串。
 * **top_k**(int)：返回结果数量。默认值：5。
 * **mode**(Literal["vector", "sparse", "hybrid"])：检索模式，vector=向量检索，sparse=稀疏检索/BM25，hybrid=混合检索。默认值："vector"。
 * **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。

@@ -4,17 +4,16 @@
 
 Hybrid retriever implementation that combines vector retrieval and sparse retrieval (BM25), using RRF (Reciprocal Rank Fusion) algorithm to fuse results.
 
-### __init__
 
 ```python
-__init__(vector_store: VectorStore, embed_model: Optional[Embedding] = None, alpha: float = 0.5, **kwargs: Any)
+HybridRetriever(vector_store: VectorStore, embed_model: Optional[Embedding] = None, alpha: float = 0.5, **kwargs: Any)
 ```
 
 Initialize hybrid retriever.
 
 **Parameters**:
 
-* **vector_store**(VectorStore): Vector store instance. Default: None.
+* **vector_store**(VectorStore): Vector store instance.
 * **embed_model**(Embedding, optional): Embedding model instance (required for vector retrieval). Default: None.
 * **alpha**(float): Hybrid weight (0=pure sparse retrieval, 1=pure vector retrieval, 0.5=balanced). Default: 0.5.
 * **kwargs**(Any): Variable arguments for passing additional configuration parameters.
@@ -29,11 +28,11 @@ Retrieve documents (hybrid retrieval).
 
 **Parameters**:
 
-* **query**(str): Query string. Default: None.
+* **query**(str): Query string.
 * **top_k**(int): Number of results to return. Default: 5.
 * **score_threshold**(float, optional): Score threshold (only supports vector mode). Default: None.
 * **mode**(Literal["vector", "sparse", "hybrid"]): Retrieval mode, supports hybrid, vector, and sparse. Default: "hybrid".
-* **kwargs**(Any): Variable arguments that may include alpha parameter to override default hybrid weight. Default: None.
+* **kwargs**(Any): Variable arguments that may include alpha parameter to override default hybrid weight.
 
 **Returns**:
 
@@ -73,7 +72,7 @@ Batch retrieval, concurrently executing multiple queries.
 
 **Parameters**:
 
-* **queries**(List[str]): List of query strings. Default: None.
+* **queries**(List[str]): List of query strings.
 * **top_k**(int): Number of results to return for each query. Default: 5.
 * **kwargs**(Any): Variable arguments for passing additional configuration parameters.
 
@@ -91,7 +90,7 @@ Retrieve documents.
 
 **Parameters**:
 
-* **query**(str): Query string. Default: None.
+* **query**(str): Query string.
 * **top_k**(int): Number of results to return. Default: 5.
 * **mode**(Literal["vector", "sparse", "hybrid"]): Retrieval mode, vector=vector retrieval, sparse=sparse retrieval/BM25, hybrid=hybrid retrieval. Default: "hybrid".
 * **kwargs**(Any): Variable arguments for passing additional configuration parameters.

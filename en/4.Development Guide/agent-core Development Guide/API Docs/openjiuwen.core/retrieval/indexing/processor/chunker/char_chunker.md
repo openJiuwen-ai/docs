@@ -4,10 +4,9 @@
 
 Fixed size chunker based on character length.
 
-### __init__
 
 ```python
-__init__(chunk_size: int = 512, chunk_overlap: int = 50, **kwargs: Any)
+CharChunker(chunk_size: int = 512, chunk_overlap: int = 50, **kwargs: Any)
 ```
 
 Initialize fixed size chunker.
@@ -28,7 +27,7 @@ Chunk text.
 
 **Parameters**:
 
-* **text**(str): Text to be chunked. Default: None.
+* **text**(str): Text to be chunked.
 
 **Returns**:
 

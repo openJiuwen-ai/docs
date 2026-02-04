@@ -4,10 +4,9 @@
 
 Configuration manager for unified configuration management, supports loading and saving from files.
 
-### __init__
 
 ```python
-__init__(config_path: Optional[str] = None)
+ConfigManager(config_path: Optional[str] = None)
 ```
 
 Initialize configuration manager.
@@ -26,7 +25,7 @@ Load configuration from file (supports JSON and YAML formats).
 
 **Parameters**:
 
-* **path**(str): Configuration file path. Default: None.
+* **path**(str): Configuration file path.
 
 **Exceptions**:
 
@@ -44,7 +43,7 @@ Save configuration to file (supports JSON and YAML formats).
 
 **Parameters**:
 
-* **path**(str): Configuration file path. Default: None.
+* **path**(str): Configuration file path.
 
 **Exceptions**:
 
@@ -94,5 +93,5 @@ Update configuration.
 
 **Parameters**:
 
-* **config**(BaseModel): Configuration object. Default: None.
+* **config**(BaseModel): Configuration object.
 

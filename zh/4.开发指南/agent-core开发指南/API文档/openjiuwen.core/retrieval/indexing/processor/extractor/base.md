@@ -14,7 +14,7 @@ extract(chunks: List[TextChunk], **kwargs: Any) -> List[Triple]
 
 **参数**：
 
-* **chunks**(List[TextChunk])：文本分块列表。默认值：无。
+* **chunks**(List[TextChunk])：文本分块列表。
 * **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。
 
 **返回**：

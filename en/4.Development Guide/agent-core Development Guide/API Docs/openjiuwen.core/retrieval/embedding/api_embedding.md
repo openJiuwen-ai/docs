@@ -4,17 +4,16 @@
 
 API embedding model implementation, supporting multiple API formats.
 
-### __init__
 
 ```python
-__init__(config: EmbeddingConfig, timeout: int = 60, max_retries: int = 3, extra_headers: Optional[dict] = None, max_batch_size: int = 8)
+APIEmbedding(config: EmbeddingConfig, timeout: int = 60, max_retries: int = 3, extra_headers: Optional[dict] = None, max_batch_size: int = 8)
 ```
 
 Initialize API embedding model.
 
 **Parameters**:
 
-* **config**(EmbeddingConfig): Embedding model configuration. Default: None.
+* **config**(EmbeddingConfig): Embedding model configuration.
 * **timeout**(int): Request timeout (seconds). Default: 60.
 * **max_retries**(int): Maximum number of retries. Default: 3.
 * **extra_headers**(dict, optional): Additional request headers. Default: None.
@@ -49,7 +48,7 @@ Get the embedding vector of text (async).
 
 **Parameters**:
 
-* **text**(str): Query text. Default: None.
+* **text**(str): Query text.
 * **kwargs**(Any): Variable arguments for passing additional configuration parameters.
 
 **Returns**:
@@ -70,7 +69,7 @@ Get the embedding vector of text (sync).
 
 **Parameters**:
 
-* **text**(str): Query text. Default: None.
+* **text**(str): Query text.
 * **kwargs**(Any): Variable arguments for passing additional configuration parameters.
 
 **Returns**:
@@ -91,7 +90,7 @@ Get embedding vectors for a list of documents (async).
 
 **Parameters**:
 
-* **texts**(List[str]): List of document texts. Default: None.
+* **texts**(List[str]): List of document texts.
 * **batch_size**(int, optional): Batch size. Default: None (uses max_batch_size).
 * **kwargs**(Any): Variable arguments for passing additional configuration parameters.
 
@@ -109,7 +108,7 @@ Get embedding vectors for a list of documents (sync).
 
 **Parameters**:
 
-* **texts**(List[str]): List of document texts. Default: None.
+* **texts**(List[str]): List of document texts.
 * **batch_size**(int, optional): Batch size. Default: None (uses max_batch_size).
 * **kwargs**(Any): Variable arguments for passing additional configuration parameters.
 

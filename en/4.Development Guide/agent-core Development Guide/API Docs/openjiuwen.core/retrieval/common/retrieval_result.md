@@ -6,9 +6,9 @@ Search result data model, representing search results returned by vector stores.
 
 **Parameters**:
 
-* **id**(str): Result ID. Default: None.
-* **text**(str): Text content. Default: None.
-* **score**(float): Relevance score. Default: None.
+* **id**(str): Result ID.
+* **text**(str): Text content.
+* **score**(float): Relevance score.
 * **metadata**(Dict[str, Any]): Metadata. Default: {}.
 
 ## class openjiuwen.core.retrieval.common.retrieval_result.RetrievalResult
@@ -17,8 +17,8 @@ Retrieval result data model, representing retrieval results returned by retrieve
 
 **Parameters**:
 
-* **text**(str): Text content. Default: None.
-* **score**(float): Relevance score. Default: None.
+* **text**(str): Text content.
+* **score**(float): Relevance score.
 * **metadata**(Dict[str, Any]): Metadata. Default: {}.
 * **doc_id**(str, optional): Document ID. Default: None.
 * **chunk_id**(str, optional): Text chunk ID. Default: None.

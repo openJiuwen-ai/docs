@@ -6,9 +6,9 @@
 
 **参数**：
 
-* **subject**(str)：主体。默认值：无。
-* **predicate**(str)：谓词。默认值：无。
-* **object**(str)：客体。默认值：无。
+* **subject**(str)：主体。
+* **predicate**(str)：谓词。
+* **object**(str)：客体。
 * **confidence**(float, 可选)：置信度。默认值：None。
 * **metadata**(Dict[str, Any])：元数据。默认值：{}。
 

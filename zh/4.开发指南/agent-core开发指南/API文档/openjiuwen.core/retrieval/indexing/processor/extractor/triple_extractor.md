@@ -4,18 +4,17 @@
 
 三元组提取器实现，使用LLM进行OpenIE三元组提取。
 
-### __init__
 
 ```python
-__init__(llm_client: Any, model_name: str, temperature: float = 0.0, max_concurrent: int = 50, **kwargs: Any)
+TripleExtractor(llm_client: Any, model_name: str, temperature: float = 0.0, max_concurrent: int = 50, **kwargs: Any)
 ```
 
 初始化三元组提取器。
 
 **参数**：
 
-* **llm_client**(Any)：LLM客户端实例。默认值：无。
-* **model_name**(str)：模型名称。默认值：无。
+* **llm_client**(Any)：LLM客户端实例。
+* **model_name**(str)：模型名称。
 * **temperature**(float)：温度参数。默认值：0.0。
 * **max_concurrent**(int)：最大并发数，默认值：50。默认值：50。
 * **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。
@@ -30,7 +29,7 @@ extract(chunks: List[TextChunk], **kwargs: Any) -> List[Triple]
 
 **参数**：
 
-* **chunks**(List[TextChunk])：文本分块列表。默认值：无。
+* **chunks**(List[TextChunk])：文本分块列表。
 * **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。
 
 **返回**：

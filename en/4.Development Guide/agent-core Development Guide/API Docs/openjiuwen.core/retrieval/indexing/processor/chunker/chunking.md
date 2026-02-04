@@ -4,10 +4,9 @@
 
 Text chunker that supports character-based or token-based chunking, and can configure text preprocessing options.
 
-### __init__
 
 ```python
-__init__(chunk_size: int = 512, chunk_overlap: int = 50, chunk_unit: str = "char", embed_model: Optional[Any] = None, preprocess_options: Optional[Dict] = None, **kwargs: Any)
+TextChunker(chunk_size: int = 512, chunk_overlap: int = 50, chunk_unit: str = "char", embed_model: Optional[Any] = None, preprocess_options: Optional[Dict] = None, **kwargs: Any)
 ```
 
 Initialize text chunker.
@@ -31,7 +30,7 @@ Chunk document list.
 
 **Parameters**:
 
-* **documents**(List[Document]): Document list. Default: None.
+* **documents**(List[Document]): Document list.
 
 **Returns**:
 

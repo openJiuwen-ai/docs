@@ -14,7 +14,7 @@ add(data: dict | List[dict], batch_size: int | None = 128, **kwargs: Any) -> Non
 
 **参数**：
 
-* **data**(dict | List[dict])：向量数据，可以是单个字典或字典列表。默认值：无。
+* **data**(dict | List[dict])：向量数据，可以是单个字典或字典列表。
 * **batch_size**(int, 可选)：批处理大小。默认值：128。
 * **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。
 
@@ -28,7 +28,7 @@ search(query_vector: List[float], top_k: int = 5, filters: Optional[dict] = None
 
 **参数**：
 
-* **query_vector**(List[float])：查询向量。默认值：无。
+* **query_vector**(List[float])：查询向量。
 * **top_k**(int)：返回结果数量。默认值：5。
 * **filters**(dict, 可选)：元数据过滤条件。默认值：None。
 * **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。
@@ -47,7 +47,7 @@ sparse_search(query_text: str, top_k: int = 5, filters: Optional[dict] = None, *
 
 **参数**：
 
-* **query_text**(str)：查询文本。默认值：无。
+* **query_text**(str)：查询文本。
 * **top_k**(int)：返回结果数量。默认值：5。
 * **filters**(dict, 可选)：元数据过滤条件。默认值：None。
 * **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。
@@ -66,7 +66,7 @@ hybrid_search(query_text: str, query_vector: Optional[List[float]] = None, top_k
 
 **参数**：
 
-* **query_text**(str)：查询文本。默认值：无。
+* **query_text**(str)：查询文本。
 * **query_vector**(List[float], 可选)：查询向量（如果提供将直接使用，否则需要先嵌入）。默认值：None。
 * **top_k**(int)：返回结果数量。默认值：5。
 * **alpha**(float)：混合权重（0=纯稀疏检索，1=纯向量检索，0.5=平衡）。默认值：0.5。

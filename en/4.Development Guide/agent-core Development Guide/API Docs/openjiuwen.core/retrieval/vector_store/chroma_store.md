@@ -4,18 +4,19 @@
 
 ChromaDB vector store implementation, supporting vector search, sparse search (text matching), and hybrid search.
 
-### __init__
+> **Reference**: Vector database similarity score calculation: [VectorStoreScoring](https://gitcode.com/SushiNinja/VectorStoreScoring).
+
 
 ```python
-__init__(config: VectorStoreConfig, chroma_path: str, text_field: str = "content", vector_field: str = "embedding", sparse_vector_field: str = "sparse_vector", metadata_field: str = "metadata", doc_id_field: str = "document_id", **kwargs: Any)
+ChromaVectorStore(config: VectorStoreConfig, chroma_path: str, text_field: str = "content", vector_field: str = "embedding", sparse_vector_field: str = "sparse_vector", metadata_field: str = "metadata", doc_id_field: str = "document_id", **kwargs: Any)
 ```
 
 Initialize ChromaDB vector store (persistent mode).
 
 **Parameters**:
 
-* **config**(VectorStoreConfig): Vector store configuration. Default: None.
-* **chroma_path**(str): ChromaDB persistence path (required). Default: None.
+* **config**(VectorStoreConfig): Vector store configuration.
+* **chroma_path**(str): ChromaDB persistence path (required).
 * **text_field**(str): Text field name. Default: "content".
 * **vector_field**(str): Vector field name. Default: "embedding".
 * **sparse_vector_field**(str): Sparse vector field name (stored as metadata in ChromaDB). Default: "sparse_vector".
@@ -61,7 +62,7 @@ Add vector data.
 
 **Parameters**:
 
-* **data**(dict | List[dict]): Vector data, can be a single dictionary or a list of dictionaries. Default: None.
+* **data**(dict | List[dict]): Vector data, can be a single dictionary or a list of dictionaries.
 * **batch_size**(int, optional): Batch size. Default: 128.
 * **kwargs**(Any): Variable arguments for passing additional configuration parameters.
 
@@ -75,7 +76,7 @@ Vector search.
 
 **Parameters**:
 
-* **query_vector**(List[float]): Query vector. Default: None.
+* **query_vector**(List[float]): Query vector.
 * **top_k**(int): Number of results to return. Default: 5.
 * **filters**(dict, optional): Metadata filter conditions. Default: None.
 * **kwargs**(Any): Variable arguments for passing additional configuration parameters.
@@ -94,7 +95,7 @@ Sparse search (text matching).
 
 **Parameters**:
 
-* **query_text**(str): Query text. Default: None.
+* **query_text**(str): Query text.
 * **top_k**(int): Number of results to return. Default: 5.
 * **filters**(dict, optional): Metadata filter conditions. Default: None.
 * **kwargs**(Any): Variable arguments for passing additional configuration parameters.
@@ -113,7 +114,7 @@ Hybrid search (sparse retrieval + vector retrieval), using RRF algorithm to fuse
 
 **Parameters**:
 
-* **query_text**(str): Query text. Default: None.
+* **query_text**(str): Query text.
 * **query_vector**(List[float], optional): Query vector (will be used directly if provided, otherwise needs to be embedded first). Default: None.
 * **top_k**(int): Number of results to return. Default: 5.
 * **alpha**(float): Hybrid weight (0=pure sparse retrieval, 1=pure vector retrieval, 0.5=balanced). Default: 0.5.

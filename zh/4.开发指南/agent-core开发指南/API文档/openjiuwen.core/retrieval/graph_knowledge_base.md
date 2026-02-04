@@ -4,17 +4,16 @@
 
 图增强知识库实现，支持图索引和检索，可以从文档中提取三元组并构建图索引，支持基于图的检索扩展。
 
-### __init__
 
 ```python
-__init__(config: KnowledgeBaseConfig, vector_store: Optional[VectorStore] = None, embed_model: Optional[Embedding] = None, parser: Optional[Parser] = None, chunker: Optional[Chunker] = None, extractor: Optional[Extractor] = None, index_manager: Optional[Indexer] = None, chunk_retriever: Optional[Retriever] = None, triple_retriever: Optional[Retriever] = None, llm_client: Optional[Any] = None, llm_model_name: Optional[Any] = None, **kwargs: Any)
+GraphKnowledgeBase(config: KnowledgeBaseConfig, vector_store: Optional[VectorStore] = None, embed_model: Optional[Embedding] = None, parser: Optional[Parser] = None, chunker: Optional[Chunker] = None, extractor: Optional[Extractor] = None, index_manager: Optional[Indexer] = None, chunk_retriever: Optional[Retriever] = None, triple_retriever: Optional[Retriever] = None, llm_client: Optional[Any] = None, llm_model_name: Optional[Any] = None, **kwargs: Any)
 ```
 
 初始化图知识库。
 
 **参数**：
 
-* **config**(KnowledgeBaseConfig)：知识库配置，use_graph=True时启用图索引。默认值：无。
+* **config**(KnowledgeBaseConfig)：知识库配置，use_graph=True时启用图索引。
 * **vector_store**(VectorStore, 可选)：向量存储实例。默认值：None。
 * **embed_model**(Embedding, 可选)：嵌入模型实例。默认值：None。
 * **parser**(Parser, 可选)：文档解析器实例。默认值：None。
@@ -37,8 +36,8 @@ parse_files(file_paths: List[str], **kwargs: Any) -> List[Document]
 
 **参数**：
 
-* **file_paths**(List[str])：文件路径列表。默认值：无。
-* **kwargs**(Any)：可变参数，可包含file_name和file_id参数。默认值：无。
+* **file_paths**(List[str])：文件路径列表。
+* **kwargs**(Any)：可变参数，可包含file_name和file_id参数。
 
 **返回**：
 
@@ -54,8 +53,8 @@ add_documents(documents: List[Document], **kwargs: Any) -> List[str]
 
 **参数**：
 
-* **documents**(List[Document])：文档列表。默认值：无。
-* **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。默认值：无。
+* **documents**(List[Document])：文档列表。
+* **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。
 
 **返回**：
 
@@ -90,9 +89,9 @@ retrieve(query: str, config: Optional[RetrievalConfig] = None, **kwargs: Any) ->
 
 **参数**：
 
-* **query**(str)：查询字符串。默认值：无。
+* **query**(str)：查询字符串。
 * **config**(RetrievalConfig, 可选)：检索配置，use_graph=True启用图检索，graph_expansion=True启用图扩展。默认值：None。
-* **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。默认值：无。
+* **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。
 
 **返回**：
 
@@ -126,8 +125,8 @@ delete_documents(doc_ids: List[str], **kwargs: Any) -> bool
 
 **参数**：
 
-* **doc_ids**(List[str])：文档ID列表。默认值：无。
-* **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。默认值：无。
+* **doc_ids**(List[str])：文档ID列表。
+* **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。
 
 **返回**：
 
@@ -143,8 +142,8 @@ update_documents(documents: List[Document], **kwargs: Any) -> List[str]
 
 **参数**：
 
-* **documents**(List[Document])：文档列表。默认值：无。
-* **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。默认值：无。
+* **documents**(List[Document])：文档列表。
+* **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。
 
 **返回**：
 
@@ -180,8 +179,8 @@ retrieve_multi_graph_kb(kbs: List[KnowledgeBase], query: str, config: Optional[R
 
 **参数**：
 
-* **kbs**(List[KnowledgeBase])：知识库列表。默认值：无。
-* **query**(str)：查询字符串。默认值：无。
+* **kbs**(List[KnowledgeBase])：知识库列表。
+* **query**(str)：查询字符串。
 * **config**(RetrievalConfig, 可选)：检索配置。默认值：None。
 * **top_k**(int, 可选)：返回结果数量。默认值：None。
 
@@ -199,8 +198,8 @@ retrieve_multi_graph_kb_with_source(kbs: List[KnowledgeBase], query: str, config
 
 **参数**：
 
-* **kbs**(List[KnowledgeBase])：知识库列表。默认值：无。
-* **query**(str)：查询字符串。默认值：无。
+* **kbs**(List[KnowledgeBase])：知识库列表。
+* **query**(str)：查询字符串。
 * **config**(RetrievalConfig, 可选)：检索配置。默认值：None。
 * **top_k**(int, 可选)：返回结果数量。默认值：None。
 

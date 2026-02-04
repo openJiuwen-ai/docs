@@ -6,7 +6,7 @@
 
 **参数**：
 
-* **kb_id**(str)：知识库标识符。默认值：无。
+* **kb_id**(str)：知识库标识符。
 * **index_type**(Literal["hybrid", "bm25", "vector"])：索引类型，hybrid=混合索引，bm25=BM25索引，vector=向量索引。默认值："hybrid"。
 * **use_graph**(bool)：是否使用图索引。默认值：False。
 * **chunk_size**(int)：分块大小。默认值：512。
@@ -31,7 +31,7 @@
 
 **参数**：
 
-* **index_name**(str)：索引名称。默认值：无。
+* **index_name**(str)：索引名称。
 * **index_type**(Literal["hybrid", "bm25", "vector"])：索引类型。默认值："hybrid"。
 
 ## class openjiuwen.core.retrieval.common.config.VectorStoreConfig
@@ -40,7 +40,7 @@
 
 **参数**：
 
-* **collection_name**(str)：集合名称。默认值：无。
+* **collection_name**(str)：集合名称。
 * **distance_metric**(Literal["cosine", "euclidean", "dot"])：距离度量方式，cosine=余弦距离，euclidean=欧氏距离，dot=点积。默认值："cosine"。
 
 ## class openjiuwen.core.retrieval.common.config.EmbeddingConfig
@@ -49,7 +49,7 @@
 
 **参数**：
 
-* **model_name**(str)：模型名称。默认值：无。
+* **model_name**(str)：模型名称。
 * **base_url**(str)：API基础URL。默认值：None。
 * **api_key**(str, 可选)：API密钥。默认值：None。
 

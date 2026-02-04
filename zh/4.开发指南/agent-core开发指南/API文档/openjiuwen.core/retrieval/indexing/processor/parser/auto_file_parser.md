@@ -4,10 +4,9 @@
 
 自动文件解析器，使用插件架构，根据文件格式自动选择合适的解析器。支持通过@register_parser装饰器注册新的解析器。
 
-### __init__
 
 ```python
-__init__(**kwargs: Any)
+AutoFileParser(**kwargs: Any)
 ```
 
 初始化自动文件解析器。
@@ -26,7 +25,7 @@ parse(doc: str, doc_id: str = "", **kwargs: Any) -> List[Document]
 
 **参数**：
 
-* **doc**(str)：文件路径。默认值：无。
+* **doc**(str)：文件路径。
 * **doc_id**(str)：文档ID。默认值：""。
 * **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。
 
@@ -49,7 +48,7 @@ register_parser(file_extensions: List[str])
 
 **参数**：
 
-* **file_extensions**(List[str])：支持的文件扩展名列表，例如[".pdf", ".PDF"]。默认值：无。
+* **file_extensions**(List[str])：支持的文件扩展名列表，例如[".pdf", ".PDF"]。
 
 **返回**：
 

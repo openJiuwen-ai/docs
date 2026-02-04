@@ -4,10 +4,9 @@
 
 Text chunker abstract base class, inherits from Processor, provides text chunking interface.
 
-### __init__
 
 ```python
-__init__(chunk_size: int = 512, chunk_overlap: int = 50, length_function: Optional[Callable[[str], int]] = None, **kwargs: Any)
+Chunker(chunk_size: int = 512, chunk_overlap: int = 50, length_function: Optional[Callable[[str], int]] = None, **kwargs: Any)
 ```
 
 Initialize text chunker.
@@ -33,7 +32,7 @@ Chunk text.
 
 **Parameters**:
 
-* **text**(str): Text to be chunked. Default: None.
+* **text**(str): Text to be chunked.
 
 **Returns**:
 
@@ -49,7 +48,7 @@ Chunk document list.
 
 **Parameters**:
 
-* **documents**(List[Document]): Document list. Default: None.
+* **documents**(List[Document]): Document list.
 
 **Returns**:
 

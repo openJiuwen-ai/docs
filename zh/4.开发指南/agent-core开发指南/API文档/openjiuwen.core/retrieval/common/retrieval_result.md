@@ -6,9 +6,9 @@
 
 **参数**：
 
-* **id**(str)：结果ID。默认值：无。
-* **text**(str)：文本内容。默认值：无。
-* **score**(float)：相关性得分。默认值：无。
+* **id**(str)：结果ID。
+* **text**(str)：文本内容。
+* **score**(float)：相关性得分。
 * **metadata**(Dict[str, Any])：元数据。默认值：{}。
 
 ## class openjiuwen.core.retrieval.common.retrieval_result.RetrievalResult
@@ -17,8 +17,8 @@
 
 **参数**：
 
-* **text**(str)：文本内容。默认值：无。
-* **score**(float)：相关性得分。默认值：无。
+* **text**(str)：文本内容。
+* **score**(float)：相关性得分。
 * **metadata**(Dict[str, Any])：元数据。默认值：{}。
 * **doc_id**(str, 可选)：文档ID。默认值：None。
 * **chunk_id**(str, 可选)：文本块ID。默认值：None。

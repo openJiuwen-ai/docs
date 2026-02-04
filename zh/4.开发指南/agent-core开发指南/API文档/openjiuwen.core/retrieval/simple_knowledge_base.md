@@ -4,17 +4,17 @@
 
 基于向量检索的知识库实现，提供完整的知识库功能，包括文档解析、分块、索引构建和检索。
 
-### __init__
+> **参考实现**：基于 `SimpleKnowledgeBase` 的示例项目。该项目实现了一个持续更新的 PEP（Python Enhancement Proposals）知识库，用于为代码的审视与修复提供风格与规范层面的专业建议。详见 [TomatoReviewer](https://gitcode.com/SushiNinja/TomatoReviewer)。
 
 ```python
-__init__(config: KnowledgeBaseConfig, vector_store: Optional[VectorStore] = None, embed_model: Optional[Embedding] = None, parser: Optional[Parser] = None, chunker: Optional[Chunker] = None, extractor: Optional[Extractor] = None, index_manager: Optional[Indexer] = None, retriever: Optional[Retriever] = None, llm_client: Optional[Any] = None, **kwargs: Any)
+SimpleKnowledgeBase(config: KnowledgeBaseConfig, vector_store: Optional[VectorStore] = None, embed_model: Optional[Embedding] = None, parser: Optional[Parser] = None, chunker: Optional[Chunker] = None, extractor: Optional[Extractor] = None, index_manager: Optional[Indexer] = None, retriever: Optional[Retriever] = None, llm_client: Optional[Any] = None, **kwargs: Any)
 ```
 
 初始化简单知识库。
 
 **参数**：
 
-* **config**(KnowledgeBaseConfig)：知识库配置。默认值：无。
+* **config**(KnowledgeBaseConfig)：知识库配置。
 * **vector_store**(VectorStore, 可选)：向量存储实例。默认值：None。
 * **embed_model**(Embedding, 可选)：嵌入模型实例。默认值：None。
 * **parser**(Parser, 可选)：文档解析器实例。默认值：None。
@@ -35,8 +35,8 @@ parse_files(file_paths: List[str], **kwargs: Any) -> List[Document]
 
 **参数**：
 
-* **file_paths**(List[str])：文件路径列表。默认值：无。
-* **kwargs**(Any)：可变参数，可包含file_name和file_id参数。默认值：无。
+* **file_paths**(List[str])：文件路径列表。
+* **kwargs**(Any)：可变参数，可包含file_name和file_id参数。
 
 **返回**：
 
@@ -70,8 +70,8 @@ add_documents(documents: List[Document], **kwargs: Any) -> List[str]
 
 **参数**：
 
-* **documents**(List[Document])：文档列表。默认值：无。
-* **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。默认值：无。
+* **documents**(List[Document])：文档列表。
+* **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。
 
 **返回**：
 
@@ -108,9 +108,9 @@ retrieve(query: str, config: Optional[RetrievalConfig] = None, **kwargs: Any) ->
 
 **参数**：
 
-* **query**(str)：查询字符串。默认值：无。
+* **query**(str)：查询字符串。
 * **config**(RetrievalConfig, 可选)：检索配置。默认值：None。
-* **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。默认值：无。
+* **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。
 
 **返回**：
 
@@ -143,8 +143,8 @@ delete_documents(doc_ids: List[str], **kwargs: Any) -> bool
 
 **参数**：
 
-* **doc_ids**(List[str])：文档ID列表。默认值：无。
-* **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。默认值：无。
+* **doc_ids**(List[str])：文档ID列表。
+* **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。
 
 **返回**：
 
@@ -160,8 +160,8 @@ update_documents(documents: List[Document], **kwargs: Any) -> List[str]
 
 **参数**：
 
-* **documents**(List[Document])：文档列表。默认值：无。
-* **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。默认值：无。
+* **documents**(List[Document])：文档列表。
+* **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。
 
 **返回**：
 
@@ -189,8 +189,8 @@ retrieve_multi_kb(kbs: List[KnowledgeBase], query: str, config: Optional[Retriev
 
 **参数**：
 
-* **kbs**(List[KnowledgeBase])：知识库列表。默认值：无。
-* **query**(str)：查询字符串。默认值：无。
+* **kbs**(List[KnowledgeBase])：知识库列表。
+* **query**(str)：查询字符串。
 * **config**(RetrievalConfig, 可选)：检索配置。默认值：None。
 * **top_k**(int, 可选)：返回结果数量。默认值：None。
 
@@ -208,8 +208,8 @@ retrieve_multi_kb_with_source(kbs: List[KnowledgeBase], query: str, config: Opti
 
 **参数**：
 
-* **kbs**(List[KnowledgeBase])：知识库列表。默认值：无。
-* **query**(str)：查询字符串。默认值：无。
+* **kbs**(List[KnowledgeBase])：知识库列表。
+* **query**(str)：查询字符串。
 * **config**(RetrievalConfig, 可选)：检索配置。默认值：None。
 * **top_k**(int, 可选)：返回结果数量。默认值：None。
 

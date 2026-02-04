@@ -14,7 +14,7 @@ Get the embedding vector of text.
 
 **Parameters**:
 
-* **text**(str): Query text. Default: None.
+* **text**(str): Query text.
 * **kwargs**(Any): Variable arguments for passing additional configuration parameters.
 
 **Returns**:
@@ -31,7 +31,7 @@ Get embedding vectors for a list of documents.
 
 **Parameters**:
 
-* **texts**(List[str]): List of document texts. Default: None.
+* **texts**(List[str]): List of document texts.
 * **batch_size**(int, optional): Batch size. Default: None.
 * **kwargs**(Any): Variable arguments for passing additional configuration parameters.
 

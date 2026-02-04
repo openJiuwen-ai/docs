@@ -7,7 +7,7 @@
 **参数**：
 
 * **id_**(str)：文档ID，如果未提供将自动生成UUID。默认值：自动生成。
-* **text**(str)：文档文本内容。默认值：无。
+* **text**(str)：文档文本内容。
 * **metadata**(Dict[str, Any])：文档元数据。默认值：{}。
 
 **样例**：
@@ -27,9 +27,9 @@ Document ID: doc1, Text: 这是一个测试文档
 
 **参数**：
 
-* **id_**(str)：文本块ID。默认值：无。
-* **text**(str)：文本块文本内容。默认值：无。
-* **doc_id**(str)：父文档ID。默认值：无。
+* **id_**(str)：文本块ID。
+* **text**(str)：文本块文本内容。
+* **doc_id**(str)：父文档ID。
 * **metadata**(Dict[str, Any])：文本块元数据。默认值：{}。
 * **embedding**(list[float] | None)：文本块嵌入向量。默认值：None。
 
@@ -43,8 +43,8 @@ from_document(doc: Document, chunk_text: str, id_: str = "") -> TextChunk
 
 **参数**：
 
-* **doc**(Document)：文档对象。默认值：无。
-* **chunk_text**(str)：文本块文本内容。默认值：无。
+* **doc**(Document)：文档对象。
+* **chunk_text**(str)：文本块文本内容。
 * **id_**(str)：文本块ID，如果未提供将自动生成UUID。默认值：""。
 
 **返回**：

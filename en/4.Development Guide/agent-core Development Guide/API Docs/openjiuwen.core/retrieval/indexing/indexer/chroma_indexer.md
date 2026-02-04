@@ -4,17 +4,16 @@
 
 ChromaDB index manager implementation, responsible for building, updating, and deleting ChromaDB indexes.
 
-### __init__
 
 ```python
-__init__(chroma_path: str, text_field: str = "content", vector_field: str = "embedding", sparse_vector_field: str = "sparse_vector", metadata_field: str = "metadata", doc_id_field: str = "document_id", **kwargs: Any)
+ChromaIndexer(chroma_path: str, text_field: str = "content", vector_field: str = "embedding", sparse_vector_field: str = "sparse_vector", metadata_field: str = "metadata", doc_id_field: str = "document_id", **kwargs: Any)
 ```
 
 Initialize ChromaDB index manager.
 
 **Parameters**:
 
-* **chroma_path**(str): ChromaDB persistence path (required). Default: None.
+* **chroma_path**(str): ChromaDB persistence path (required).
 * **text_field**(str): Text field name. Default: "content".
 * **vector_field**(str): Vector field name. Default: "embedding".
 * **sparse_vector_field**(str): Sparse vector field name. Default: "sparse_vector".
@@ -48,8 +47,8 @@ Build index.
 
 **Parameters**:
 
-* **chunks**(List[TextChunk]): List of text chunks. Default: None.
-* **config**(IndexConfig): Index configuration. Default: None.
+* **chunks**(List[TextChunk]): List of text chunks.
+* **config**(IndexConfig): Index configuration.
 * **embed_model**(Embedding, optional): Embedding model instance (required for vector index). Default: None.
 * **kwargs**(Any): Variable arguments for passing additional configuration parameters.
 
@@ -67,9 +66,9 @@ Update index.
 
 **Parameters**:
 
-* **chunks**(List[TextChunk]): List of text chunks. Default: None.
-* **doc_id**(str): Document ID. Default: None.
-* **config**(IndexConfig): Index configuration. Default: None.
+* **chunks**(List[TextChunk]): List of text chunks.
+* **doc_id**(str): Document ID.
+* **config**(IndexConfig): Index configuration.
 * **embed_model**(Embedding, optional): Embedding model instance (required for vector index). Default: None.
 * **kwargs**(Any): Variable arguments for passing additional configuration parameters.
 
@@ -87,8 +86,8 @@ Delete index.
 
 **Parameters**:
 
-* **doc_id**(str): Document ID. Default: None.
-* **index_name**(str): Index name. Default: None.
+* **doc_id**(str): Document ID.
+* **index_name**(str): Index name.
 * **kwargs**(Any): Variable arguments for passing additional configuration parameters.
 
 **Returns**:
@@ -105,7 +104,7 @@ Check if index exists.
 
 **Parameters**:
 
-* **index_name**(str): Index name. Default: None.
+* **index_name**(str): Index name.
 
 **Returns**:
 
@@ -121,7 +120,7 @@ Get index information.
 
 **Parameters**:
 
-* **index_name**(str): Index name. Default: None.
+* **index_name**(str): Index name.
 
 **Returns**:
 

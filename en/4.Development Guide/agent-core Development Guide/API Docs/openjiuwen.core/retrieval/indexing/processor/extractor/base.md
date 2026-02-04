@@ -14,7 +14,7 @@ Extract information (e.g., triples).
 
 **Parameters**:
 
-* **chunks**(List[TextChunk]): List of text chunks. Default: None.
+* **chunks**(List[TextChunk]): List of text chunks.
 * **kwargs**(Any): Variable arguments for passing additional configuration parameters.
 
 **Returns**:
