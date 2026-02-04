@@ -61,7 +61,7 @@ add_branch(self, condition: Union[str, Callable[[], bool], Condition], target: U
 >>> 
 >>> 
 >>> class AbsComponent(WorkflowComponent):
-...      async def invoke(self, inputs, session: WorkflowSession, context: ModelContext):
+...      async def invoke(self, inputs, session: Session, context: ModelContext):
 ...          num = inputs["num"]
 ...          if num < 0:
 ...              return {"result": -num}
