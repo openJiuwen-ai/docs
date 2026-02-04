@@ -1,9 +1,9 @@
-# openjiuwen.core.common.logging.manager
+# openjiuwen.core.common.logging
 
 ## class openjiuwen.core.common.logging.manager.LogManager
 
 ```python
-LogManager()
+class openjiuwen.core.common.logging.manager.LogManager
 ```
 
 `LogManager`类统一管理所有日志器，提供了日志器的注册与获取功能。
@@ -115,3 +115,59 @@ classmethod get_logger(cls, log_type: str) - > LoggerProtocol
 >>> logger.info("这是自定义日志器的消息")
 2025-09-29 03:07:04,789 | [CUSTOM] | INFO | 这是自定义日志器的消息
 ```
+
+### set_default_logger_class
+
+```python
+classmethod set_default_logger_class(cls, logger_class: Type[LoggerProtocol]) -> None
+```
+
+设置默认日志器类。
+
+**参数**：
+
+* **logger_class**(Type[LoggerProtocol])：默认日志器类，必须实现`LoggerProtocol`协议。
+
+**返回**：
+
+无返回值。
+
+### initialize
+
+```python
+classmethod initialize(cls) -> None
+```
+
+初始化日志管理器。在异步环境中，通常只在应用启动时调用一次。多次调用时，已初始化的部分会被跳过（幂等操作）。
+
+**返回**：
+
+无返回值。
+
+**异常**：
+
+* **RuntimeError**：如果`LogConfig`不可用时抛出。
+
+### get_all_loggers
+
+```python
+classmethod get_all_loggers(cls) -> Dict[str, LoggerProtocol]
+```
+
+获取所有已注册的日志器。
+
+**返回**：
+
+`Dict[str, LoggerProtocol]`，所有日志器的副本字典，键为日志器id，值为日志器实例。
+
+### reset
+
+```python
+classmethod reset(cls) -> None
+```
+
+重置日志管理器。清除所有日志器和初始化状态。主要用于测试场景。
+
+**返回**：
+
+无返回值。
