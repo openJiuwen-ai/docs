@@ -1,11 +1,11 @@
 # openjiuwen.core.sys_operation.operation_result
 
-`openjiuwen.core.sys_operation.operation_result` 模块定义了系统操作的所有返回结果数据结构。
+`openjiuwen.core.sys_operation.result` 模块定义了系统操作的所有返回结果数据结构。
 
-## class openjiuwen.core.sys_operation.result.base_result.BaseResult
+## class BaseResult
 
 ```python
-class openjiuwen.core.sys_operation.result.base_result.(BaseModel, Generic[T], ABC)
+class openjiuwen.core.sys_operation.result.base_result(BaseModel, Generic[T], ABC)
 ```
 
 所有操作结果的通用泛型基类。
@@ -35,7 +35,7 @@ class openjiuwen.core.sys_operation.result.code_operation_result.ExecuteCodeData
 ## class openjiuwen.core.sys_operation.result.code_operation_result.ExecuteCodeChunkData
 
 ```python
-class openjiuwen.core.sys_operation.result.code_operation_result.ExecuteCodeChunkData(BaseModel)
+class ExecuteCodeChunkData(BaseModel)
 ```
 
 流式执行时的分片数据。
@@ -51,7 +51,7 @@ class openjiuwen.core.sys_operation.result.code_operation_result.ExecuteCodeChun
 ## class openjiuwen.core.sys_operation.result.code_operation_result.ExecuteCodeResult
 
 ```python
-class openjiuwen.core.sys_operation.result.code_operation_result.ExecuteCodeResult(BaseResult[ExecuteCodeData])
+class ExecuteCodeResult(BaseResult[ExecuteCodeData])
 ```
 
 代码执行的最终结果类型。
@@ -59,7 +59,7 @@ class openjiuwen.core.sys_operation.result.code_operation_result.ExecuteCodeResu
 ## class openjiuwen.core.sys_operation.result.code_operation_result.ExecuteCodeStreamResult
 
 ```python
-class openjiuwen.core.sys_operation.result.code_operation_result.ExecuteCodeStreamResult(BaseResult[ExecuteCodeChunkData])
+class ExecuteCodeStreamResult(BaseResult[ExecuteCodeChunkData])
 ```
 
 代码流式执行的结果类型。
@@ -67,7 +67,7 @@ class openjiuwen.core.sys_operation.result.code_operation_result.ExecuteCodeStre
 ## class openjiuwen.core.sys_operation.result.shell_operation_result.ExecuteCmdData
 
 ```python
-class openjiuwen.core.sys_operation.result.shell_operation_result.ExecuteCmdData(BaseModel)
+class ExecuteCmdData(BaseModel)
 ```
 
 Shell 命令执行结果数据。
@@ -83,7 +83,7 @@ Shell 命令执行结果数据。
 ## class openjiuwen.core.sys_operation.result.shell_operation_result.ExecuteCmdChunkData
 
 ```python
-class openjiuwen.core.sys_operation.result.shell_operation_result.ExecuteCmdChunkData(BaseModel)
+class ExecuteCmdChunkData(BaseModel)
 ```
 
 Shell 流式执行分片数据。
@@ -99,7 +99,7 @@ Shell 流式执行分片数据。
 ## class openjiuwen.core.sys_operation.result.shell_operation_result.ExecuteCmdResult
 
 ```python
-class openjiuwen.core.sys_operation.result.shell_operation_result.ExecuteCmdResult(BaseResult[ExecuteCmdData])
+class ExecuteCmdResult(BaseResult[ExecuteCmdData])
 ```
 
 Shell 执行的最终结果类型。
@@ -107,7 +107,7 @@ Shell 执行的最终结果类型。
 ## class openjiuwen.core.sys_operation.result.shell_operation_result.ExecuteCmdStreamResult
 
 ```python
-class openjiuwen.core.sys_operation.result.shell_operation_result.ExecuteCmdStreamResult(BaseResult[ExecuteCmdChunkData])
+class ExecuteCmdStreamResult(BaseResult[ExecuteCmdChunkData])
 ```
 
 Shell 流式执行的结果类型。
@@ -115,7 +115,7 @@ Shell 流式执行的结果类型。
 ## class openjiuwen.core.sys_operation.result.fs_operation_result.FileSystemItem
 
 ```python
-class openjiuwen.core.sys_operation.result.fs_operation_result.FileSystemItem(BaseModel)
+class FileSystemItem(BaseModel)
 ```
 
 文件或目录的基本属性。
@@ -132,7 +132,7 @@ class openjiuwen.core.sys_operation.result.fs_operation_result.FileSystemItem(Ba
 ## class openjiuwen.core.sys_operation.result.fs_operation_result.FileSystemData
 
 ```python
-class openjiuwen.core.sys_operation.result.fs_operation_result.FileSystemData(BaseModel)
+class FileSystemData(BaseModel)
 ```
 
 列出文件或目录的结果数据。
@@ -148,7 +148,7 @@ class openjiuwen.core.sys_operation.result.fs_operation_result.FileSystemData(Ba
 ## class openjiuwen.core.sys_operation.result.fs_operation_result.SearchFilesData
 
 ```python
-class openjiuwen.core.sys_operation.result.fs_operation_result.SearchFilesData(BaseModel)
+class SearchFilesData(BaseModel)
 ```
 
 搜索文件的结果数据。
@@ -164,7 +164,7 @@ class openjiuwen.core.sys_operation.result.fs_operation_result.SearchFilesData(B
 ## class openjiuwen.core.sys_operation.result.fs_operation_result.ReadFileData
 
 ```python
-class openjiuwen.core.sys_operation.result.fs_operation_result.ReadFileData(BaseModel)
+class ReadFileData(BaseModel)
 ```
 
 读取文件数据。
@@ -178,7 +178,7 @@ class openjiuwen.core.sys_operation.result.fs_operation_result.ReadFileData(Base
 ## class openjiuwen.core.sys_operation.result.fs_operation_result.ReadFileChunkData
 
 ```python
-class openjiuwen.core.sys_operation.result.fs_operation_result.ReadFileChunkData(BaseModel)
+class ReadFileChunkData(BaseModel)
 ```
 
 读取文件分片数据。
@@ -195,7 +195,7 @@ class openjiuwen.core.sys_operation.result.fs_operation_result.ReadFileChunkData
 ## class openjiuwen.core.sys_operation.result.fs_operation_result.WriteFileData
 
 ```python
-class openjiuwen.core.sys_operation.result.fs_operation_result.WriteFileData(BaseModel)
+class WriteFileData(BaseModel)
 ```
 
 写入文件数据。
@@ -209,7 +209,7 @@ class openjiuwen.core.sys_operation.result.fs_operation_result.WriteFileData(Bas
 ## class openjiuwen.core.sys_operation.result.fs_operation_result.UploadFileData
 
 ```python
-class openjiuwen.core.sys_operation.result.fs_operation_result.UploadFileData(BaseModel)
+class UploadFileData(BaseModel)
 ```
 
 上传文件数据。
@@ -223,7 +223,7 @@ class openjiuwen.core.sys_operation.result.fs_operation_result.UploadFileData(Ba
 ## class openjiuwen.core.sys_operation.result.fs_operation_result.UploadFileChunkData
 
 ```python
-class openjiuwen.core.sys_operation.result.fs_operation_result.UploadFileChunkData(BaseModel)
+class UploadFileChunkData(BaseModel)
 ```
 
 上传文件分片数据。
@@ -239,7 +239,7 @@ class openjiuwen.core.sys_operation.result.fs_operation_result.UploadFileChunkDa
 ## class openjiuwen.core.sys_operation.result.fs_operation_result.DownloadFileData
 
 ```python
-class openjiuwen.core.sys_operation.result.fs_operation_result.DownloadFileData(BaseModel)
+class DownloadFileData(BaseModel)
 ```
 
 下载文件数据。
@@ -253,7 +253,7 @@ class openjiuwen.core.sys_operation.result.fs_operation_result.DownloadFileData(
 ## class openjiuwen.core.sys_operation.result.fs_operation_result.DownloadFileChunkData
 
 ```python
-class openjiuwen.core.sys_operation.result.fs_operation_result.DownloadFileChunkData(BaseModel)
+class DownloadFileChunkData(BaseModel)
 ```
 
 下载文件分片数据。
@@ -269,7 +269,7 @@ class openjiuwen.core.sys_operation.result.fs_operation_result.DownloadFileChunk
 ## class openjiuwen.core.sys_operation.result.fs_operation_result.ReadFileResult
 
 ```python
-class openjiuwen.core.sys_operation.result.fs_operation_result.ReadFileResult(BaseResult[ReadFileData])
+class ReadFileResult(BaseResult[ReadFileData])
 ```
 
 读取文件结果。
@@ -277,7 +277,7 @@ class openjiuwen.core.sys_operation.result.fs_operation_result.ReadFileResult(Ba
 ## class openjiuwen.core.sys_operation.result.fs_operation_result.ReadFileStreamResult
 
 ```python
-class openjiuwen.core.sys_operation.result.fs_operation_result.ReadFileStreamResult(BaseResult[ReadFileChunkData])
+class ReadFileStreamResult(BaseResult[ReadFileChunkData])
 ```
 
 流式读取文件结果。
@@ -285,7 +285,7 @@ class openjiuwen.core.sys_operation.result.fs_operation_result.ReadFileStreamRes
 ## class openjiuwen.core.sys_operation.result.fs_operation_result.WriteFileResult
 
 ```python
-class openjiuwen.core.sys_operation.result.fs_operation_result.WriteFileResult(BaseResult[WriteFileData])
+class WriteFileResult(BaseResult[WriteFileData])
 ```
 
 写入文件结果。
@@ -293,7 +293,7 @@ class openjiuwen.core.sys_operation.result.fs_operation_result.WriteFileResult(B
 ## class openjiuwen.core.sys_operation.result.fs_operation_result.UploadFileResult
 
 ```python
-class openjiuwen.core.sys_operation.result.fs_operation_result.UploadFileResult(BaseResult[UploadFileData])
+class UploadFileResult(BaseResult[UploadFileData])
 ```
 
 上传文件结果。
@@ -301,7 +301,7 @@ class openjiuwen.core.sys_operation.result.fs_operation_result.UploadFileResult(
 ## class openjiuwen.core.sys_operation.result.fs_operation_result.UploadFileStreamResult
 
 ```python
-class openjiuwen.core.sys_operation.result.fs_operation_result.UploadFileStreamResult(BaseResult[UploadFileChunkData])
+class UploadFileStreamResult(BaseResult[UploadFileChunkData])
 ```
 
 流式上传文件结果。
@@ -309,7 +309,7 @@ class openjiuwen.core.sys_operation.result.fs_operation_result.UploadFileStreamR
 ## class openjiuwen.core.sys_operation.result.fs_operation_result.DownloadFileResult
 
 ```python
-class openjiuwen.core.sys_operation.result.fs_operation_result.DownloadFileResult(BaseResult[DownloadFileData])
+class DownloadFileResult(BaseResult[DownloadFileData])
 ```
 
 下载文件结果。
@@ -317,7 +317,7 @@ class openjiuwen.core.sys_operation.result.fs_operation_result.DownloadFileResul
 ## class openjiuwen.core.sys_operation.result.fs_operation_result.DownloadFileStreamResult
 
 ```python
-class openjiuwen.core.sys_operation.result.fs_operation_result.DownloadFileStreamResult(BaseResult[DownloadFileChunkData])
+class DownloadFileStreamResult(BaseResult[DownloadFileChunkData])
 ```
 
 流式下载文件结果。
@@ -325,7 +325,7 @@ class openjiuwen.core.sys_operation.result.fs_operation_result.DownloadFileStrea
 ## class openjiuwen.core.sys_operation.result.fs_operation_result.ListFilesResult
 
 ```python
-class openjiuwen.core.sys_operation.result.fs_operation_result.ListFilesResult(BaseResult[FileSystemData])
+class ListFilesResult(BaseResult[FileSystemData])
 ```
 
 列出文件结果。
@@ -333,7 +333,7 @@ class openjiuwen.core.sys_operation.result.fs_operation_result.ListFilesResult(B
 ## class openjiuwen.core.sys_operation.result.fs_operation_result.ListDirsResult
 
 ```python
-class openjiuwen.core.sys_operation.result.fs_operation_result.ListDirsResult(BaseResult[FileSystemData])
+class ListDirsResult(BaseResult[FileSystemData])
 ```
 
 列出目录结果。
@@ -341,7 +341,7 @@ class openjiuwen.core.sys_operation.result.fs_operation_result.ListDirsResult(Ba
 ## class openjiuwen.core.sys_operation.result.fs_operation_result.SearchFilesResult
 
 ```python
-class openjiuwen.core.sys_operation.result.fs_operation_result.SearchFilesResult(BaseResult[SearchFilesData])
+class SearchFilesResult(BaseResult[SearchFilesData])
 ```
 
 搜索文件结果。
