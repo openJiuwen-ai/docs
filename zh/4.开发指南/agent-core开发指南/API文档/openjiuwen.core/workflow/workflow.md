@@ -727,7 +727,7 @@ def draw(
 >>> from openjiuwen.core.workflow import Start
 >>> from openjiuwen.core.context_engine.base import ModelContext
 >>> from openjiuwen.core.graph.executable import Output
->>> from openjiuwen.core.session.node import Session
+>>> from openjiuwen.core.workflow.components import Session
 >>> from openjiuwen.core.workflow import Input, Workflow, WorkflowComponent
 >>> 
 >>> 

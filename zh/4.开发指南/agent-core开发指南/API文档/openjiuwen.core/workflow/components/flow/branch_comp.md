@@ -53,8 +53,8 @@ add_branch(condition: Union[str, Callable[[], bool], Condition], target: Union[s
 >>> import os
 >>> from openjiuwen.core.common.exception.exception import JiuWenBaseException
 >>> from openjiuwen.core.context_engine import ModelContext
->>> from openjiuwen.core.session import WorkflowSession
->>> from openjiuwen.core.session.workflow import create_workflow_session
+>>> from openjiuwen.core.workflow.components import Session
+>>> from openjiuwen.core.workflow import create_workflow_session
 >>> from openjiuwen.core.workflow import WorkflowComponent, WorkflowOutput, Workflow, Start, End, BranchRouter, \
 ...     ExpressionCondition
 >>> 

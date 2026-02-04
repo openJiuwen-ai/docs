@@ -24,8 +24,8 @@
 >>> 
 >>> from openjiuwen.core.context_engine import ModelContext
 >>> from openjiuwen.core.workflow import ComponentComposable, BranchRouter, End, Start, Workflow, Input, Output
->>> from openjiuwen.core.session import Session
->>> from openjiuwen.core.session.workflow import create_workflow_session
+>>> from openjiuwen.core.workflow.components import Session
+>>> from openjiuwen.core.workflow import create_workflow_session
 >>> from openjiuwen.core.graph import Graph
 >>> 
 >>> 
@@ -111,8 +111,8 @@
 >>>
 >>> from openjiuwen.core.context_engine import ModelContext 
 >>> from openjiuwen.core.graph.executable import Executable
->>> from openjiuwen.core.session import Session
->>> from openjiuwen.core.session.workflow import create_workflow_session
+>>> from openjiuwen.core.workflow.components import Session
+>>> from openjiuwen.core.workflow import create_workflow_session
 >>> from openjiuwen.core.workflow import ComponentExecutable, End, Input, Output, Start, Workflow, ComponentComposable
 >>> 
 >>> # `CalculateComponent`继承`ComponentComposable`，是用于数学运算的组件，实现`to_executable`方法提供了实现计算逻辑的`ComputeExecutor`实例，实现`add_component`方法将`CalculateComponent`节点添加到工作流中。
