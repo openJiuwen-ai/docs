@@ -30,7 +30,7 @@ MetaTemplateBuilder(model_config: ModelRequestConfig, model_client_config: Model
 ## register_meta_template
 
 ```python
-register_meta_template(name: str, meta_template: str | Template)
+register_meta_template(name: str, meta_template: str | PromptTemplate)
 ```
 
 注册自定义 meta-template。
@@ -42,10 +42,10 @@ register_meta_template(name: str, meta_template: str | Template)
 - **name** (str)：模板名（不含前缀）。
   - 内部会自动加上固定前缀 `META_TEMPLATE_`。
   - 建议用稳定且可读的命名（例如 `my_team_general_v1`）。
-- **meta_template** (str | Template)：模板内容。
-  - 传 `str` 时会自动包装为 `Template(content=...)`。
-  - 传 `Template` 时会 deepcopy 一份，避免外部引用被意外修改。
-  - 只支持 `str` 或 `Template`；其他类型会抛出异常。
+- **meta_template** (str | PromptTemplate)：模板内容。
+  - 传 `str` 时会自动包装为 `PromptTemplate(content=...)`。
+  - 传 `PromptTemplate` 时会 deepcopy 一份，避免外部引用被意外修改。
+  - 只支持 `str` 或 `PromptTemplate`；其他类型会抛出异常。
 
 **异常**：
 
@@ -77,17 +77,17 @@ register_meta_template(name: str, meta_template: str | Template)
 ## build
 
 ```python
-async build(prompt: str | Template, tools: Optional[List[ToolInfo]] = None, template_type: Literal["general", "plan", "other"] = "general", custom_template_name: Optional[str] = None) -> Optional[str]
+async build(prompt: str | PromptTemplate, tools: Optional[List[ToolInfo]] = None, template_type: Literal["general", "plan", "other"] = "general", custom_template_name: Optional[str] = None) -> Optional[str]
 ```
 
 生成/优化提示词文本（非流式）。
 
 **参数**：
 
-- **prompt** (str | [Template](../../../openjiuwen.core/foundation/prompt/template.md#class-prompttemplate)))：原始提示词/任务说明。
-  - 允许传 `Template`，会先转成纯字符串内容再处理。
+- **prompt** (str | [PromptTemplate](../../../openjiuwen.core/foundation/prompt/template.md#class-openjiuwencorefoundationprompttemplateprompttemplate)))：原始提示词/任务说明。
+  - 允许传 `PromptTemplate`，会先转成纯字符串内容再处理。
   - 不能为空且不能是空白字符串，否则会抛出异常。
-- **tools** (List[[ToolInfo](../../../openjiuwen.core/foundation/tool/tool.md#class-openjiuwencorefoundationtoolschematoolinfo)]] | None)：可用工具列表。
+- **tools** (List[ToolInfo] | None)：可用工具列表。
   - 传入后会被写入 meta-template 的 `tools` 字段，帮助模型生成“可正确调用工具”的提示词。
   - 要求每个元素必须是 `ToolInfo`，否则会抛出异常。
 - **template_type**：模板策略。
@@ -138,17 +138,17 @@ async build(prompt: str | Template, tools: Optional[List[ToolInfo]] = None, temp
 ## stream_build
 
 ```python
-async stream_build(prompt: str | Template, tools: Optional[List[ToolInfo]] = None, template_type: Literal["general", "plan", "other"] = "general", custom_template_name: Optional[str] = None) -> AsyncGenerator
+async stream_build(prompt: str | PromptTemplate, tools: Optional[List[ToolInfo]] = None, template_type: Literal["general", "plan", "other"] = "general", custom_template_name: Optional[str] = None) -> AsyncGenerator
 ```
 
 基于用户提供的原始提示词及所选定的元模板，流式生成内容更加丰富、结构更加完整、逻辑更加严谨的提示词。
 
 **参数**：
 
-- **prompt** (str | [Template](../../../openjiuwen.core/foundation/prompt/template.md#class-prompttemplate)))：原始提示词/任务说明。
-  - 允许传 `Template`，会先转成纯字符串内容再处理。
+- **prompt** (str | [PromptTemplate](../../../openjiuwen.core/foundation/prompt/template.md#class-openjiuwencorefoundationprompttemplateprompttemplate)))：原始提示词/任务说明。
+  - 允许传 `PromptTemplate`，会先转成纯字符串内容再处理。
   - 不能为空且不能是空白字符串，否则会抛出异常。
-- **tools** (List[[ToolInfo](../../../openjiuwen.core/foundation/tool/tool.md#class-openjiuwencorefoundationtoolschematoolinfo)]] | None)：可用工具列表。
+- **tools** (List[ToolInfo]] | None)：可用工具列表。
   - 传入后会被写入 meta-template 的 `tools` 字段，帮助模型生成“可正确调用工具”的提示词。
   - 要求每个元素必须是 `ToolInfo`，否则会抛出异常。
 - **template_type**：模板策略。
