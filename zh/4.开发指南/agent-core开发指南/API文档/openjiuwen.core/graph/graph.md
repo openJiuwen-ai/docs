@@ -36,7 +36,7 @@ start_node(self, node_id: str) -> Self
 >>> import random
 >>> 
 >>> from openjiuwen.core.context_engine import ModelContext
->>> from openjiuwen.core.session.node import Session
+>>> from openjiuwen.core.workflow.components import Session
 >>> from openjiuwen.core.workflow import Input, Output, WorkflowComponent
 >>> from openjiuwen.core.graph.base import Graph
 >>> 
@@ -45,7 +45,7 @@ start_node(self, node_id: str) -> Self
 ...         super().__init__()
 ...         self.start_ids:list[str] = start_ids
 ... 
-...     def  add_component(self, graph: Graph, node_id: str, wait_for_all: bool = False) -> None:
+...     def add_component(self, graph: Graph, node_id: str, wait_for_all: bool = False) -> None:
 ...         choose_idx = random.randint(0, len(self.start_ids))
 ...         graph.start_node(self.start_ids[choose_idx])
 ...         graph.add_node(node_id, self.to_executable(), wait_for_all=wait_for_all)
@@ -86,14 +86,13 @@ end_node(self, node_id) -> Self
 >>> import random
 >>> 
 >>> from openjiuwen.core.workflow import WorkflowComponent
->>> from openjiuwen.core.context_engine.base import Context
+>>> from openjiuwen.core.context_engine import ModelContext
 >>> from openjiuwen.core.graph.base import Graph
 >>> from openjiuwen.core.graph.executable import Input, Output, Executable
->>> from openjiuwen.core.session.base import ComponentExecutable
->>> from openjiuwen.core.workflow import Session
+>>> from openjiuwen.core.workflow.components import Session
 >>> 
 >>> 
->>> class DemoCmpWithRandomEnd(WorkflowComponent, ComponentExecutable):
+>>> class DemoCmpWithRandomEnd(WorkflowComponent):
 ...     def __init__(self, end_ids):
 ...         super().__init__()
 ...         self.end_ids:list[str] = end_ids
@@ -103,7 +102,7 @@ end_node(self, node_id) -> Self
 ...         graph.end_node(self.end_ids[choose_idx])
 ...         graph.add_node(node_id, self.to_executable(), wait_for_all=wait_for_all)
 ... 
-...     async def invoke(self, inputs: Input, session: Session, context: Context) -> Output:
+...     async def invoke(self, inputs: Input, session: Session, context: ModelContext) -> Output:
 ...         return inputs
 ... 
 ...     def to_executable(self) -> Executable:
