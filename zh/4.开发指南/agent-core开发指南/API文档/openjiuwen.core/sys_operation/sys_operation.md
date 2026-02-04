@@ -2,6 +2,10 @@
 
 ## class openjiuwen.core.sys_operation.OperationMode
 
+```python
+class OperationMode
+```
+
 定义了系统操作执行过程中不同模式的标识。
 
 **参数**：
@@ -10,6 +14,10 @@
 * **SANDBOX**：表示系统操作在隔离的沙箱环境中执行。
 
 ## class openjiuwen.core.sys_operation.LocalWorkConfig
+
+```python
+class LocalWorkConfig
+```
 
 表示系统操作在本地环境中执行所使用的本地工作环境配置。
 
@@ -21,7 +29,7 @@
 ## class openjiuwen.core.sys_operation.SysOperationCard
 
 ```python
-class openjiuwen.core.sys_operation.SysOperationCard(BaseCard)
+class SysOperationCard()
 ```
 
 系统操作配置卡片。
@@ -35,7 +43,7 @@ class openjiuwen.core.sys_operation.SysOperationCard(BaseCard)
 ## class openjiuwen.core.sys_operation.SysOperation
 
 ```python
-class openjiuwen.core.sys_operation.SysOperation(card: SysOperationCard)
+class SysOperation(card: SysOperationCard)
 ```
 
 系统操作入口类，提供对文件、代码和 Shell 操作的访问。
@@ -44,7 +52,11 @@ class openjiuwen.core.sys_operation.SysOperation(card: SysOperationCard)
 
 * **card**(SysOperationCard)：系统操作配置卡片。
 
-### fs() -> BaseFsOperation
+### fs
+
+```python
+fs() -> BaseFsOperation
+```
 
 获取文件系统操作实例。
 
@@ -52,7 +64,11 @@ class openjiuwen.core.sys_operation.SysOperation(card: SysOperationCard)
 
 **BaseFsOperation**，对应的 `fs` 操作实例（本地或沙箱）。
 
-### code() -> BaseCodeOperation
+### code
+
+```python
+code() -> BaseCodeOperation
+```
 
 获取代码执行操作实例。
 
@@ -60,10 +76,80 @@ class openjiuwen.core.sys_operation.SysOperation(card: SysOperationCard)
 
 **BaseCodeOperation**，对应的 `code` 操作实例（本地或沙箱）。
 
-### shell() -> BaseShellOperation
+### shell
+
+```python
+shell() -> BaseShellOperation
+```
 
 获取 Shell 操作实例。
 
 **返回**：
 
 **BaseShellOperation**，对应的 `shell` 操作实例（本地或沙箱）。
+
+**样例：**
+
+```python
+import asyncio
+from openjiuwen.core.sys_operation.sys_operation import SysOperation, SysOperationCard
+from openjiuwen.core.sys_operation.base import OperationMode
+from openjiuwen.core.sys_operation.config import LocalWorkConfig
+
+async def main():
+    # 1. 初始化配置（本地模式）
+    # 设置工作目录并配置允许的 Shell 命令白名单
+    config = LocalWorkConfig(
+        work_dir="./workspace",
+        shell_allowlist=["echo", "ls", "dir", "python"]
+    )
+    
+    # 2. 创建 SysOperation 实例
+    card = SysOperationCard(mode=OperationMode.LOCAL, work_config=config)
+    sys_op = SysOperation(card)
+
+    # 3. 文件系统操作 (FS)
+    print("--- 文件系统操作 ---")
+    fs = sys_op.fs()
+    
+    # 写入文件
+    # 注意：如果目录不存在，write_file 会尝试自动创建父目录
+    write_res = await fs.write_file("test.txt", "Hello OpenJiuwen!", mode="text")
+    if write_res.code == 0:
+        print(f"写入成功: {write_res.data.path}")
+    else:
+        print(f"写入失败: {write_res.message}")
+    
+    # 读取文件
+    read_res = await fs.read_file("test.txt", mode="text")
+    if read_res.code == 0:
+        print(f"文件内容: {read_res.data.content}")
+
+    # 4. 代码执行操作 (Code)
+    print("\n--- 代码执行操作 ---")
+    code_op = sys_op.code()
+    
+    # 执行 Python 代码
+    code = "print('Hello from Code Operation')"
+    code_res = await code_op.execute_code(code, language="python")
+    if code_res.code == 0:
+        print(f"代码输出: {code_res.data.stdout.strip()}")
+    else:
+        print(f"代码执行失败: {code_res.message}")
+
+    # 5. Shell 命令操作 (Shell)
+    print("\n--- Shell 命令操作 ---")
+    shell_op = sys_op.shell()
+    
+    # 执行 Shell 命令
+    # 注意：命令必须在 shell_allowlist 中允许
+    shell_res = await shell_op.execute_cmd("echo Hello from Shell Operation")
+    if shell_res.code == 0:
+        print(f"Shell 输出: {shell_res.data.stdout.strip()}")
+    else:
+        print(f"Shell 执行失败: {shell_res.message}")
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
