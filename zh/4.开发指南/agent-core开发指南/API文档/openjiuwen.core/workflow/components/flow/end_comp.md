@@ -17,9 +17,6 @@ class openjiuwen.core.workflow.components.flow.end_comp.End(conf: Union[EndConfi
 > - `conf`当前仅支持`responseTemplate`配置。
 > - `responseTemplate`表示渲染模板，非空时按模版输出；为`None`和""都表示不使用模板。默认值：`None`。例如`End`组件执行时输入为`{"user_var": "你好"}`，`conf`配置为`{"responseTemplate": "输出:{{user_var}}"}`，则`End`组件输出为`"输出:你好"`；若`conf`为空或`responseTemplate`为空，则`End`组件输出为`{"user_var": "你好"}`。
 
-**异常**：
-
-- **JiuWenBaseException**：openJiuwen异常基类，具体详细信息和解决方法，参见[StatusCode](../common/exception/status_code.md#class-openjiuwencorecommonexceptionstatus_codestatuscode)。
 
 **样例**：
 

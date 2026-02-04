@@ -152,7 +152,7 @@ class openjiuwen.core.component.loop_comp.LoopComponent(loop_group: LoopGroup, o
 
 下面的示例展示了如何使用LoopComponent配合AlwaysTrue条件和BreakComponent实现需要在特定条件下中断的无限循环。
 
-**注意**：AlwaysTrue条件会使循环持续执行，直到BreakComponent显式中断循环。详细信息请参考[BreakComponent](./break_comp.md#class-openjiuwencorecomponentbreak_compbreakcomponent)。
+**注意**：AlwaysTrue条件会使循环持续执行，直到BreakComponent显式中断循环。详细信息请参考[BreakComponent]。
 
 ```python
 >>> import asyncio
