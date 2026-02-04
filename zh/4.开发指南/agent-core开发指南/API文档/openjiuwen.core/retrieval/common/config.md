@@ -50,6 +50,6 @@
 **参数**：
 
 * **model_name**(str)：模型名称。默认值：无。
+* **base_url**(str)：API基础URL。默认值：None。
 * **api_key**(str, 可选)：API密钥。默认值：None。
-* **base_url**(str, 可选)：API基础URL。默认值：None。
 

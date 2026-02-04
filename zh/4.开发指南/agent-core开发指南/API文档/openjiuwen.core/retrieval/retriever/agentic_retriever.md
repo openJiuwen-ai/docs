@@ -7,7 +7,7 @@
 ### __init__
 
 ```python
-__init__(graph_retriever: GraphRetriever, llm_client: Any, llm_model_name: Optional[str] = None, max_iter: int = 3, agent_topk: int = 15)
+__init__(graph_retriever: GraphRetriever, llm_client: Any, llm_model_name: Optional[str] = None, max_iter: int = 2, agent_topk: int = 15)
 ```
 
 初始化智能检索器。
@@ -17,7 +17,7 @@ __init__(graph_retriever: GraphRetriever, llm_client: Any, llm_model_name: Optio
 * **graph_retriever**(GraphRetriever)：图检索器实例。默认值：无。
 * **llm_client**(Any)：LLM客户端实例（用于查询重写）。默认值：无。
 * **llm_model_name**(str, 可选)：LLM模型名称。默认值：None。
-* **max_iter**(int)：最大迭代轮数。默认值：3。
+* **max_iter**(int)：最大迭代轮数。默认值：2。
 * **agent_topk**(int)：每轮检索返回的结果数量。默认值：15。
 
 ### async retrieve

@@ -50,6 +50,6 @@ Embedding model configuration class, defining embedding model-related configurat
 **Parameters**:
 
 * **model_name**(str): Model name. Default: None.
+* **base_url**(str): API base URL. Default: None.
 * **api_key**(str, optional): API key. Default: None.
-* **base_url**(str, optional): API base URL. Default: None.
 

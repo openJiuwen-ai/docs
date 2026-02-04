@@ -7,7 +7,7 @@ Agentic retriever that adds LLM query rewriting and multi-round fusion capabilit
 ### __init__
 
 ```python
-__init__(graph_retriever: GraphRetriever, llm_client: Any, llm_model_name: Optional[str] = None, max_iter: int = 3, agent_topk: int = 15)
+__init__(graph_retriever: GraphRetriever, llm_client: Any, llm_model_name: Optional[str] = None, max_iter: int = 2, agent_topk: int = 15)
 ```
 
 Initialize agentic retriever.
@@ -17,7 +17,7 @@ Initialize agentic retriever.
 * **graph_retriever**(GraphRetriever): Graph retriever instance. Default: None.
 * **llm_client**(Any): LLM client instance (for query rewriting). Default: None.
 * **llm_model_name**(str, optional): LLM model name. Default: None.
-* **max_iter**(int): Maximum number of iterations. Default: 3.
+* **max_iter**(int): Maximum number of iterations. Default: 2.
 * **agent_topk**(int): Number of results to return per round of retrieval. Default: 15.
 
 ### async retrieve

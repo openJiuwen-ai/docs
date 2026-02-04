@@ -80,3 +80,30 @@ Batch retrieval, concurrently executing multiple queries.
 
 **List[List[RetrievalResult]]**, returns a list of retrieval results corresponding to each query.
 
+### async retrieve_search_results
+
+```python
+retrieve_search_results(query: str, top_k: int = 5, mode: Literal["vector", "sparse", "hybrid"] = "vector", **kwargs: Any) -> List[SearchResult]
+```
+
+Retrieve documents.
+
+**Parameters**:
+
+* **query**(str): Query string. Default: None.
+* **top_k**(int): Number of results to return. Default: 5.
+* **mode**(Literal["vector", "sparse", "hybrid"]): Retrieval mode, vector=vector retrieval, sparse=sparse retrieval/BM25, hybrid=hybrid retrieval. Default: "vector".
+* **kwargs**(Any): Variable arguments for passing additional configuration parameters.
+
+**Returns**:
+
+**List[SearchResult]**, returns a list of search results.
+
+### async close
+
+```python
+close() -> None
+```
+
+Close the retriever and release resources.
+

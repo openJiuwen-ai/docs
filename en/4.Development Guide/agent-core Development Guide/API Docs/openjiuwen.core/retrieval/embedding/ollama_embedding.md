@@ -7,7 +7,7 @@ Ollama embedding model implementation.
 ### __init__
 
 ```python
-__init__(config: EmbeddingConfig, hf_tokenizer_name: Optional[str] = None, timeout: int = 60, max_retries: int = 3, extra_headers: Optional[dict] = None)
+__init__(config: EmbeddingConfig, hf_tokenizer_name: Optional[str] = None, timeout: int = 60, max_retries: int = 3, extra_headers: Optional[dict] = None,max_batch_size: int = 8, dimension: Optional[int] = None)
 ```
 
 Initialize Ollama embedding model.
@@ -19,6 +19,8 @@ Initialize Ollama embedding model.
 * **timeout**(int): Request timeout (seconds). Default: 60.
 * **max_retries**(int): Maximum number of retries. Default: 3.
 * **extra_headers**(dict, optional): Additional request headers. Default: None.
+* **max_batch_size**(int): Maximum batch size. Default: 8.
+* **dimension**(int, optional): Embedding output dimension. Default: None.
 
 **Exceptions**:
 
