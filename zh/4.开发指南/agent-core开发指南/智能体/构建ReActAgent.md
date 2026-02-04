@@ -61,94 +61,61 @@ def _create_prompt_template():
 
 ```python
 import os
-from openjiuwen.core.foundation.tool.service_api.restful_api import RestfulApi
-from openjiuwen.core.foundation.tool.param import Param
+from openjiuwen.core.foundation.tool import RestfulApi, RestfulApiCard
 
-os.environ["LLM_SSL_VERIFY"] = "false"  # 关闭SSL校验仅用于本地调试，生产环境请务必打开
-os.environ["RESTFUL_SSL_VERIFY"] = "false"  # 关闭SSL校验仅用于本地调试，生产环境请务必打开
+os.environ.setdefault("SSRF_PROTECT_ENABLED", "false")  # 关闭IP校验仅用于本地调试，生产环境请务必打开
+os.environ.setdefault("RESTFUL_SSL_VERIFY", "false")  # 关闭SSL校验仅用于本地调试，生产环境请务必打开
 
 def _create_tool():
-    weather_plugin = RestfulApi(
+    weather_card = RestfulApiCard(
         name="WeatherReporter",
         description="天气查询插件",
-        params=[
-            Param(name="location", description="天气查询的地点，必须为英文", type="string", required=True),
-            Param(name="date", description="天气查询的时间，格式为YYYY-MM-DD", type="string", required=True),
-        ],
-        path="your weather search api url",  # 天气查询服务部署地址
-        headers={},
+        url="your weather search api url", # 天气查询服务部署地址
         method="GET",
-        response=[],
-    )
-    return weather_plugin
-```
-
-同时通过`PluginSchema`接口创建了插件描述信息，该描述信息后续将成为大模型输入的一部分，引导大模型生成工具调用命令。示例代码如下：
-
-```python
-from openjiuwen.core.single_agent.legacy import PluginSchema
-
-def _create_tool_schema():
-    tool_info = PluginSchema(
-        name='WeatherReporter',
-        description='天气查询插件',
-        inputs={
+        headers={},
+        input_params={
             "type": "object",
             "properties": {
                 "location": {
                     "type": "string",
-                    "description": "天气查询的地点。\n注意：地点名称必须为英文",
-                    "required": True
+                    "description": "天气查询的地点，必须为英文"
                 },
                 "date": {
                     "type": "string",
-                    "description": "天气查询的时间，格式为YYYY-MM-DD",
-                    "required": True
+                    "description": "天气查询的时间，格式为YYYY-MM-DD"
                 }
-            }
-        }
+            },
+            "required": ["location", "date"]
+        },
     )
-    return tool_info
+    weather_plugin = RestfulApi(card=weather_card)
+    return weather_plugin
 ```
 
-## 创建MCP扩展插件
+## 配置MCP扩展插件
 
-openJiuwen支持创建集成MCP（Model Context Protocol）扩展协议的插件。本示例创建了一个基于SSE协议的天气查询MCP插件。openJiuwen提供了MCP客户端的`connect`、`disconnect`方法，实现MCP客户端与MCP服务器建立、断开链接。
+openJiuwen支持创建集成MCP（Model Context Protocol）扩展协议的插件。本示例提供了一个基于SSE协议的天气查询MCP插件的配置。
 
 ```python
-from openjiuwen.core.foundation.tool.mcp.base import MCPTool, SseClient, McpToolInfo
+from openjiuwen.core.foundation.tool.mcp.base import McpServerConfig
 
-class McpToolWrapper:
-    def __init__(self, server_path, name):
-        self.mcp_client = SseClient(server_path=server_path, name=name)
-
-    async def connect(self):
-        await self.mcp_client.connect()
-
-    async def disconnect(self):
-        await self.mcp_client.disconnect()
-
-    def create_mcp_tools(self):
-        mcp_tool_info = McpToolInfo(
-            type="function",
-            name="query_weather",
-            server_name="McpSseServer",
-            input_schema={
-                "type": "object",
-                "title": "query_weatherArguments",
-                "properties": {
-                    "location": {
-                        "title": "Location",
-                        "type": "string"
-                    }
-                },
-                "required": [
-                    "location"
-                ],
+mcp_config = McpServerConfig(
+    server_id="query_weather_mcp",
+    server_name="query_weather",
+    server_path="http://127.0.0.1:8188/sse",
+    client_type="sse",
+    params={
+        "type": "object",
+        "title": "query_weatherArguments",
+        "properties": {
+            "location": {
+                "title": "Location",
+                "type": "string"
             }
-        )
-        mcp_tool = MCPTool(mcp_client=self.mcp_client, tool_info=mcp_tool_info)
-        return [mcp_tool]
+        },
+        "required": ["location"]
+    }
+)
 ```
 
 
@@ -157,75 +124,63 @@ class McpToolWrapper:
 首先使用openJiuwen提供的`create_react_agent_config`方法快速创建天气查询的`ReActAgentConfig`对象，涵盖`ReActAgent`相关的配置参数信息，如提示词定义及大模型配置信息等。示例代码如下：
 
 ```python
-from openjiuwen.core.single_agent.legacy import create_react_agent_config
+from openjiuwen.core.single_agent import AgentCard, ReActAgentConfig, ReActAgent
 
-react_agent_config = create_react_agent_config(
-    agent_id="react_agent_123",
-    agent_version="0.0.1",
-    description="AI助手",
-    model=_create_model_config(),    # 大模型的配置信息
-    prompt_template=_create_prompt_template()  # 自定义提示词
+model_config = ReactAgentImpl._create_model()
+model_client_config = ReactAgentImpl._create_client_model()
+
+react_agent_config = ReActAgentConfig(
+    model_config_obj=model_config,
+    model_client_config=model_client_config,
+    prompt_template=prompt_template
 )
+
+agent_card = AgentCard(
+    id="react_agent_123",
+    description="AI助手",
+)
+
+react_agent = ReActAgent(card=agent_card).configure(react_agent_config)
 ```
 
-其中，`_create_model_config`用于定义大模型的相关配置信息，如模型提供商、模型名称、API调用和模型温度等信息：
+其中，`_create_model`和 `_create_client_model` 用于定义大模型的相关配置信息，如模型提供商、模型名称、API调用和模型温度等信息：
 
 ```python
 import os
-from openjiuwen.core.foundation.llm import ModelConfig, BaseModelInfo
+from openjiuwen.core.foundation.llm import ModelRequestConfig, ModelClientConfig
 
 API_BASE = os.getenv("API_BASE", "your api base")
 API_KEY = os.getenv("API_KEY", "your api key")
 MODEL_NAME = os.getenv("MODEL_NAME", "")
 MODEL_PROVIDER = os.getenv("MODEL_PROVIDER", "")
 
+def _create_model():
+    return ModelRequestConfig(
+        model=MODEL_NAME,
+        temperature=0.8,
+        top_p=0.9
+    )
 
-def _create_model_config() -> ModelConfig:
-    return ModelConfig(
-        model_provider=MODEL_PROVIDER,
-        model_info=BaseModelInfo(
-            model=MODEL_NAME,
-            api_base=API_BASE,
-            api_key=API_KEY,
-            temperature=0.7,
-            top_p=0.9,
-            timeout=30,
-        ),
+def _create_client_model():
+    return ModelClientConfig(
+        client_provider=MODEL_PROVIDER,
+        api_key=API_KEY,
+        api_base=API_BASE,
+        timeout=30,
+        verify_ssl=False,
     )
 ```
 
 接着使用openJiuwen提供的`ReActAgent`类的构造函数实例化对象，包括天气查询助手配置，示例代码如下：
 
 ```python
-from openjiuwen.core.single_agent import ReActAgent
+from openjiuwen.core.runner import Runner
+from openjiuwen.core.single_agent import AgentCard, ReActAgentConfig, ReActAgent
 
-react_agent = ReActAgent(react_agent_config)
-react_agent.add_tools([_create_tool()])
-```
-
-## ReActAgent关联MCP扩展插件
-
-openJiuwen支持`ReActAgent`关联MCP插件。开发者指定连接MCP服务器的IP地址，通过`connect`与MCP服务器建立链接。`ReActAgent`执行结束后，开发者通过`disconnect`与MCP服务器断开链接。
-
-```python
-import asyncio
-from openjiuwen.core.single_agent import ReActAgent
-from openjiuwen.core.runner.runner import Runner
-
-async def main():
-   react_agent = ReActAgent(react_agent_config)
-   wrapper = McpToolWrapper(server_path="your path to mcp server", name="McpSseServer")
-   await wrapper.connect()  # 与MCP服务器建立链接
-   react_agent.add_tools(wrapper.create_mcp_tools())
-   
-   try:
-       # 运行ReActAgent
-       result = await Runner.run_agent(react_agent, {"query": "北京天气怎么样"})
-       print(f"ReActAgent 最终输出结果：{result}")
-   finally:
-       await wrapper.disconnect()  # 与MCP服务器断开链接
-
-asyncio.run(main())
+react_agent = ReActAgent(card=agent_card).configure(react_agent_config)
+    tool = ReactAgentImpl._create_tool()
+    Runner.resource_mgr.add_tool(tool)
+    react_agent.ability_manager.add(tool.card)
 ```
 
 # 运行ReActAgent
@@ -252,26 +207,23 @@ ReActAgent 最终输出结果：
 
 建议外出时携带雨具，注意防雨防滑。需要其他天气信息可以随时告诉我哦~
 ```
-
-
-# 完整示例代码
+# 使用MCP服务的完整示例代码
 
 ```python
 import asyncio
 import os
 from datetime import datetime
 
-from openjiuwen.core.single_agent.legacy import create_react_agent_config
-from openjiuwen.core.single_agent import ReActAgent
-from openjiuwen.core.foundation.llm import ModelConfig, BaseModelInfo
-from openjiuwen.core.foundation.tool.param import Param
-from openjiuwen.core.foundation.tool.service_api.restful_api import RestfulApi
+from openjiuwen.core.foundation.llm import ModelRequestConfig, ModelClientConfig
+from openjiuwen.core.foundation.tool import McpServerConfig
+from openjiuwen.core.single_agent import AgentCard, ReActAgentConfig, ReActAgent
+from openjiuwen.core.runner.runner import Runner
 
 API_BASE = os.getenv("API_BASE", "your api base")
 API_KEY = os.getenv("API_KEY", "your api key")
 MODEL_NAME = os.getenv("MODEL_NAME", "")
 MODEL_PROVIDER = os.getenv("MODEL_PROVIDER", "")
-os.environ.setdefault("LLM_SSL_VERIFY", "false")  # 关闭SSL校验仅用于本地调试，生产环境请务必打开
+os.environ.setdefault("SSRF_PROTECT_ENABLED", "false")  # 关闭IP校验仅用于本地调试，生产环境请务必打开
 os.environ.setdefault("RESTFUL_SSL_VERIFY", "false")  # 关闭SSL校验仅用于本地调试，生产环境请务必打开
 
 def build_current_date():
@@ -281,30 +233,155 @@ def build_current_date():
 class ReactAgentImpl:
     @staticmethod
     def _create_model():
-        return ModelConfig(model_provider=MODEL_PROVIDER,
-                           model_info=BaseModelInfo(
-                               model=MODEL_NAME,
-                               api_base=API_BASE,
-                               api_key=API_KEY,
-                               temperature=0.7,
-                               top_p=0.9,
-                               timeout=30  # 添加超时设置
-                           ))
+        return ModelRequestConfig(
+            model=MODEL_NAME,
+            temperature=0.8,
+            top_p=0.9
+        )
+
+    @staticmethod
+    def _create_client_model():
+        return ModelClientConfig(
+           client_provider=MODEL_PROVIDER,
+           api_key=API_KEY,
+           api_base=API_BASE,
+           timeout=30,
+           verify_ssl=False,
+        )
+
+    @staticmethod
+    def _create_prompt_template():
+        system_prompt = "你是一个AI助手，在适当的时候调用合适的工具，帮助我完成任务！今天的日期为：{}\n注意：1. 如果用户请求中未指定具体时间，则默认为今天。"
+        return [
+            dict(role="system", content=system_prompt.format(build_current_date()))
+        ]
+
+async def main():
+    model_config = ReactAgentImpl._create_model()
+    model_client_config = ReactAgentImpl._create_client_model()
+    prompt_template = ReactAgentImpl._create_prompt_template()
+
+    react_agent_config = ReActAgentConfig(
+        model_config_obj=model_config,
+        model_client_config=model_client_config,
+        prompt_template=prompt_template
+    )
+
+    agent_card = AgentCard(
+        id="react_agent_123",
+        description="AI助手",
+    )
+
+    react_agent = ReActAgent(card=agent_card).configure(react_agent_config)
+    mcp_config = McpServerConfig(
+        server_id="query_weather_mcp",
+        server_name="query_weather",
+        server_path="your weather search mcp path",
+        client_type="sse",
+        params={
+            "type": "object",
+            "title": "query_weatherArguments",
+            "properties": {
+                "location": {
+                    "title": "Location",
+                    "type": "string"
+                }
+            },
+            "required": ["location"]
+        }
+    )
+    await Runner.resource_mgr.add_mcp_server(mcp_config, expiry_time=6000000)
+
+    try:
+        # 运行ReActAgent
+        react_agent.ability_manager.add(mcp_config)
+        result = await Runner.run_agent(react_agent, {"query": "北京天气怎么样"})
+        print(f"ReActAgent 最终输出结果：{result}")
+    finally:
+        await Runner.resource_mgr.remove_mcp_server(server_id="query_weather_mcp")
+
+
+asyncio.run(main())
+```
+
+最终输出结果为：
+
+```
+ReActAgent 最终输出结果：
+根据查询结果，北京的天气情况如下：
+- 地点：北京
+- 温度：22℃
+- 天气状况：晴
+
+今天北京天气晴朗，气温22℃，是个不错的天气！
+```
+
+# 使用插件的完整示例代码
+
+```python
+import asyncio
+import os
+from datetime import datetime
+
+from openjiuwen.core.foundation.llm import ModelRequestConfig, ModelClientConfig
+from openjiuwen.core.foundation.tool import RestfulApi, RestfulApiCard
+from openjiuwen.core.runner import Runner
+from openjiuwen.core.single_agent import AgentCard, ReActAgentConfig, ReActAgent
+
+API_BASE = os.getenv("API_BASE", "your api base")
+API_KEY = os.getenv("API_KEY", "your api key")
+MODEL_NAME = os.getenv("MODEL_NAME", "")
+MODEL_PROVIDER = os.getenv("MODEL_PROVIDER", "")
+os.environ.setdefault("SSRF_PROTECT_ENABLED", "false")  # 关闭SSL校验仅用于本地调试，生产环境请务必打开
+os.environ.setdefault("RESTFUL_SSL_VERIFY", "false")  # 关闭SSL校验仅用于本地调试，生产环境请务必打开
+
+def build_current_date():
+    current_datetime = datetime.now()
+    return current_datetime.strftime("%Y-%m-%d")
+
+class ReactAgentImpl:
+    @staticmethod
+    def _create_model():
+        return ModelRequestConfig(
+            model=MODEL_NAME,
+            temperature=0.8,
+            top_p=0.9
+        )
+
+    @staticmethod
+    def _create_client_model():
+        return ModelClientConfig(
+           client_provider=MODEL_PROVIDER,
+           api_key=API_KEY,
+           api_base=API_BASE,
+           timeout=30,
+           verify_ssl=False,
+        )
 
     @staticmethod
     def _create_tool():
-        weather_plugin = RestfulApi(
+        weather_card = RestfulApiCard(
             name="WeatherReporter",
             description="天气查询插件",
-            params=[
-                Param(name="location", description="天气查询的地点，必须为英文", type="string", required=True),
-                Param(name="date", description="天气查询的时间，格式为YYYY-MM-DD", type="string", required=True),
-            ],
-            path="user's path to weather service",
-            headers={},
+            url="user's path to weather service",
             method="GET",
-            response=[],
+            headers={},
+            input_params={
+                "type": "object",
+                "properties": {
+                    "location": {
+                        "type": "string",
+                        "description": "天气查询的地点，必须为英文"
+                    },
+                    "date": {
+                        "type": "string",
+                        "description": "天气查询的时间，格式为YYYY-MM-DD"
+                    }
+                },
+                "required": ["location", "date"]
+            },
         )
+        weather_plugin = RestfulApi(card=weather_card)
         return weather_plugin
 
     @staticmethod
@@ -316,18 +393,24 @@ class ReactAgentImpl:
 
 async def main():
     model_config = ReactAgentImpl._create_model()
+    model_client_config = ReactAgentImpl._create_client_model()
     prompt_template = ReactAgentImpl._create_prompt_template()
 
-    react_agent_config = create_react_agent_config(
-        agent_id="react_agent_123",
-        agent_version="0.0.1",
-        description="AI助手",
-        model=model_config,
+    react_agent_config = ReActAgentConfig(
+        model_config_obj=model_config,
+        model_client_config=model_client_config,
         prompt_template=prompt_template
     )
 
-    react_agent: ReActAgent = ReActAgent(react_agent_config)
-    react_agent.add_tools([ReactAgentImpl._create_tool()])
+    agent_card = AgentCard(
+        id="react_agent_123",
+        description="AI助手",
+    )
+
+    react_agent = ReActAgent(card=agent_card).configure(react_agent_config)
+    tool = ReactAgentImpl._create_tool()
+    Runner.resource_mgr.add_tool(tool)
+    react_agent.ability_manager.add(tool.card)
 
     result = await react_agent.invoke({"query": "查询杭州的天气"})
     print(f"ReActAgent 最终输出结果：{result}")

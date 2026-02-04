@@ -66,7 +66,7 @@ flow = Workflow(workflow_config=workflow_config)
 from openjiuwen.core.workflow import Start
 
 def create_start_component():
-	return Start({"inputs": [{"id": "query", "type": "String", "required": "true", "sourceType": "ref"}]})
+	return Start()
 ```
 
 > **说明**
@@ -92,7 +92,7 @@ def create_end_component():
 
 ```python
 import os
-from openjiuwen.core.foundation.llm import ModelConfig, BaseModelInfo
+from openjiuwen.core.foundation.llm import ModelClientConfig, ModelRequestConfig
 from openjiuwen.core.workflow import (
     IntentDetectionComponent, IntentDetectionCompConfig)
 
@@ -101,29 +101,34 @@ API_KEY = os.getenv("API_KEY", "your api key")
 MODEL_NAME = os.getenv("MODEL_NAME", "")
 MODEL_PROVIDER = os.getenv("MODEL_PROVIDER", "")
 
-def create_model_config() -> ModelConfig:
+def create_model_config() -> ModelRequestConfig:
     """根据环境变量构造模型配置。"""
-    return ModelConfig(
-        model_provider=MODEL_PROVIDER,
-        model_info=BaseModelInfo(
-            api_key=API_KEY,
-            api_base=API_BASE,
-            model=MODEL_NAME,
-            temperature=0.8,
-            top_p=0.9,
-            stream=False,
-            timeout=30,
-        ),
+    return ModelRequestConfig(
+        model=MODEL_NAME,
+        temperature=0.8,
+        top_p=0.9
+    )
+
+def create_model_client_config() -> ModelClientConfig:
+    """根据环境变量构造客户端模型配置。"""
+    return ModelClientConfig(
+        client_provider=MODEL_PROVIDER,
+        api_key=API_KEY,
+        api_base=API_BASE,
+        timeout=30,
+        verify_ssl=False,
     )
 
 def create_intent_detection_component() -> IntentDetectionComponent:
     """创建意图识别组件。"""
+    model_client_config = create_model_client_config()
     model_config = create_model_config()
     user_prompt = "请识别意图"
     config = IntentDetectionCompConfig(
         user_prompt=user_prompt,
         category_name_list=["查询某地天气"],
-        model=model_config,
+        model_client_config=model_client_config,
+        model_config=model_config,
     )
     intent_component = IntentDetectionComponent(config)
     intent_component.add_branch("${intent.classification_id} == 0", ["llm"], "默认分支")
@@ -151,12 +156,14 @@ def build_current_date():
 
 def create_llm_component() -> LLMComponent:
     """创建 LLM 组件，仅用于抽取结构化字段（location/date）。"""
+    model_client_config = create_model_client_config()
     model_config = create_model_config()
     current_date = build_current_date()
     user_prompt_prefix = "你是一个query改写的AI助手。今天的日期是{}。"
     user_prompt = "\n原始query为：{{query}}\n\n帮我改写原始query，要求：\n1. 只把地名改为英文，其他信息保留中文；\n2. 默认日期为今天；\n3. 时间为YYYY-MM-DD格式。"
     config = LLMCompConfig(
-        model=model_config,
+        model_client_config=model_client_config,
+        model_config=model_config,
         template_content=[{"role": "user", "content": user_prompt_prefix.format(current_date) + user_prompt}],
         response_format={"type": "text"},
         output_config={
@@ -179,9 +186,11 @@ def create_questioner_component() -> QuestionerComponent:
         FieldInfo(field_name="location", description="地点", required=True),
         FieldInfo(field_name="date", description="时间", required=True, default_value="today"),
     ]
+    model_client_config = create_model_client_config()
     model_config = create_model_config()
     config = QuestionerConfig(
-        model=model_config,
+        model_client_config=model_client_config,
+        model_config=model_config,
         question_content="",
         extract_fields_from_response=True,
         field_names=key_fields,
@@ -210,18 +219,28 @@ from openjiuwen.core.foundation.tool.service_api.restful_api import RestfulApi
 def create_plugin_component() -> ToolComponent:
     """创建插件组件，可调用外部 RESTful API。"""
     tool_config = ToolComponentConfig()
-    weather_plugin = RestfulApi(
+    weather_card = RestfulApiCard(
         name="WeatherReporter",
         description="天气查询插件",
-        params=[
-            Param(name="location", description="天气查询的地点，必须为英文", type="string", required=True),
-            Param(name="date", description="天气查询的时间，格式为YYYY-MM-DD", type="string", required=True),
-        ],
-        path="your weather search api url",  # 天气查询服务部署地址
-        headers={},
+        url="your weather search api url",
         method="GET",
-        response=[],
+        headers={},
+        input_params={
+            "type": "object",
+            "properties": {
+                "location": {
+                    "type": "string",
+                    "description": "天气查询的地点，必须为英文"
+                },
+                "date": {
+                    "type": "string",
+                    "description": "天气查询的时间，格式为YYYY-MM-DD"
+                }
+            },
+            "required": ["location", "date"]
+        },
     )
+    weather_plugin = RestfulApi(card=weather_card)
     return ToolComponent(tool_config).bind_tool(weather_plugin)
 ```
 
@@ -283,21 +302,7 @@ flow.add_connection("plugin", "end")
 
 # 创建WorkflowAgent
 
-首先通过`WorkflowSchema`创建工作流的描述信息，并指定了工作流输入参数的类型，示例代码如下：
-
-```python
-from openjiuwen.core.single_agent.legacy import WorkflowSchema
-
-schema = WorkflowSchema(
-    id=flow.config().metadata.id,
-    name=flow.config().metadata.name,
-    version=flow.config().metadata.version,
-    description="天气查询工作流",
-    inputs={"query": {"type": "string"}},
-)
-```
-
-然后通过`WorkflowAgentConfig`的初始化方法创建WorkflowAgentConfig对象，涵盖`WorkflowAgent`相关的描述信息等。示例代码如下：
+通过`WorkflowAgentConfig`的初始化方法创建WorkflowAgentConfig对象，涵盖`WorkflowAgent`相关的描述信息等。示例代码如下：
 
 ```python
 from openjiuwen.core.application.workflow_agent import WorkflowAgentConfig
@@ -306,7 +311,6 @@ agent_config = WorkflowAgentConfig(
     id="weather_agent",
     version="0.1.0",
     description="天气查询agent",
-    workflows=[schema],
 )
 ```
 
@@ -316,7 +320,7 @@ agent_config = WorkflowAgentConfig(
 from openjiuwen.core.application.workflow_agent import WorkflowAgent
 
 workflow_agent = WorkflowAgent(agent_config)
-workflow_agent.bind_workflows([flow])
+workflow_agent.add_workflows([flow])
 ```
 
 # 运行WorkflowAgent
@@ -326,7 +330,7 @@ workflow_agent.bind_workflows([flow])
 ```python
 import asyncio
 
-async def test_weather_workflow():
+async def weather_workflow(agent: WorkflowAgent):
     result = await workflow_agent.invoke({"conversation_id": "12345","query": "上海天气如何"})
     print(f"{result}")
 
@@ -343,10 +347,10 @@ asyncio.run(test_weather_workflow())
 # 完整代码
 
 ```python
+import asyncio
 import os
 from datetime import datetime
 
-from openjiuwen.core.single_agent.legacy import WorkflowSchema, PluginSchema
 from openjiuwen.core.application.workflow_agent import WorkflowAgentConfig, WorkflowAgent
 from openjiuwen.core.workflow import (
     Workflow,
@@ -357,11 +361,10 @@ from openjiuwen.core.workflow import (
     QuestionerComponent, FieldInfo, QuestionerConfig,
     ToolComponent, ToolComponentConfig,
 )
-from openjiuwen.core.foundation.llm import ModelConfig, BaseModelInfo
-from openjiuwen.core.foundation.tool.service_api.restful_api import RestfulApi
+from openjiuwen.core.foundation.llm import ModelClientConfig, ModelRequestConfig
+from openjiuwen.core.foundation.tool.service_api.restful_api import RestfulApi, RestfulApiCard
 from openjiuwen.core.workflow import WorkflowCard
 from openjiuwen.core.workflow.workflow_config import WorkflowConfig
-import asyncio
 
 API_BASE = os.getenv("API_BASE", "your api base")
 API_KEY = os.getenv("API_KEY", "your api key")
@@ -372,29 +375,34 @@ def build_current_date():
     current_datetime = datetime.now()
     return current_datetime.strftime("%Y-%m-%d")
 
-def create_model_config() -> ModelConfig:
+def create_model_config() -> ModelRequestConfig:
     """根据环境变量构造模型配置。"""
-    return ModelConfig(
-        model_provider=MODEL_PROVIDER,
-        model_info=BaseModelInfo(
-            api_key=API_KEY,
-            api_base=API_BASE,
-            model=MODEL_NAME,
-            temperature=0.8,
-            top_p=0.9,
-            streaming=True,
-            timeout=30.0,
-        ),
+    return ModelRequestConfig(
+        model=MODEL_NAME,
+        temperature=0.8,
+        top_p=0.9
+    )
+
+def create_model_client_config() -> ModelClientConfig:
+    """根据环境变量构造客户端模型配置。"""
+    return ModelClientConfig(
+        client_provider=MODEL_PROVIDER,
+        api_key=API_KEY,
+        api_base=API_BASE,
+        timeout=30,
+        verify_ssl=False,
     )
 
 def create_llm_component() -> LLMComponent:
     """创建 LLM 组件，仅用于抽取结构化字段（location/date）。"""
+    model_client_config = create_model_client_config()
     model_config = create_model_config()
     current_date = build_current_date()
     user_prompt_prefix = "你是一个query改写的AI助手。今天的日期是{}。"
     user_prompt = "\n原始query为：{{query}}\n\n帮我改写原始query，要求：\n1. 只把地名改为英文，其他信息保留中文；\n2. 默认日期为今天；\n3. 时间为YYYY-MM-DD格式。"
     config = LLMCompConfig(
-        model=model_config,
+        model_client_config=model_client_config,
+        model_config=model_config,
         template_content=[{"role": "user", "content": user_prompt_prefix.format(current_date) + user_prompt}],
         response_format={"type": "text"},
         output_config={
@@ -405,12 +413,14 @@ def create_llm_component() -> LLMComponent:
 
 def create_intent_detection_component() -> IntentDetectionComponent:
     """创建意图识别组件。"""
+    model_client_config = create_model_client_config()
     model_config = create_model_config()
     user_prompt = "请识别意图"
     config = IntentDetectionCompConfig(
         user_prompt=user_prompt,
         category_name_list=["查询某地天气"],
-        model=model_config,
+        model_client_config=model_client_config,
+        model_config=model_config,
     )
     intent_component = IntentDetectionComponent(config)
     intent_component.add_branch("${intent.classification_id} == 0", ["end"], "默认分支")
@@ -423,9 +433,11 @@ def create_questioner_component() -> QuestionerComponent:
         FieldInfo(field_name="location", description="地点", required=True),
         FieldInfo(field_name="date", description="时间", required=True, default_value="today"),
     ]
+    model_client_config = create_model_client_config()
     model_config = create_model_config()
     config = QuestionerConfig(
-        model=model_config,
+        model_client_config=model_client_config,
+        model_config=model_config,
         question_content="",
         extract_fields_from_response=True,
         field_names=key_fields,
@@ -444,18 +456,28 @@ def create_end_component():
 def create_plugin_component() -> ToolComponent:
     """创建插件组件，可调用外部 RESTful API。"""
     tool_config = ToolComponentConfig()
-    weather_plugin = RestfulApi(
+    weather_card = RestfulApiCard(
         name="WeatherReporter",
         description="天气查询插件",
-        params=[
-            Param(name="location", description="天气查询的地点，必须为英文", type="string", required=True),
-            Param(name="date", description="天气查询的时间，格式为YYYY-MM-DD", type="string", required=True),
-        ],
-        path="your weather search api url",  # 天气查询服务部署地址
-        headers={},
+        url="your weather search api url",
         method="GET",
-        response=[],
+        headers={},
+        input_params={
+            "type": "object",
+            "properties": {
+                "location": {
+                    "type": "string",
+                    "description": "天气查询的地点，必须为英文"
+                },
+                "date": {
+                    "type": "string",
+                    "description": "天气查询的时间，格式为YYYY-MM-DD"
+                }
+            },
+            "required": ["location", "date"]
+        },
     )
+    weather_plugin = RestfulApi(card=weather_card)
     return ToolComponent(tool_config).bind_tool(weather_plugin)
 
 def bind_agent():
@@ -514,32 +536,23 @@ def bind_agent():
     flow.add_connection("questioner", "plugin")
     flow.add_connection("plugin", "end")
 
-    schema = WorkflowSchema(
-        id=flow.config().metadata.id,
-        name=flow.config().metadata.name,
-        version=flow.config().metadata.version,
-        description="天气查询工作流",
-        inputs={"query": {"type": "string"}},
-    )
-
     agent_config = WorkflowAgentConfig(
         id="weather_agent",
         version="0.1.0",
         description="天气查询agent",
-        workflows=[schema]
     )
 
     workflow_agent = WorkflowAgent(agent_config)
-    workflow_agent.bind_workflows([flow])
+    workflow_agent.add_workflows([flow])
     return workflow_agent
 
-async def weather_workflow(workflow_agent):
-    result = await workflow_agent.invoke({"conversation_id": "12345", "query": "上海今天天气如何"})
+async def weather_workflow(agent: WorkflowAgent):
+    result = await agent.invoke({"conversation_id": "12345", "query": "上海今天天气如何"})
     print(result)
 
 if __name__ == "__main__":
     os.environ.setdefault("RESTFUL_SSL_VERIFY", "false")  # 关闭SSL校验仅用于本地调试，生产环境请务必打开
-    os.environ.setdefault("LLM_SSL_VERIFY", "false")  # 关闭SSL校验仅用于本地调试，生产环境请务必打开
+    os.environ.setdefault("SSRF_PROTECT_ENABLED", "false")  # ip地址合法性校验仅用于本地调试，生产环境请务必打开
     workflow_agent = bind_agent()
     asyncio.run(weather_workflow(workflow_agent))
 ```
