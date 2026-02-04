@@ -150,7 +150,7 @@ def add_workflow_comp(
 ​**参数**​：
 
 * ​**comp_id**​(str)：组件的唯一标识符，用于在工作流中引用此组件。
-* ​**workflow_comp**(ComponentComposable)：待添加的工作流组件实例。
+* ​**workflow_comp**​(ComponentComposable)：待添加的工作流组件实例。
 * ​**wait_for_all**​(bool, 可选)：是否等待所有前置依赖组件执行完成后再执行此组件。`True`表示需要等待所有前置依赖组件执行完成，`False`表示不需要。默认值：`False`。
 * ​**inputs_schema**​(dict|Transformer, 可选)：组件输入参数的结构定义，键名应与组件输入参数名匹配，值为对应的输入参数类型。默认值：`None`。
 * ​**outputs_schema**​(dict|Transformer, 可选)：组件输出结果的结构定义，用于定义输出数据的格式规范，便于后续组件解析。默认值：`None`。

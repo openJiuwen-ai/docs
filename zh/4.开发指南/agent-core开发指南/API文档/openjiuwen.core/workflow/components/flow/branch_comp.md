@@ -60,7 +60,7 @@ add_branch(condition: Union[str, Callable[[], bool], Condition], target: Union[s
 >>> 
 >>> 
 >>> class AbsComponent(WorkflowComponent):
-...      async def invoke(self, inputs, session: WorkflowSession, context: ModelContext):
+...      async def invoke(self, inputs, session: Session, context: ModelContext):
 ...          num = inputs["num"]
 ...          if num < 0:
 ...              return {"result": -num}
@@ -71,7 +71,6 @@ add_branch(condition: Union[str, Callable[[], bool], Condition], target: Union[s
 >>> async def run_workflow(num: int) -> tuple[WorkflowOutput | str, bool]:
 ...     # 构造工作流、初始化工作流运行时
 ...     workflow = Workflow()
-...     runtime = WorkflowRuntime()
 ... 
 ...     # 添加开始、结束组件到工作流
 ...     workflow.set_start_comp("start", Start(), inputs_schema={"query": "${user_inputs.query}"})
