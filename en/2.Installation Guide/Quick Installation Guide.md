@@ -1,6 +1,6 @@
 The document introduces the installation methods for openJiuwen.
 
-  ![image](./images/openJiuwen-install-flow.png)
+  ![openJiuwen install flow](./images/openJiuwen-install-flow.png)
 <center>Figure: openJiuwen installation workflow</center>  
 
 To help you get started quickly, the community provides the following two installation options: 

@@ -117,7 +117,7 @@ Before proceeding with the full installation, install the dependencies below, th
   git config --global user.email your_useremail
   ```
 
-  ![image](../images/gitcode-token.png)
+  ![GitCode personal access token settings](../images/gitcode-personal-access-token-creation.png)
 
 * Follow step 3 in the screenshot to obtain a personal access token. You will need to enter your GitCode account and token when cloning.
 
@@ -301,7 +301,7 @@ Older Windows versions do not support the full automation of this one-click comm
 * Download: Go to the <a href="https://www.docker.com/products/docker-desktop/" target="_blank" rel="nofollow noopener noreferrer">Docker website</a> to download the Windows installer (for x86 machines, choose the AMD64 version);
 * Run the installer: **Check the “Use WSL 2 instead of Hyper-V” option** and follow the wizard to complete installation:
 
-  <img src="../images/docker_desktop_on_wsl.png" width="600"/>
+  <img src="../images/Docker_on_Hyper-V.png" width="600"/>
 * Restart your computer after installation;
 * After restarting, open Docker Desktop and wait for it to finish loading (the first launch may take 5–10 minutes);
 * Once Docker Desktop starts, for a trial you can click “Continue without signing in” on the welcome screen; for long-term use, refer to the <a href="https://docs.docker.com/desktop/setup/sign-in" target="_blank" rel="nofollow noopener noreferrer">official guide</a>.
@@ -371,13 +371,15 @@ The memory and knowledge base features require an embedding model. The steps bel
 
 * Click <a href="https://console.huaweicloud.com/modelarts/?locale=zh-cn&region=cn-southwest-2#/model-studio/square" target="_blank" rel="nofollow noopener noreferrer">this link</a> to open the ModelArts Model Square. 
 
-* To experience the memory feature and knowledge base feature, please click on "向量模型" (Embedding model) and select a vector model according to your needs. The following content uses BGE-M3 as an example.
+* To experience the memory feature and knowledge base feature, please click on "Embedding" and select a vector model according to your needs. The following content uses BGE-M3 as an example.
 
-  ![Find the embedding model](../images/find_embed.png)
+  ![Select BGE-M3 embedding model in ModelArts](../images/bge-m3-embedding-model-selection.png)
 
-* After locating the suitable model, click "推理调用" (Inference Call) to enter the model information acquisition page.
+* After locating the suitable model, click "Call" to enter the model information acquisition page.
 
-  ![Get api_base and model_name](../images/embed_api_base_and_model_name.png)
+  ![Get API endpoint and model name for BGE-M3](../images/bge-m3-api-endpoint-and-model-name.png)
+  
+
 
 * Record the API endpoint (EMBED_API_BASE) and the model parameter (EMBED_MODEL_NAME).
 

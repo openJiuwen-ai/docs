@@ -81,13 +81,13 @@ Make sure your machine meets the following requirements:
 
     - Click <a href="https://console.huaweicloud.com/modelarts/?locale=zh-cn&region=cn-southwest-2#/model-studio/square" target="_blank" rel="nofollow noopener noreferrer">this link</a> to go to the ModelArts Model Square.
 
-    - To experience the memory feature, please click on "向量模型" (Embedding model) and select a vector model according to your needs. The following content uses BGE-M3 as an example.
+    - To experience the memory feature, please click on "Embedding" and select a vector model according to your needs. The following content uses BGE-M3 as an example.
 
-      ![Find the embedding model](../images/find_embed.png)
+      ![Select BGE-M3 embedding model in ModelArts](../images/bge-m3-embedding-model-selection.png)
 
-    - After locating the suitable model, click "推理调用" (Inference Call) to enter the model information acquisition page.
+    - After locating the suitable model, click "Call" to enter the model information acquisition page.
 
-      ![Get api_base and model_name](../images/embed_api_base_and_model_name.png)
+      ![Get API endpoint and model name for BGE-M3](../images/bge-m3-api-endpoint-and-model-name.png)
 
     - Record the API address (corresponds to EMBED_API_BASE) and the model parameter (corresponds to EMBED_MODEL_NAME).
 
@@ -140,13 +140,13 @@ The memory feature depends on an embedding model. The following steps use Huawei
 
 - Click <a href="https://console.huaweicloud.com/modelarts/?locale=zh-cn&region=cn-southwest-2#/model-studio/square" target="_blank" rel="nofollow noopener noreferrer">this link</a> to go to the ModelArts Model Square.
 
-- To experience the memory feature, please click on "向量模型" (Embedding model) and select a vector model according to your needs. The following content uses BGE-M3 as an example.
+- To experience the memory feature, please click on "Embedding" and select a vector model according to your needs. The following content uses BGE-M3 as an example.
 
-  ![Find the embedding model](../images/find_embed.png)
+  ![Select BGE-M3 embedding model in ModelArts](../images/bge-m3-embedding-model-selection.png)
 
-- After locating the suitable model, click "推理调用" (Inference Call) to enter the model information acquisition page.
+- After locating the suitable model, click "Call" to enter the model information acquisition page.
 
-  ![Get api_base and model_name](../images/embed_api_base_and_model_name.png)
+  ![Get API endpoint and model name for BGE-M3](../images/bge-m3-api-endpoint-and-model-name.png)
 
 - Record the API address (corresponds to EMBED_API_BASE) and the model parameter (corresponds to EMBED_MODEL_NAME).
 

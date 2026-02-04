@@ -120,7 +120,7 @@ Before proceeding with the main installation, you must first install the require
   git config --global user.email your_useremail
   ```
 
-  ![image](../images/gitcode-token.png)
+  ![GitCode personal access token settings](../images/gitcode-personal-access-token-creation.png)
 
 * Follow Step 3 in the image to obtain a Personal Access Token. When cloning the repository, you will need to enter your GitCode username and this personal access token.
 
@@ -292,7 +292,7 @@ The memory and knowledge base function supports two vector databases: Chroma and
 * Download: Visit the <a href="https://www.docker.com/products/docker-desktop/" rel="nofollow">Docker Desktop official website</a>, and click "Download for Mac" to download the .dmg installer.
 * Double-click the installer and drag **Docker** into the Applications folder.
 
-  ![docker1](../images/docker拖拽.png)
+  ![Drag Docker to Applications folder](../images/docker-drag-to-applications.png)
 
 * Find and start the Docker application.
 * Upon first opening Docker, the system will prompt you to enter your macOS password to authorize the installation of virtual machine components. Click OK to continue.
@@ -355,11 +355,12 @@ The memory and knowledge base features rely on an embedding model. The following
 
 * To experience the memory feature and knowledge base feature, please click on "向量模型" (Embedding model) and select a vector model according to your needs. The following content uses BGE-M3 as an example.
 
-  ![Locate the embedding model](../images/find_embed.png)
+  ![Select BGE-M3 embedding model in ModelArts](../images/bge-m3-embedding-model-selection.png)
 
-* After locating the suitable model, click "推理调用" (Inference Call) to enter the model information acquisition page.
+* After locating the suitable model, click "Call" to enter the model information acquisition page.
 
-  ![Obtain api_base and model_name](../images/embed_api_base_and_model_name.png)
+  ![Get API endpoint and model name for BGE-M3](../images/bge-m3-api-endpoint-and-model-name.png)
+
 
 * Record the API address (corresponding to EMBED_API_BASE) and model parameters (corresponding to EMBED_MODEL_NAME).
 

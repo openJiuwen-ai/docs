@@ -133,7 +133,7 @@ Before the formal installation, complete the dependency installation, then proce
   git config --global user.email your_useremail
   ```
 
-  ![image](../images/gitcode-token.png)
+  ![GitCode personal access token settings](../images/gitcode-personal-access-token-creation.png)
 
 - Follow the illustration (Step 3) to obtain a personal access token. When cloning the code, you will need to enter your gitcode account and personal access token.
 
@@ -343,13 +343,14 @@ The memory and knowledge base features rely on an embedding model. The following
 
 - Click the <a href="https://console.huaweicloud.com/modelarts/?locale=zh-cn&region=cn-southwest-2#/model-studio/square" target="_blank" rel="nofollow noopener noreferrer">link</a> to enter ModelArts Model Square.
 
-- To experience the memory feature and knowledge base feature, please click on "向量模型" (Embedding model) and select a vector model according to your needs. The following content uses BGE-M3 as an example.
+- To experience the memory feature and knowledge base feature, please click on "Embedding" and select a vector model according to your needs. The following content uses BGE-M3 as an example.
 
-  ![Find embedding model](../images/find_embed.png)
+  ![Select BGE-M3 embedding model in ModelArts](../images/bge-m3-embedding-model-selection.png)
 
-- After locating the suitable model, click "推理调用" (Inference Call) to enter the model information acquisition page.
+- After locating the suitable model, click "Call" to enter the model information acquisition page.
 
-  ![Get api_base and model_name](../images/embed_api_base_and_model_name.png)
+  ![Get API endpoint and model name for BGE-M3](../images/bge-m3-api-endpoint-and-model-name.png)
+
 
 - Record the API address (corresponds to EMBED_API_BASE) and the model parameter (corresponds to EMBED_MODEL_NAME).
 
