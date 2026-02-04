@@ -15,11 +15,11 @@ abstract add_message(message: BaseMessage | List[BaseMessage]) -> List[BaseMessa
 
 **参数**：
 
-- **message**([BaseMessage](../../openjiuwen.core/foundation/llm/llm.md#basemessage--usermessage--systemmessage--assistantmessage--toolmessage)| List[BaseMessage])：要添加的单个或多条消息对象，必须是BaseMessage或者BaseMessage组成的列表类型。
+- **message**([BaseMessage](../../openjiuwen.core/foundation/llm/llm.md#class-openjiuwencorefoundationllmschemamessagebasemessage)| List[BaseMessage])：要添加的单个或多条消息对象，必须是BaseMessage或者BaseMessage组成的列表类型。
 
 **返回**：
 
-**List[[BaseMessage](../../openjiuwen.core/foundation/llm/llm.md#basemessage--usermessage--systemmessage--assistantmessage--toolmessage)]**，追加后的消息列表（Processor 处理后的结果）。
+**List[[BaseMessage](../../openjiuwen.core/foundation/llm/llm.md#class-openjiuwencorefoundationllmschemamessagebasemessage)]**，追加后的消息列表（Processor 处理后的结果）。
 
 **样例**：
 
@@ -51,7 +51,7 @@ abstract get_messages(size: Optional[int] = None, with_history: bool = True) -> 
 
 **返回**：
 
-**List[[BaseMessage](../../openjiuwen.core/foundation/llm/llm.md#basemessage--usermessage--systemmessage--assistantmessage--toolmessage)]**，按原始顺序返回的检索到的消息，最近的消息在最后。
+**List[[BaseMessage](../../openjiuwen.core/foundation/llm/llm.md#class-openjiuwencorefoundationllmschemamessagebasemessage)]**，按原始顺序返回的检索到的消息，最近的消息在最后。
 
 **样例**：
 
@@ -79,7 +79,7 @@ abstract set_message(messages: List[BaseMessage], with_history: bool = True)
 
 **参数**：
 
-- **messages**(List[[BaseMessage](../../openjiuwen.core/foundation/llm/llm.md#basemessage--usermessage--systemmessage--assistantmessage--toolmessage)])：要置入模型上下文的新消息序列。
+- **messages**(List[[BaseMessage](../../openjiuwen.core/foundation/llm/llm.md#class-openjiuwencorefoundationllmschemamessagebasemessage)])：要置入模型上下文的新消息序列。
 - **with_history**(bool, 可选)：替换范围。为`True`表示替换拼接后的消息集（由「上下文消息 + 历史消息」组成）；为`False`表示仅替换历史消息，保留上下文消息不变。默认值：`True`。
 
 **样例**：
@@ -112,7 +112,7 @@ abstract pop_message(size: int = 1, with_history: bool = True) -> List[BaseMessa
 
 **返回**：
 
-**List[[BaseMessage](../../openjiuwen.core/foundation/llm/llm.md#basemessage--usermessage--systemmessage--assistantmessage--toolmessage)]**：被移除的消息。
+**List[[BaseMessage](../../openjiuwen.core/foundation/llm/llm.md#class-openjiuwencorefoundationllmschemamessagebasemessage)]**：被移除的消息。
 
 **样例**：
 
@@ -174,7 +174,7 @@ abstract get_context_window(
 
 **参数**：
 
-- **system_messages**(List[[BaseMessage](../../openjiuwen.core/foundation/llm/llm.md#basemessage--usermessage--systemmessage--assistantmessage--toolmessage)], 可选)：要前置到消息窗口的系统级消息。
+- **system_messages**(List[[BaseMessage](../../openjiuwen.core/foundation/llm/llm.md#class-openjiuwencorefoundationllmschemamessagebasemessage)], 可选)：要前置到消息窗口的系统级消息。
 - **tools**(List[[ToolInfo](../../openjiuwen.core/foundation/tool/tool.md)], 可选)：要纳入消息窗口的工具定义信息。
 - **window_size**(int, 可选)：要包含的历史消息最大数量；若省略，默认包含全部历史消息。
 - **dialogue_round**(int, 可选)：要保留的最新对话轮次数量。一个轮次的定义为：从用户消息开始，至下一条不含工具调用的助手消息结束（即工具调用轮次中的最终回复）。未完成轮次（仅有用户消息、无后续助手消息）仍计为一个轮次。当该参数与`window_size`同时指定时，本参数优先级更高。若显式设置，值必须大于 0；默认值`None`表示禁用基于轮次的消息截断逻辑。
@@ -390,8 +390,8 @@ class openjiuwen.core.context_engine.base.ContextWindow()
 
 **参数**：
 
-- **system_messages**(List[[BaseMessage](../../openjiuwen.core/foundation/llm/llm.md#basemessage--usermessage--systemmessage--assistantmessage--toolmessage)]): 系统级指令（如操作指引、角色设定），需固定置于最终消息列表的开头位置。默认值：`[]`。
-- **context_messages**(List[[BaseMessage](../../openjiuwen.core/foundation/llm/llm.md#basemessage--usermessage--systemmessage--assistantmessage--toolmessage)]): 对话历史或用户输入信息，可由上下文引擎处理器进行截断、压缩或重排处理。默认值：`[]`。
+- **system_messages**(List[[BaseMessage](../../openjiuwen.core/foundation/llm/llm.md#class-openjiuwencorefoundationllmschemamessagebasemessage)]): 系统级指令（如操作指引、角色设定），需固定置于最终消息列表的开头位置。默认值：`[]`。
+- **context_messages**(List[[BaseMessage](../../openjiuwen.core/foundation/llm/llm.md#class-openjiuwencorefoundationllmschemamessagebasemessage)]): 对话历史或用户输入信息，可由上下文引擎处理器进行截断、压缩或重排处理。默认值：`[]`。
 
 - **tools**(List[[ToolInfo](../../openjiuwen.core/foundation/tool/tool.md)]): 工具定义信息（函数、插件），模型可在本轮对话中调用此类工具。默认值：`[]`。
 - **statistic**("ContextStats"): 上下文窗口的统计信息。默认值：`ContextStats()`。
@@ -404,7 +404,7 @@ get_messages() -> List[BaseMessage]
 
 **返回**：
 
-**List[[BaseMessage](../../openjiuwen.core/foundation/llm/llm.md#basemessage--usermessage--systemmessage--assistantmessage--toolmessage)]**，返回系统级指令和对话历史或用户输入信息拼接后的消息列表。
+**List[[BaseMessage](../../openjiuwen.core/foundation/llm/llm.md#class-openjiuwencorefoundationllmschemamessagebasemessage)]**，返回系统级指令和对话历史或用户输入信息拼接后的消息列表。
 
 **样例**：
 
