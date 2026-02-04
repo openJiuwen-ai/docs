@@ -1,6 +1,6 @@
 # openjiuwen.core.workflow.components.condition.number
 
-`openjiuwen.core.workflow.components.condition.number` 模块提供基于次数的循环条件实现，用于在 [LoopComponent](../flow/loop/loop_comp.md#class-openjiuwencoreworkflowcomponentsflowlooploop_comploopcomponent) 中按固定次数或输入中的次数上限循环。根据 `session.state()` 中的当前轮次索引 `INDEX` 与上限 `limit` 比较，判断是否继续循环。与 [loop_comp](../flow/loop/loop_comp.md) 配合使用。条件类通过 `openjiuwen.core.workflow` 导出，建议使用 `from openjiuwen.core.workflow import NumberCondition` 导入。
+`openjiuwen.core.workflow.components.condition.number` 模块提供基于次数的循环条件实现，用于在 [LoopComponent] 中按固定次数或输入中的次数上限循环。根据 `session.state()` 中的当前轮次索引 `INDEX` 与上限 `limit` 比较，判断是否继续循环。与 [loop_comp](../flow/loop/loop_comp.md) 配合使用。条件类通过 `openjiuwen.core.workflow` 导出，建议使用 `from openjiuwen.core.workflow import NumberCondition` 导入。
 
 ## class openjiuwen.core.workflow.components.condition.number.NumberCondition
 

@@ -1,239 +1,262 @@
-# openjiuwen.core.workflow
+# openjiuwen.core.workflow.components.loop_comp
 
-`openjiuwen.core.workflow.components.flow.loop.loop_comp` 模块提供工作流中的循环能力，包括：用于定义循环体的 [LoopGroup](loop_comp.md#class-openjiuwencoreworkflowcomponentsflowlooploop_comploopgroup)、作为循环节点的 [LoopComponent](loop_comp.md#class-openjiuwencoreworkflowcomponentsflowlooploop_comploopcomponent)、用于中途退出的 [LoopBreakComponent](loop_comp.md#class-openjiuwencoreworkflowcomponentsflowlooploop_comploopbreakcomponent)、以及用于在循环内写回变量的 [LoopSetVariableComponent](loop_comp.md#class-openjiuwencoreworkflowcomponentsflowlooploop_comploopsetvariablecomponent)。组件通过 `openjiuwen.core.workflow` 导出，建议使用 `from openjiuwen.core.workflow import LoopComponent, LoopGroup, LoopBreakComponent, LoopSetVariableComponent` 导入。更多组件说明见 [components](../../../components.README.md)。
+## class openjiuwen.core.workflow.components.loop_comp.LoopGroup
 
----
+循环体，用于组织和管理一组循环执行的组件。LoopGroup 是构建循环逻辑的基础容器，它可以包含多个组件并定义它们之间的连接关系，为工作流提供了强大的循环处理能力的基础支持。
 
-## class openjiuwen.core.workflow.components.flow.loop.loop_comp.LoopGroup
-
-```python
-class openjiuwen.core.workflow.components.flow.loop.loop_comp.LoopGroup()
-```
-
-循环体工作流，继承自 `BaseWorkflow`（工作流基类） 并实现 [Executable](../../../../graph/graph.md)。用于定义循环体内包含的节点、边、起始与结束节点；不支持嵌套 [LoopComponent](loop_comp.md#class-openjiuwencoreworkflowcomponentsflowlooploop_comploopcomponent)。通过 `start_nodes` / `start_comp` 与 `end_nodes` / `end_comp` 配置循环体的入口与出口。
-
-### add_workflow_comp(comp_id: str, workflow_comp: ComponentComposable, *, wait_for_all: bool = None, inputs_schema: dict | Transformer = None, outputs_schema: dict | Transformer = None, stream_inputs_schema: dict | Transformer = None, stream_outputs_schema: dict | Transformer = None, comp_ability: list[ComponentAbility] = None) -> Self
-
-向循环体内添加组件。若添加的是 [LoopBreakComponent](loop_comp.md#class-openjiuwencoreworkflowcomponentsflowlooploop_comploopbreakcomponent)，会记录到内部 break 列表；不支持添加 [LoopComponent](loop_comp.md#class-openjiuwencoreworkflowcomponentsflowlooploop_comploopcomponent)（嵌套循环）。
-
-**参数**：
-
-- **comp_id**（str）：工作流组件的唯一标识 ID，用于在工作流中区分不同组件，不可重复。
-- **workflow_comp**（ComponentComposable）：要添加的工作流组件实例，需实现 ComponentComposable 接口。
-- **wait_for_all**（bool = None）：是否等待所有前置组件完成后再执行当前组件，默认值为 None（使用工作流容器的默认配置）。
-- **inputs_schema**（dict | Transformer = None）：组件的常规输入数据模式 / 转换器，用于规范和处理传入组件的非流式输入参数，默认值为 None（不进行额外输入处理）。
-- **outputs_schema**（dict | Transformer = None）：组件的常规输出数据模式 / 转换器，用于规范和处理组件输出的非流式结果，默认值为 None（不进行额外输出处理）。
-- **stream_inputs_schema**（dict | Transformer = None）：组件的流式输入数据模式 / 转换器，用于处理流式传输的输入参数，默认值为 None（不支持流式输入）。
-- **stream_outputs_schema**（dict | Transformer = None）：组件的流式输出数据模式 / 转换器，用于处理流式传输的输出结果，默认值为 None（不支持流式输出）。
-- **comp_ability**（list[ComponentAbility] = None）：当前组件具备的能力列表，用于标识组件的功能特性，默认值为 None（无额外能力声明）。
-
-**异常**：
-
-- **BaseError**：当 `workflow_comp` 为 `LoopComponent` 时，错误码为 `COMPONENT_LOOP_NOT_SUPPORT`（嵌套循环不支持）。
-
-### start_nodes(nodes: list[str]) -> Self
-
-批量设置循环体的起始节点。循环执行将从这些节点开始。
-
-**参数**：
-
-- **nodes**（list[str]）：起始节点 ID 列表，列表中的每个字符串对应一个工作流组件的唯一标识 ID。
-
----
-
-### start_comp(start_comp_id: str) -> Self
-
-设置单个起始节点。即使调用者直接使用 BaseWorkflow API，也会记录到内部起始节点列表中。
-
-**参数**：
-
-- **start_comp_id**（str）：起始组件的唯一标识 ID。
-
----
-
-### end_nodes(nodes: list[str] | str) -> Self
-
-批量设置循环体的结束节点。循环执行到这些节点后，会根据循环条件判断是否继续下一轮迭代。
-
-**参数**：
-
-- **nodes**（list[str] | str）：结束节点 ID，可以是单个字符串或字符串列表。若为字符串，则作为单个结束节点；若为列表，则设置多个结束节点。
-
----
-
-### end_comp(end_comp_id: str) -> Self
-
-设置单个结束节点。即使调用者直接使用 BaseWorkflow API，也会记录到内部结束节点列表中。
-
-**参数**：
-
-- **end_comp_id**（str）：结束组件的唯一标识 ID。
-
----
-
-###  async on_invoke(inputs: Input, session: BaseSession, **kwargs) -> Output
-
-循环组件的调用入口。自动完成能力补全，创建子工作流会话，编译并执行循环图。
-
-**参数**：
-
-- **inputs**（Input）：输入数据对象。
-- **session**（BaseSession）：当前会话实例。
-- **kwargs**：额外参数，支持传递 `context` 上下文信息。
-
-**返回值**：
-
-- **Output**：执行结果，当前实现返回 `None`。
-
----
-
-### skip_trace() -> bool
-
-是否跳过链路追踪。
-
-**返回值**：
-
-- **bool**：固定返回 `True`，表示跳过链路追踪。
-
----
-
-### graph_invoker() -> bool
-
-是否为图调用器。
-
-**返回值**：
-
-- **bool**：固定返回 `True`，表示该组件作为图调用器执行。
-
----
-
-### check_validate()
-
-验证循环组配置的合法性。检查起始节点、结束节点是否设置，以及循环体内是否包含至少一个节点。
-
-**异常**：
-
-- **BaseError**：当配置不合法时抛出，错误码为 `COMPONENT_LOOP_GROUP_PARAM_INVALID`，可能的原因包括：
-  - 缺少起始节点（`missing start_nodes in loop group`）
-  - 缺少结束节点（`missing end_nodes in loop group`）
-  - 循环体为空（`loop group is empty (contains no nodes)`）
-
-## class openjiuwen.core.workflow.components.flow.loop.loop_comp.LoopComponent
+### add_workflow_comp
 
 ```python
-class openjiuwen.core.workflow.components.flow.loop.loop_comp.LoopComponent(loop_group: LoopGroup, output_schema: dict)
+add_workflow_comp(comp_id: str, workflow_comp: ComponentComposable, *,  wait_for_all: bool = None, inputs_schema: dict = None, stream_inputs_schema: dict = None, outputs_schema: dict = None, stream_outputs_schema: dict = None, inputs_transformer=None, outputs_transformer=None, **kwargs) -> Self
 ```
 
-循环组件，继承自 [WorkflowComponent](../../components.md#class-openjiuwencoreworkflowcomponentscomponentworkflowcomponent)。根据输入中的 `loop_type`、`loop_array` / `loop_number` / `bool_expression` 等构建条件，驱动 [LoopGroup](loop_comp.md#class-openjiuwencoreworkflowcomponentsflowlooploop_comploopgroup) 重复执行，并支持 [LoopBreakComponent](loop_comp.md#class-openjiuwencoreworkflowcomponentsflowlooploop_comploopbreakcomponent) 与中间变量回写。
+添加工作流组件到循环体中。注意，循环体添加的组件只能在循环体内使用，不能在循环体外使用。同理，循环体外（使用`openjiuwen.core.workflow.base.BaseWorkFlow.add_workflow_comp`接口）添加的组件也只能在循环体外使用，不能在循环体内使用。
 
 **参数**：
 
-- **loop_group**（LoopGroup）：循环体工作流，不可为空。
-- **output_schema**（dict）：循环节点输出结构定义，用于聚合循环结果。
+- **comp_id**(str)：组件的唯一标识符，用于在循环体中引用此组件。注意是整个 Workflow 中的唯一标识符，不能与其他组件重复。
+- **workflow_comp**(ComponentComposable)：待添加的循环体组件实例，取值类型不可为`LoopComponent`。
+- *：参数分隔符
+- **inputs_schema**(dict, 可选)：组件常规输入参数的结构 schema。用于校验输入数据的格式合法性。键名与组件输入参数名匹配，值与组件输入数据类型匹配，未配置时不校验输入格式。默认值：`None`。
+- **stream_inputs_schema**(dict, 可选)：组件流式输入参数的结构 schema。用于定义流式输入数据的格式规范。默认值：`None`。
+- **outputs_sc- **wait_for_all**(bool, 可选)：是否等待所有前置依赖组件执行完成后再执行此组件。`True`表示需要等待所有前置依赖组件执行完成，`False`表示不需要。默认值：`None`，表示由系统根据组件能力自动决定（流式组件默认为`True`，其他组件默认为`False`）。
+hema**(dict, 可选)：组件常规输出结果的结构 schema。用于定义输出数据的格式规范，便于后续组件解析；未配置时输出格式由组件自身决定。默认值：`None`。
+- **stream_outputs_schema**(dict, 可选)：组件流式输出结果的结构 schema。用于定义流式输出数据的格式规范。默认值：`None`。
+- **inputs_transformer**([Transformer])：输入数据转换器，负责在将数据传递给组件前进行格式转换或预处理，允许开发者注入自定义逻辑。schema规范结构在前，transformer格式转换在后，可同时配置。默认值：`None`。
+- **outputs_transformer**([Transformer])：输出数据转换器，负责在组件产生结果后进行格式转换或后处理，允许开发者注入自定义逻辑。默认值：`None`。
+- **kwargs**：预留参数，配置不生效。
 
-**异常**：
+> **说明**
+>
+> - inputs_schema和inputs_transformer的配置可参见开发文档中的要求，取值可引用上游组件的输出；outputs_schema和outputs_transformer的配置取值可使用组件本身输出。
+> - inputs_schema和inputs_transformer均未配置时表示透传所有输入；outputs_schema和outputs_transformer均未配置时表示输出格式为组件自身输出。
+> - schema和transform同时配置时，只有transformer生效。
 
-- **BaseError**：当对 `loop_group` 校验失败时抛出异常。
-
-### async invoke(inputs: Input, session: Session, context: ModelContext) -> Output:
-
-执行循环：从 `inputs` 中解析 `INPUTS_KEY` 得到 LoopInput（含 `loop_type`、`loop_array`、`loop_number`、`bool_expression`、`intermediate_var` 等），根据类型构建 [Condition](../../condition/condition.md)（如 [ArrayConditionInSession](../../condition/array.md)、[NumberConditionInSession](../../condition/number.md)、[AlwaysTrue](../../condition/condition.md)、[ExpressionCondition](../../condition/expression.md)），驱动 [LoopGroup](loop_comp.md#class-openjiuwencoreworkflowcomponentsflowlooploop_comploopgroup) 执行直至条件不满足或遇到 break。
-
-**参数**：
-
-- **inputs**（Input）：须为 dict，且包含键 `INPUTS_KEY`，其值符合 `LoopInput` 约定。
-- **session**（Session）：工作流会话，用于获取循环次数上限等环境变量。
-- **context**（ModelContext）：上下文。
-
-**返回**：
-
-- **Output**：循环结束后聚合的输出，结构由 `output_schema` 与内部回调决定。
-
-**异常**：
-
-- **BaseError**：输入无效、缺少 `INPUTS_KEY`、`loop_type` 非法、`loop_number` 超限或循环体为空等，错误码参见 [StatusCode](../../../../common/exception/status_code.md)（如 `COMPONENT_LOOP_INPUT_INVALID`、`NUMBER_CONDITION_ERROR`、`COMPONENT_LOOP_EXECUTION_ERROR`）。若子图抛出 GraphInterrupt，会原样上抛。
-
-### graph_invoker() -> bool
-
-**返回**：
-
-- **bool**：表示本组件由图的执行器调度（子图调用）是否成功。
-
-### property loop_group() -> LoopGroup
-
-**返回**：
-
-- **LoopGroup**：返回构造时传入的 [LoopGroup](loop_comp.md#class-openjiuwencoreworkflowcomponentsflowlooploop_comploopgroup) 实例。
-
----
-
-## class openjiuwen.core.workflow.components.flow.loop.loop_comp.LoopBreakComponent
+**样例**：
 
 ```python
-class openjiuwen.core.workflow.components.flow.loop.loop_comp.LoopBreakComponent()
+>>> from openjiuwen.core.component.base import WorkflowComponent
+>>> from openjiuwen.core.context_engine.base import Context
+>>> from openjiuwen.core.graph.executable import Input, Output
+>>> from openjiuwen.core.runtime.base import ComponentExecutable
+>>> from openjiuwen.core.runtime.runtime import Runtime
+>>> from openjiuwen.core.component.loop_comp import LoopGroup
+>>> # 自定义组件AddTenNode， 每次调用，对于inputs中的source累加10
+>>> class AddTenNode(WorkflowComponent):
+...     def __init__(self, node_id: str):
+...         super().__init__()
+...         self.node_id = node_id
+...
+...     async def invoke(self, inputs: Input, session: WorkflowSession, context: Context) -> Output:
+...         return {"result": inputs["source"] + 10}
+>>>
+>>> # 创建循环体
+>>> loop_group = LoopGroup()
+>>> # 添加第一个组件，处理循环数组中的当前项
+>>> # AddTenNode 是一个简单的组件，将输入的 source 字段值增加 10 并输出到 result 字段
+>>> loop_group.add_workflow_comp("1", AddTenNode("1"), inputs_schema={"source": "${l.item}"})
+>>> # 添加第二个组件，处理中间变量
+>>> loop_group.add_workflow_comp("2", AddTenNode("2"), inputs_schema={"source": "${l.user_var}"})
 ```
 
-循环中断组件。在循环体内作为节点加入后，执行时会调用当前循环控制器的 `break_loop` 方法，使当前循环在当轮结束后退出。需由循环执行逻辑注入 LoopController（通常由循环执行逻辑在内部自动完成）。
-
-### set_controller(loop_controller: LoopController)
-
-**参数**：
-
-- **loop_controller**（LoopController）：为循环中断组件配置循环控制器。
-
-### async invoke(inputs: Input, session: Session, context: ModelContext) -> Output
-
-
-调用控制器的 `break_loop` 方法标记循环中断，并返回空字典 `{}`。
-
-**参数**：
-
-- **inputs**（Input）：需要组件处理的输入数据对象。
-- **session**（Session）：当前会话实例，用于获取组件相关信息。
-- **context**（ModelContext）：模型上下文对象。
-
-**返回值**：
-
-- **Output**：组件响应的输出对象。
-
-**异常**：
-
-- **BaseError**：控制器未设置时，错误码为 `COMPONENT_BREAK_EXECUTION_ERROR`。
-
----
-
-## class openjiuwen.core.workflow.components.flow.loop.loop_comp.LoopSetVariableComponent
+### start_nodes
 
 ```python
-class openjiuwen.core.workflow.components.flow.loop.loop_comp.LoopSetVariableComponent(variable_mapping: dict[str, Any])
+start_nodes(nodes: list[str]) -> Self
 ```
 
-循环内设置变量组件，继承自 [WorkflowComponent](../../components.md#class-workflowcomponent)。根据 `variable_mapping` 将右侧表达式的值（可为引用路径）写入会话状态中左侧路径对应的节点输出，用于在循环体内更新变量供后续节点或下一轮使用。
+设置循环体的起始组件。
 
 **参数**：
 
-- **variable_mapping**（dict[str, Any]）：键为写入目标路径（支持 `${node_id.key}` 形式），值为字面量或引用路径；不可为空。
+- **nodes**(list[str])：起始组件标识符列表。当前只支持设置一个起始组件，`nodes`列表中不可存在`None`值。示例：`['start_node']`。
 
-**异常**：
-
-- **BaseError**：当 `variable_mapping` 为 `None` 或空时，错误码为 `COMPONENT_SET_VAR_INIT_FAILED`。
-
-### async invoke(inputs: Input, session: Session, context: ModelContext) -> Output
+**样例：**
 
 ```python
-async def invoke(self, inputs: Input, session: Session, context: ModelContext) -> Output
+>>> from openjiuwen.core.component.loop_comp import LoopGroup
+>>> # 设置循环体的起始组件
+>>> loop_group = LoopGroup()
+>>> loop_group.add_workflow_comp("1", AddTenNode("1"))
+>>> loop_group.add_workflow_comp("2", AddTenNode("2"))
+>>> # 指定组件"1"作为循环的起始组件
+>>> loop_group.start_nodes(["1"])
 ```
+
+### end_nodes
+
+```python
+end_nodes(nodes: list[str]) -> Self
+```
+
+设置循环体的结束组件。
 
 **参数**：
 
-- **inputs**（Input）：需要本组件处理的输入数据对象。
-- **session**（Session）：当前会话实例，用于获取组件相关信息。
-- **context**（ModelContext）：模型上下文对象。
+- **nodes**(list[str])：结束组件标识符列表。当前只支持设置一个结束组件，`nodes`列表中不可存在`None`值。示例：`['end_node']`。
 
-**返回值**：
+**样例**：
 
-- **Output**：组件响应的输出对象。
+```python
+>>> from openjiuwen.core.component.loop_comp import LoopGroup
+>>> # 设置循环体的结束组件
+>>> loop_group = LoopGroup()
+>>> loop_group.add_workflow_comp("1", AddTenNode("1"))
+>>> loop_group.add_workflow_comp("2", AddTenNode("2"))
+>>> # 指定组件"2"作为循环的结束组件
+>>> loop_group.end_nodes(["2"])
+```
 
-**异常**：
+## class openjiuwen.core.component.loop_comp.LoopType
 
-- **BaseError**：左侧 key 格式不支持时，错误码为 `COMPONENT_SET_VAR_INPUT_PARAM_ERROR`。
+循环类型枚举类，定义了支持的循环类型。
+
+- **Array**：数组循环，对数组中的每个元素执行循环。值为"array"。
+- **Number**：数值循环，执行指定次数的循环。值为"number"。
+- **AlwaysTrue**：无限循环，一直执行直到被中断。值为"always_true"。
+- **Expression**：表达式循环，根据表达式结果决定是否继续循环。值为"expression"。
+
+## class openjiuwen.core.component.loop_comp.LoopComponent
+
+```python
+class openjiuwen.core.component.loop_comp.LoopComponent(loop_group: LoopGroup, output_schema: dict)
+```
+
+标准循环组件类，是对循环功能的高级封装，提供了更简洁的使用方式。通过LoopComponent，可以方便地实现数组循环、数值循环等多种循环模式，并支持循环中断、中间变量传递等高级功能。
+
+**参数**：
+
+- **loop_group**([LoopGroup])：循环组实例，定义了循环体内要执行的组件。循环组中可以包含多个组件，并通过连接关系定义它们的执行顺序。`loop_group`内至少包含一个组件。
+- **output_schema**(dict)：输出模式定义，用于从循环结果中提取特定字段。键为输出字段名，值为字段值的表达式路径。例如：`{"results": "${1.result}", "user_var": "${l.user_var}"}`表示将循环体内组件"1"的result字段和中间变量"user_var"作为循环组件的输出。
+
+> **说明**
+>
+> 1. **循环体常用组件**：在循环功能实现中，通常需要与以下组件配合使用：
+>
+>    - [BreakComponent]：用于控制循环的中断，当执行到此组件时，循环将立即停止。
+>    - [SetVariableComponent]：用于在循环过程中设置变量值，支持引用路径和嵌套结构变量的设置。
+> 2. **循环变量作用域**：循环内部的变量仅在循环内部可见，外部组件无法直接访问。
+> 3. **中间变量初始化**：使用LoopComponent的intermediate_var参数可以在循环开始前初始化中间变量，确保循环逻辑的正确性。
+> 4. **循环中断机制**：
+>
+>    - 使用BreakComponent时，需要在LoopComponent的循环体中正确配置中断逻辑。
+>    - 循环中断后，已收集的结果仍会被保留并返回。
+>    - 详细信息请参考[BreakComponent]。
+> 5. **循环条件类型**：根据不同的循环需求选择合适的循环类型：
+>
+>    - array：适用于需要遍历数组的场景。
+>    - always_true：适用于需要无限循环直到显式中断的场景。
+> 6. **性能考虑**：对于大数据集的循环，应注意内存使用和执行效率，避免在循环体中执行过于复杂的操作。
+
+**样例**：
+
+下面的示例展示了如何使用LoopComponent配合AlwaysTrue条件和BreakComponent实现需要在特定条件下中断的无限循环。
+
+**注意**：AlwaysTrue条件会使循环持续执行，直到BreakComponent显式中断循环。详细信息请参考[BreakComponent](./break_comp.md#class-openjiuwencorecomponentbreak_compbreakcomponent)。
+
+```python
+>>> import asyncio
+>>>
+>>> from openjiuwen.core.component.base import WorkflowComponent
+>>> from openjiuwen.core.component.break_comp import BreakComponent
+>>> from openjiuwen.core.workflow.end_comp import End
+>>> from openjiuwen.core.component.loop_comp import LoopComponent, LoopGroup
+>>> from openjiuwen.core.component.set_variable_comp import SetVariableComponent
+>>> from openjiuwen.core.component.branch_comp import BranchComponent
+>>> from openjiuwen.core.workflow.start_comp import Start
+>>> from openjiuwen.core.context_engine.base import Context
+>>> from openjiuwen.core.runtime.base import ComponentExecutable, Input, Output
+>>> from openjiuwen.core.runtime.runtime import Runtime
+>>> from openjiuwen.core.runtime.workflow import WorkflowRuntime
+>>> from openjiuwen.core.workflow.base import Workflow
+>>>
+>>> # 通用节点组件，返回输入值
+>>> class CommonNode(WorkflowComponent):
+...     async def invoke(self, inputs: Input, session: WorkflowSession, context: Context) -> Output:
+...         return {"output": inputs["value"]}
+>>>
+>>> # 创建LoopGroup
+>>> loop_group = LoopGroup()
+>>>
+>>> # 创建通用节点作为循环体核心组件
+>>> class commonNode(CommonNode):
+...     async def invoke(self, inputs: Input, session: WorkflowSession, context: Context) -> Output:
+...         # 模拟循环体的工作，返回结果
+...         return {"output": True}
+>>>
+>>> # 为LoopGroup添加工作流组件
+>>> loop_group.add_workflow_comp("a", commonNode())
+>>>
+>>> # 创建分支组件用于条件判断
+>>> branch_component = BranchComponent()
+>>> loop_group.add_workflow_comp("branch", branch_component)
+>>>
+>>> # 创建变量设置组件，递增user_var
+>>> set_variable_component = SetVariableComponent({"user_var": "${loop.user_var} + 1"})
+>>> loop_group.add_workflow_comp("setVar", set_variable_component)
+>>>
+>>> # 创建终止循环组件
+>>> break_node = BreakComponent()
+>>> loop_group.add_workflow_comp("break", break_node)
+>>>
+>>> # 指定组件"a"为循环开始，组件"setVar"为正常循环结束
+>>> loop_group.start_nodes(["a"])
+>>> loop_group.end_nodes(["setVar"])
+>>>
+>>> # 设置BranchComponent的分支条件
+>>> # 分支1: 继续循环，执行setVariableComponent
+>>> branch_component.add_branch("${loop.index} < 2", ["setVar"])
+>>> # 分支2: 终止循环，执行break组件
+>>> branch_component.add_branch("${loop.index} >= 2", ["break"])
+>>>
+>>> # 设置组件连接
+>>> loop_group.add_connection("a", "branch")
+>>>
+>>> # 创建LoopComponent，设置输出模式，捕获最终的中间变量、循环计数和循环结果
+>>> loop_component = LoopComponent(
+...     loop_group,
+...     {
+...         "user_var": "${loop.user_var}",
+...         "loop_count": "${loop.index}",
+...         "results": "${a.output}"
+...     }
+... )
+>>>
+>>> # 创建工作流实例
+>>> workflow = Workflow()
+>>>
+>>> # 添加开始组件
+>>> workflow.set_start_comp("s", Start({}))
+>>>
+>>> # 添加结束组件，引用loop组件的输出结果
+>>> workflow.set_end_comp("e", End({}),
+...                        inputs_schema={
+...                            "user_var": "${loop.user_var}",
+...                            "loop_count": "${loop.loop_count}",
+...                            "results": "${loop.results}"
+...                        })
+>>>
+>>> # 添加循环组件，设置为always_true循环类型和中间变量初始值
+>>> workflow.add_workflow_comp("loop", loop_component,
+...                               inputs_schema={
+...                                   "loop_type": "always_true",
+...                                   "intermediate_var": {"user_var": 0}
+...                               })
+>>>
+>>> # 串行连接组件：start->loop->end
+>>> workflow.add_connection("s", "loop")
+>>> workflow.add_connection("loop", "e")
+>>>
+>>> # 调用invoke方法执行工作流
+>>> result = asyncio.run(workflow.invoke({}, create_workflow_session()))
+>>>
+>>> print(f"执行结果: {result.result}")
+>>> output = result.result.get('output', {})
+>>>
+>>> # 验证循环执行了3次
+>>> assert output.get("loop_count") == 3, f"Expected loop_count == 3, got {output.get('loop_count')}"
+>>>
+>>> # 验证每个循环的执行结果
+>>> expected_results = [True, True, True]
+>>> assert output.get("results") == expected_results, f"Expected {expected_results}, got {output.get('results')}"
+```

@@ -1,112 +1,165 @@
-# openjiuwen.core.workflow
+# openjiuwen.core.workflow.components.branch_router
 
-`openjiuwen.core.workflow.components.flow.branch_router` 模块提供分支路由器及其单条分支的抽象，用于在工作流条件边中根据当前会话状态选择下一跳节点。 [BranchComponent](branch_comp.md#class-openjiuwencoreworkflowcomponentsflowbranchcomponent) 内部使用本模块的 [BranchRouter](branch_router.md#class-openjiuwencoreworkflowcomponentsflowbranch_routerbranchrouter) 管理多条 [Branch](branch_router.md#class-openjiuwencoreworkflowcomponentsflowbranch_routerbranchrouter)；条件支持字符串表达式、可调用对象或 [Condition](../condition/condition.md) 子类，表达式语法见 [ExpressionCondition](../condition/expression.md)。
-
-类通过 `openjiuwen.core.workflow` 导出，建议使用 `from openjiuwen.core.workflow import BranchRouter, Branch` 导入。
-
-## class openjiuwen.core.workflow.components.flow.branch_router.Branch
+## class openjiuwen.core.workflow.components.branch_router.BranchRouter
 
 ```python
-class openjiuwen.core.workflow.components.flow.branch_router.Branch(condition: Union[str, Callable[[], bool], Condition], target: list[str], branch_id: str = None)
+class openjiuwen.core.workflow.components.branch_router.BranchRouter(report_trace: bool = False)
 ```
 
-表示单条分支：一个条件与一个目标节点 id 列表。用于在 [BranchRouter](branch_router.md#class-openjiuwencoreworkflowcomponentsflowbranch_routerbranchrouter) 内按顺序求值并选择首个满足条件的分支。
+`BranchRouter` 是实现分支路由器的核心类，提供了管理和切换不同的执行分支的能力，用于设计工作流的分支流程，通常和工作流的[add_conditional_connection]方法配合使用。工作流会在源组件执行完成后，调用`BranchRouter` 的可调用对象，根据其返回值来决定下一步工作流的走向。若分支路由器所管理的分支均不满足预设条件，会抛出 `JiuWenBaseException`异常，错误码为101102，错误信息为"Branch meeting the condition was not found."。
 
 **参数**：
 
-- **condition**（`str | Callable[[], bool] | Condition`）：分支条件。若为 `str` 会封装为 [ExpressionCondition](../condition/expression.md)；若为可调用对象则封装为 [FuncCondition](../condition/condition.md#class-openjiuwencoreworkflowcomponentsconditionconditionfunccondition)；若为 [Condition](../condition/condition.md) 子类则直接使用。其他类型会抛出异常。
-- **target**（list[str]）：该分支对应的下游节点 id 列表。
-- **branch_id**（str | None）：可选分支标识，默认 `None`。
+* **report_trace**(bool, 可选)：调测信息记录标识位。`True`表示工作流将记录和报告每个分支的执行情况，`False`表示工作流将不记录和报告每个分支的执行情况。默认值：`False`。
 
-**异常**：
-
-- **BaseError**：当条件类型不符合要求时，错误码参见 [StatusCode](../../../common/exception/status_code.md) 中组件分支相关项。
-
-### evaluate(session: BaseSession) -> bool
-
-在当前会话下求值本分支条件。
-
-**参数**：
-
-- **session**（BaseSession）：当前会话，用于解析表达式中的占位符等。
-
-**返回**：
-
-- **bool**：条件是否成立。
-
-### trace_info(session: BaseSession) -> str
-
-返回当前分支条件的可读描述，用于追踪与调试。
-
-**参数**：
-
-- **session**（BaseSession）：当前会话。
-
-**返回**：
-
-- **str**：条件的 trace 信息（如表达式字符串或函数名）。
-
----
-
-## class openjiuwen.core.workflow.components.flow.branch_router.BranchRouter
+### add_branch
 
 ```python
-class openjiuwen.core.workflow.components.flow.branch_router.BranchRouter(report_trace: bool = False)
+add_branch(self, condition: Union[str, Callable[[], bool], Condition], target: Union[str, list[str]], branch_id: str = None)
 ```
 
-分支路由器，用于在工作流条件边中根据当前会话状态从多条 [Branch](branch_router.md#class-openjiuwencoreworkflowcomponentsflowbranch_routerbranch) 中选出首个满足条件的分支，并返回其目标节点 id 列表。可由 [BranchComponent](branch_comp.md#class-openjiuwencoreworkflowcomponentsflowbranchcomponent) 使用，也可在自定义组件中单独使用。
+`add_branch`函数用于向分支路由器中添加一个分支逻辑，包含该分支的预设条件、目标组件、分支标识。
 
 **参数**：
 
-- **report_trace**（bool）：是否在执行时上报分支信息（如分支 id、条件描述等）用于追踪，默认 `False`。
+* **condition**(Union[str, Callable[[], bool], Condition])：表示该分支的预设条件，不可取值为`None`。`condition`支持以下3种类型：
+  
+  * 若为`str`，表示字符串形式的`bool`表达式。该表达式遵循的规则参见[ExpressionCondition]。
+  * 若为`Callable[[], bool]`，表示一个返回值为`bool`类型的函数，用于判断条件是否满足。示例：
 
-### add_branch(condition: Union[str, Callable[[], bool], Condition], target: Union[str, list[str]], branch_id: str = None)
+    ```python
+    def branch_function() -> bool:
+        return True
+    ```
 
-添加一条分支。语义与 [BranchComponent.add_branch](branch_comp.md#add_branchcondition-unionstr-callable-bool-condition-target-unionstr-liststr-branch_id-str--none) 一致：`condition` 为真时路由到 `target`。
-
-**参数**：
-
-- **condition**（`str | Callable[[], bool] | Condition`）：分支条件，类型要求同上文 Branch 构造参数。
-- **target**（`str | list[str]`）：下游节点 id 或 id 列表；若为单个 id 则内部转为单元素列表。
-- **branch_id**（str | None）：可选分支标识，默认 `None`。
+  * 若为`Condition`，表示一个预定义的、可调用的`openjiuwen.core.component.condition.condition.Condition`对象。
+* **target**(Union[str, list[str]])：表示满足条件后要跳转到的单个目标组件ID或者目标组件ID列表，不可取值为`None`。`target`支持以下2种类型：
+  
+  * 若为`str`，表示单个目标组件的组件ID。
+  * 若为`list[str]`，表示多个目标组件的组件ID列表。
+* **branch_id**(str, 可选)：表示该条件分支的标识。默认值：`None`。
 
 **异常**：
 
-- **BaseError**：当 `condition` 或 `target` 为 `None` 时，错误码参见 [StatusCode](../../../common/exception/status_code.md)。
+* **JiuWenBaseException**：openJiuwen异常基类，具体详细信息和解决方法，参见[StatusCode]。
 
-### set_session(session: Union[Session, BaseSession])
+**样例**：
 
-设置当前会话，供条件边执行时在 [\_\_call\_\_](branch_router.md#__call__args-kwargs---liststr) 中求值各分支条件使用。
+以在工作流中添加条件边为例，介绍分支路由器的使用方法。该工作流输入为数字，根据数字的取值分支结合`add_conditional_connection`方法添加不同的条件分支：
 
-**参数**：
+* 分支`pos_branch`：判断数值为正数直接执行结束组件。
+* 分支`neg_branch`：若判断数值为负数，通过自定义的绝对值计算组件，计算绝对值后执行结束组件。
+* 分支`zero_branch`：若判断数值为零，根据用户设置的环境变量`ALLOW_ZERO`来决定工作流走向，`ALLOW_ZERO`为`true`，则通过自定义的绝对值计算组件，计算绝对值后执行结束组件；反之，找不到符合条件的分支，工作流执行失败并抛出异常。
 
-- **session**（Session | BaseSession）：工作流或 Agent 的会话实例。若为 [Session](../../../session/session.md)，内部会使用其 `_inner` 会话。
-
-**异常**：
-
-- **BaseError**：当 `session` 类型不是 `Session` 或 `BaseSession` 时，错误码参见 [StatusCode](../../../common/exception/status_code.md)。
-
-### \_\_call\_\_(*args, **kwargs) -> list[str]
-
-作为条件边的路由函数被图调用：按添加顺序依次求值各分支条件，返回首个满足条件的分支的 `target` 节点 id 列表。若 `report_trace` 为 `True`，会先上报各分支信息，再在命中时上报对应 `branch_id`。
-
-**参数**：
-
-- **args**：位置参数，当前实现未使用。
-- **kwargs**：额外添加的动态参数，当前实现未使用。
-
-**返回**：
-
-- **list[str]**：命中的分支对应的目标节点 id 列表。
-
-**异常**：
-
-- **BaseError**：当没有任何分支条件满足时，错误码参见 [StatusCode](../../../common/exception/status_code.md) 中的分支执行相关项（如“未找到满足条件的分支”）。
-
-### get_drawable_branch_router()
-
-当环境变量 `WORKFLOW_DRAWABLE=true` 时，在构造路由器时会创建用于可视化的分支路由信息。本方法返回该可绘制对象，供工作流可视化使用；未开启绘制时为 `None`。
-
-**返回**：
-
-- 可绘制分支路由器实例或 `None`。
+```python
+>>> import asyncio
+>>> import os
+>>> 
+>>> from openjiuwen.core.common.exception.exception import JiuWenBaseException
+>>> from openjiuwen.core.workflow.branch_router import BranchRouter
+>>> from openjiuwen.core.component.condition.expression import ExpressionCondition
+>>> from openjiuwen.core.context_engine.base import Context
+>>> from openjiuwen.core.runtime.base import ComponentExecutable
+>>> from openjiuwen.core.runtime.runtime import Runtime
+>>> from openjiuwen.core.component.base import WorkflowComponent
+>>> from openjiuwen.core.runtime.workflow import WorkflowRuntime
+>>> from openjiuwen.core.workflow.base import Workflow, WorkflowOutput
+>>> from openjiuwen.core.workflow.start_comp import Start
+>>> from openjiuwen.core.workflow.end_comp import End
+>>> from openjiuwen.core.workflow import create_workflow_session
+>>> 
+>>> class AbsComponent(WorkflowComponent):
+...     async def invoke(self, inputs, session: WorkflowSession, context: Context):
+...         num = inputs["num"]
+...         if num < 0:
+...             return {"result": -num}
+...         return {"result": num}
+>>> 
+>>> 
+>>> async def run_workflow(num: int) -> tuple[WorkflowOutput | str, bool]:
+...     # 构造工作流、初始化工作流运行时
+...     workflow = Workflow()
+...     runtime = WorkflowRuntime()
+... 
+...     # 添加开始、结束组件到工作流
+...     workflow.set_start_comp("start", Start(), inputs_schema={"query": "${user_inputs.query}"})
+...     workflow.set_end_comp("end", End(), inputs_schema={"raw": "${start.query}", "updated": "${abs.result}"})
+... 
+...     # 添加实现绝对值计算的自定义组件
+...     abs_comp = AbsComponent()
+...     workflow.add_workflow_comp("abs", abs_comp, inputs_schema={"num": "${start.query}"})
+... 
+...     # 定义分支路由器，增加分支
+...     router = BranchRouter()
+... 
+...     # 1. 分支pos_branch：condition为str类型
+...     expression_str = "${start.query} > 0"
+...     router.add_branch(expression_str, ["end"], "pos_branch")
+... 
+...     # 2. 分支neg_branch：condition为Condition类型
+...     expression_condition = ExpressionCondition("${start.query} < 0")
+...     router.add_branch(expression_condition, ["abs"], "neg_branch")
+... 
+...     # 3. 分支zero_branch：condition为Callable[[], bool]类型
+...     def expression_callable() -> bool:
+...         return str(os.environ.get("ALLOW_ZERO", "false")).lower() == "true"
+... 
+...     router.add_branch(expression_callable, ["abs"], "zero_branch")
+... 
+...     # 定义节点连接
+...     workflow.add_conditional_connection("start", router=router)
+...     workflow.add_connection("abs", "end")
+... 
+...     # 构造输入、调用工作流
+...     inputs = {"user_inputs": {"query": num}}
+... 
+...     try:
+...         workflow_output = await workflow.invoke(inputs, create_workflow_session())
+...         return workflow_output, True
+...     except JiuWenBaseException as e:
+...         print(f"workflow execute error: {e}")
+...         return e.message, False
+...
+>>> async def main():
+...     # 当用户输入为10时，满足分支pos_branch，依次执行组件start，branch，end，工作流执行成功。
+...     workflow_output, run_success = await run_workflow(num=10)
+...     assert run_success is True
+...     assert workflow_output is not None
+...     result = workflow_output.result
+...     assert result.get("output", {}).get("raw") == 10
+...     assert result.get("output", {}).get("updated") is None
+...     print(result)
+... 
+...     # 当用户输入为-10时，满足分支neg_branch，依次执行组件start，branch，abs，end，工作流执行成功。
+...     workflow_output, run_success = await run_workflow(num=-10)
+...     assert run_success is True
+...     assert workflow_output is not None
+...     result = workflow_output.result
+...     assert result.get("output", {}).get("raw") == -10
+...     assert result.get("output", {}).get("updated") == 10
+...     print(result)
+... 
+...     # 当用户输入为0，环境变量ALLOW_ZERO为true时，满足zero_branch，依次执行组件start，branch，abs，end，工作流执行成功。
+...     os.environ["ALLOW_ZERO"] = "true"
+...     workflow_output, run_success = await run_workflow(num=0)
+...     assert run_success is True
+...     assert workflow_output is not None
+...     result = workflow_output.result
+...     assert result.get("output", {}).get("raw") == 0
+...     assert result.get("output", {}).get("updated") == 0
+...     print(result)
+... 
+...     # 当用户输入为0，环境变量ALLOW_ZERO为false时，找不到满足的条件分支，工作流执行失败并抛出异常。
+...     os.environ["ALLOW_ZERO"] = "false"
+...     workflow_output, run_success = await run_workflow(num=0)
+...     assert run_success is False
+...     assert workflow_output == "Branch meeting the condition was not found."
+...     print(workflow_output)
+... 
+>>> asyncio.run(main())
+{'output': {'raw': 10}}
+{'output': {'raw': -10, 'updated': 10}}
+{'output': {'raw': 0, 'updated': 0}}
+workflow execute error: [101102] Branch meeting the condition was not found.
+Branch meeting the condition was not found.
+```

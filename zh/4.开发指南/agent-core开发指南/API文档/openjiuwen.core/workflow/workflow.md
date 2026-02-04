@@ -76,7 +76,7 @@ set_start_comp(self, start_comp_id: str, component: Union[Executable, WorkflowCo
 ​**样例**​：
 
 ```python
->>> from openjiuwen.core.component.start_comp import Start
+>>> from openjiuwen.core.workflow.start_comp import Start
 >>> 
 >>> # input示例：{"question": "Agent是什么？", "user_id": 123}
 >>> workflow.set_start_comp("start", Start(), inputs_schema={"query": "${inputs.question}"})
@@ -120,7 +120,7 @@ set_end_comp(self, end_comp_id: str, component: Union[Executable, WorkflowCompon
 ​**样例**​：
 
 ```python
->>> from openjiuwen.core.component.end_comp import End
+>>> from openjiuwen.core.workflow.end_comp import End
 >>> # 创建End组件（指定输出模板）
 >>> end = End({"responseTemplate": "结果:{{final_output}}"})
 >>> 
@@ -161,9 +161,7 @@ add_workflow_comp(self, comp_id: str, workflow_comp: Union[Executable, WorkflowC
 > * schema和transform同时配置时，只有transformer生效。
 > * 当组件与上游组件连边是流式边的时候，可按需配置stream_inputs_schema或stream_inputs_transformer；当组件与下游组件连边是流式边的时候，可按需配置stream_outputs_schema或stream_outputs_transformer。配置非stream前缀的schema和transformer不生效。
 
-​**异常**​：
 
-* ​**JiuWenBaseException**​：openJiuwen异常基类，详细信息和解决方法，请参见[StatusCode](../common/exception/status_code.md#class-openjiuwencorecommonexceptionstatus_codestatuscode)。
 
 ​**样例**​：
 
@@ -322,9 +320,10 @@ async invoke(self, inputs: Input, runtime: BaseRuntime,  context: Context = None
 
 ```python
 >>> import asyncio
->>> from openjiuwen.core.runtime.workflow import WorkflowRuntime
 >>> 
->>> result = asyncio.run(workflow.invoke("查询上海的天气", WorkflowRuntime()))
+>>> from openjiuwen.core.workflow import create_workflow_session
+
+>>> result = asyncio.run(workflow.invoke("查询上海的天气", create_workflow_session()))
 >>> print(f"{result}")
 {"state": "COMPLETED", "result": "结果:Check the weather in Shanghai on 2025-08-22"}
 ```
@@ -332,7 +331,7 @@ async invoke(self, inputs: Input, runtime: BaseRuntime,  context: Context = None
 ### stream
 
 ```
-async stream(self,  inputs: Input,  runtime: BaseRuntime, context: Context = None， stream_modes: list[StreamMode] = None) -> AsyncIterator[WorkflowChunk]
+async stream(self,  inputs: Input,  session: WorkflowSession, context: Context = None， stream_modes: list[StreamMode] = None) -> AsyncIterator[WorkflowChunk]
 ```
 
 一个异步生成器方法。通过stream执行工作流后返回一个异步生成器，该生成器以流式方式逐步产生整个过程中的各个chunk；支持多种流模式和实时数据传递，使用户能即时看到进展并持续接收补充内容直至流程结束。
@@ -355,12 +354,12 @@ openJiuwen提供了**三种流式输出方式**，提供了对于流式信息的
 * 样例一：当stream_modes为`​BaseStreamMode.OUTPUT`时，只输出框架定义的标准流式数据，数据为`OutputSchema`类型。
   
   ```python
-  >>> from openjiuwen.core.runtime.workflow import WorkflowRuntime
+  >>> from openjiuwen.core.workflow import create_workflow_session
   >>> from openjiuwen.core.stream.base import BaseStreamMode, OutputSchema
-  >>> async for chunk in workflow.stream({"query": "查询上海的天气"}, WorkflowRuntime(), stream_modes=[BaseStreamMode.OUTPUT]):
+  >>> async for chunk in workflow.stream({"query": "查询上海的天气"}, create_workflow_session(), stream_modes=[BaseStreamMode.OUTPUT]):
   ...    print(chunk)
-  >>> OutputSchema(type = 'end node stream', index = 0, payload = {'answer': '结果:'}),
-  >>> OutputSchema(type = 'end node stream', index = 1, payload ={ 'answer': 'Check the weather in Shanghai on 2025-08-22' })
+  >>> OutputSchema(type = 'end node stream', index = 0, payload = {'response': '结果:'}),
+  >>> OutputSchema(type = 'end node stream', index = 1, payload ={ 'response': 'Check the weather in Shanghai on 2025-08-22' })
   ```
 
 * 样例二：当stream_modes为`​BaseStreamMode.TRACE`时，只输出框架定义的调测流式数据，数据为`TraceSchema`类型。
@@ -371,9 +370,10 @@ openJiuwen提供了**三种流式输出方式**，提供了对于流式信息的
   >>> import datetime
   >>> 
   >>> from openjiuwen.core.component.base import WorkflowComponent
-  >>> from openjiuwen.core.component.end_comp import End
+  >>> from openjiuwen.core.workflow.end_comp import End
+  >>> from openjiuwen.core.workflow import create_workflow_session
   >>> from openjiuwen.core.component.loop_comp import LoopGroup, LoopComponent
-  >>> from openjiuwen.core.component.start_comp import Start
+  >>> from openjiuwen.core.workflow.start_comp import Start
   >>> from openjiuwen.core.component.workflow_comp import SubWorkflowComponent
   >>> from openjiuwen.core.context_engine.base import Context
   >>> from openjiuwen.core.runtime.base import ComponentExecutable, Input, Output
@@ -384,7 +384,7 @@ openJiuwen提供了**三种流式输出方式**，提供了对于流式信息的
   >>> # 1. 基础工作流
   >>> # 自定义组件`CustomComponent`，将输入直接作为输出返回
   >>> # 定义一个自定义组件
-  >>> class CustomComponent(ComponentExecutable, WorkflowComponent):
+  >>> class CustomComponent(WorkflowComponent):
   ...     async def invoke(self, inputs: Input, runtime: Runtime, context: Context) -> Output:
   ...         return inputs
   ... 
@@ -402,7 +402,7 @@ openJiuwen提供了**三种流式输出方式**，提供了对于流式信息的
   >>> workflow.add_connection("start", "a")
   >>> workflow.add_connection("a", "end")
   >>> async def run_workflow_base():
-  ...     async for chunk in workflow.stream({"num": 1}, WorkflowRuntime(), stream_modes=[BaseStreamMode.TRACE]):
+  ...     async for chunk in workflow.stream({"num": 1}, session=create_workflow_session(), stream_modes=[BaseStreamMode.TRACE]):
   ...         print(f"stream chunk: {chunk}")
 
   >>> asyncio.run(run_workflow_base())
@@ -458,7 +458,7 @@ openJiuwen提供了**三种流式输出方式**，提供了对于流式信息的
   >>> # 2. 循环工作流
   >>> # 使用自定义组件`CustomComponent`搭建一个包含循环组件、开始组件、结束组件的工作流，循环组件使用数组循环模式，其中循环体内有三个串联的自定义组件`a`，`b`，`c`，分别输出每次循环迭代的数组元素：
   >>> # 自定义组件返回组件输入中"value"字段的值，赋值给output变量
-  >>> class CustomComponent(ComponentExecutable, WorkflowComponent):
+  >>> class CustomComponent(WorkflowComponent):
   ...     async def invoke(self, inputs: Input, runtime: Runtime, context: Context) -> Output:
   ...         return {"output": inputs["value"]}
   ... 
@@ -503,7 +503,7 @@ openJiuwen提供了**三种流式输出方式**，提供了对于流式信息的
   >>> 
   >>> # 通过`flow.stream`方法执行工作流，并指定`stream_modes=[BaseStreamMode.TRACE]`，获取循环工作流的流输出调测信息：
   >>> async def run_workflow_loop():
-  >>>     async for chunk in workflow.stream({"user_input": [1, 2, 3]}, runtime=WorkflowRuntime(), stream_modes=[BaseStreamMode.TRACE]):
+  >>>     async for chunk in workflow.stream({"user_input": [1, 2, 3]}, session=create_workflow_session(), stream_modes=[BaseStreamMode.TRACE]):
   ...         print(f"stream chunk: {chunk}")
   >>> asyncio.run(run_workflow_loop())
    >>> # 截取位于循环体中的组件`a`的调测信息如下，可以看到会获取到两帧信息，包含一帧开始事件和一帧结束事件。其中，`loopIndex`表示该组件位于循环组件`loop`中，值为2（从0开始计数），说明当前处于第3次循环执行状态。与此同时，循环体内组件`a`的`invokeId`为`loop.a`，而其`parentInvokeId`为`loop.c`，表示上一次执行的组件为上一轮循环中循环体内的组件`c`。
@@ -602,7 +602,7 @@ openJiuwen提供了**三种流式输出方式**，提供了对于流式信息的
   >>> 
   >>> # 通过`flow.stream`方法执行工作流，并指定`stream_modes=[BaseStreamMode.TRACE]`，获取嵌套工作流的流输出调测信息：
   >>> async def run_workflow_sub():
-  >>>     async for chunk in main_workflow.stream({"num": 1}, WorkflowRuntime(), stream_modes=[BaseStreamMode.TRACE]):
+  >>>     async for chunk in main_workflow.stream({"num": 1}, session=create_workflow_session(), stream_modes=[BaseStreamMode.TRACE]):
   ...         print(f"stream chunk: {chunk}")
   >>> asyncio.run(run_workflow_sub())
   >>> # 截取位于子工作流的`sub_a`组件调测信息如下，可以看到会获取到两帧信息，包含一帧开始事件和一帧结束事件。其中，该组件的`parentNodeId`字段记录其所属的子工作流的`invokeId`，即`"a"`。该字段主要用于嵌套子作流的场景，以便明确组件的层级关系和归属结构。同时，`sub_a`组件位于子工作流组件`a`中，因此其`invokeId`为`"a.sub_a"`，用于标识该组件在整个工作流中的调用。
@@ -658,6 +658,7 @@ openJiuwen提供了**三种流式输出方式**，提供了对于流式信息的
   
   ```python
   >>> from openjiuwen.core.runtime.runtime import Runtime
+  >>> from openjiuwen.core.workflow import create_workflow_session
   >>> from openjiuwen.core.component.base import WorkflowComponent
   >>> from openjiuwen.core.runtime.base import ComponentExecutable, Input, Output
   >>> from openjiuwen.core.context_engine.base import Context
@@ -665,7 +666,7 @@ openJiuwen提供了**三种流式输出方式**，提供了对于流式信息的
   >>> from openjiuwen.core.stream.base import BaseStreamMode, CustomSchema
   >>> 
   >>> # 1. 创建自定义组件，并流式输出
-  >>> class LLMComponent(WorkflowComponent, ComponentExecutable):
+  >>> class LLMComponent(WorkflowComponent):
   ...     async def invoke(self, inputs: Input, runtime: Runtime, context: Context) -> Output:
   ...         ...
   ...         llm_response = await self._llm.ainvoke(model_inputs)
@@ -675,7 +676,7 @@ openJiuwen提供了**三种流式输出方式**，提供了对于流式信息的
   ...         ...
   ... 
   >>> # 2. 调用工作流流式输出
-  >>> async for chunk in workflow.stream({"query": "查询上海的天气"}, WorkflowRuntime(), stream_modes=[BaseStreamMode.CUSTOM]):
+  >>> async for chunk in workflow.stream({"query": "查询上海的天气"}, session=create_workflow_session(), stream_modes=[BaseStreamMode.CUSTOM]):
   ...      print(chunk)
   >>> CustomSchema(custom_output = 'Check the weather in Shanghai on 2025-08-22')
   ```
@@ -710,12 +711,12 @@ to_mermaid(self, title, expand_subgraph, enable_animation) -> str
 
 ```python
 >>> from openjiuwen.core.component.base import WorkflowComponent
->>> from openjiuwen.core.component.end_comp import End
->>> from openjiuwen.core.component.start_comp import Start
+>>> from openjiuwen.core.workflow  import End
+>>> from openjiuwen.core.workflow import Start
+>>> from openjiuwen.core.workflow import create_workflow_session
 >>> from openjiuwen.core.context_engine.base import Context
 >>> from openjiuwen.core.graph.executable import Output
 >>> from openjiuwen.core.runtime.base import ComponentExecutable, Input
->>> from openjiuwen.core.runtime.runtime import Runtime
 >>> from openjiuwen.core.workflow.base import Workflow
 >>> 
 >>> 
@@ -786,8 +787,9 @@ to_mermaid_png(self, title, expand_subgraph) -> bytes
 
 ```python
 >>> from openjiuwen.core.component.base import WorkflowComponent
->>> from openjiuwen.core.component.end_comp import End
->>> from openjiuwen.core.component.start_comp import Start
+>>> from openjiuwen.core.workflow  import End
+>>> from openjiuwen.core.workflow import Start
+>>> from openjiuwen.core.workflow import create_workflow_session
 >>> from openjiuwen.core.context_engine.base import Context
 >>> from openjiuwen.core.graph.executable import Output
 >>> from openjiuwen.core.runtime.base import ComponentExecutable, Input
@@ -796,7 +798,7 @@ to_mermaid_png(self, title, expand_subgraph) -> bytes
 >>> 
 >>> 
 >>> # 自定义的组件
->>> class Node1(ComponentExecutable, WorkflowComponent):
+>>> class Node1(WorkflowComponent):
 ...     def __init__(self):
 ...         super().__init__()
 ... 
@@ -855,17 +857,17 @@ to_mermaid_svg(self, title, expand_subgraph) -> bytes
 
 ```python
 >>> from openjiuwen.core.component.base import WorkflowComponent
->>> from openjiuwen.core.component.end_comp import End
->>> from openjiuwen.core.component.start_comp import Start
+>>> from openjiuwen.core.workflow  import End
+>>> from openjiuwen.core.workflow import Start
+>>> from openjiuwen.core.workflow import create_workflow_session
 >>> from openjiuwen.core.context_engine.base import Context
 >>> from openjiuwen.core.graph.executable import Output
 >>> from openjiuwen.core.runtime.base import ComponentExecutable, Input
->>> from openjiuwen.core.runtime.runtime import Runtime
 >>> from openjiuwen.core.workflow.base import Workflow
 >>> 
 >>> 
 >>> # 自定义的组件
->>> class Node1(ComponentExecutable, WorkflowComponent):
+>>> class Node1(WorkflowComponent):
 ...     def __init__(self):
 ...         super().__init__()
 ... 
@@ -903,190 +905,23 @@ to_mermaid_svg(self, title, expand_subgraph) -> bytes
 > - 组件a到end之间为流式边，转为svg图片可展示动态效果。
 > - 该样例需要在[Jupyter Notebook](https://jupyter.org/)中执行。
 
-## class openjiuwen.core.workflow.Sesssion
+
+### draw
 
 ```python
-class openjiuwen.core.workflow.Sesssion(parent: "AgentSession" = None, session_id: str = None, envs: dict[str, Any] = None)
+draw(self,title: str = "",output_format: str = "mermaid",  expand_subgraph: int | bool = False,enable_animation: bool = False,**kwargs) -> str | bytes:
 ```
+生成工作流的可视化图表，支持导出 Mermaid 语法文本、PNG 静态图片、SVG 矢量图三种格式，统一封装工作流结构可视化能力，适用于工作流调试、文档生成与可视化展示场景。
 
-工作流执行的核心运行时会话，实现了工作流场景下的会话管理。
+​**参数**​：
 
-**参数**：
+* ​**title**​(str, 可选)：可视化图表标题，渲染后展示在图表顶部。默认值：""。
+* ​**output_format**​(str, 可选)：指定输出格式，仅支持mermaid/png/svg三种类型。默认值："mermaid"。
+* ​**expand_subgraph**​(int | bool, 可选)：子工作流展开配置，布尔值控制全展开 / 不展开，非负整数控制子图展开深度。默认值：False。
+* ​**enable_animation**​(bool, 可选)：Mermaid 格式动画开关，仅对 Mermaid 语法生效，开启后流式边可展示动态效果。默认值：False。
+* ​**kwargs**​(dict, 可选)：额外渲染配置项，用于传递底层渲染器自定义参数。
 
-- **parent**(AgentSession, 可选)：Agent的Session，默认值：`None`。
-- **session_id**(str, 可选)：会话唯一标识。默认值：`None`，未提供时自动生成UUID。
-- **envs**(dict[str, Any], 可选)：工作流执行过程中使用的环境变量，默认值：`None`。
+​**返回**​：
+* ​**str**​：当output_format="mermaid"时，返回标准 Mermaid 流程图语法字符串；
+* ​**bytes**​：当output_format="png"或output_format="svg"时，返回对应格式图片的二进制数据流。
 
-**样例**：
-
-```python
->>> from openjiuwen.core.workflow import Session
->>> 
->>> session = Session(session_id="123")
->>> 
-```
-
-### get_callback_manager
-
-```python
-get_callback_manager(self) -> CallbackManager
-```
-
-获取本次工作流执行的回调函数管理器。
-
-**返回**：
-
-**CallbackManager**：当前工作流执行的回调函数管理器。
-
-**样例**：
-
-```python
->>> from openjiuwen.core.workflow import Session
->>> 
->>> session = Session()
->>> 
->>> callback_manager = session.get_callback_manager()
-```
-
-### get_session_id
-
-```python
-get_session_id(self) -> str
-```
-
-获取本次工作流执行的唯一会话标识。
-
-**返回**：
-
-**str**：当前工作流的唯一会话标识。
-
-**样例**：
-
-```python
->>> from openjiuwen.core.workflow import Session
->>> 
->>> session = Session(session_id="123")
->>> 
->>> print(f"session id is: {session.get_session_id()}")
-session id is: 123
-```
-
-### get_envs
-
-```python
-get_envs(self)
-```
-
-获取本次工作流执行配置的环境变量。
-
-**返回**：
-
-**dict[str, Any]**：为本次工作流执行配置的环境变量。
-
-**样例**：
-
-```python
->>> from openjiuwen.core.workflow import Session
->>> from openjiuwen.core.session import WORKFLOW_EXECUTE_TIMEOUT
->>>
->>> session = Session(envs={WORKFLOW_EXECUTE_TIMEOUT: 100})
->>> 
->>> print(f"envs is: {session.get_envs()}")
-envs is: {'_execute_timeout': 100}
-```
-
-### get_parent
-
-```python
-get_parent(self)
-```
-
-获取本工作流执行时所属的Agent的Session。
-
-**返回**：
-
-**AgentSession**：当前工作流执行时所属的Agent的Session。
-
-**样例**：
-
-```python
->>> from openjiuwen.core.workflow import Session
->>> from openjiuwen.core.single_agent import Session as AgentSession
->>> 
->>> session = Session(parent=AgentSession())
->>> 
->>> agent_session = session.get_parent()
-```
-
-### set_workflow_card
-
-```python
-set_workflow_card(self, card)
-```
-
-设置本次会话的工作流卡片信息。
-
-**参数**：
-
-- **card**(WorkflowCard)：工作流卡片信息。
-
-**样例**：
-
-```python
->>> from openjiuwen.core.workflow import Session, WorkflowCard
->>> 
->>> session = Session()
->>> session.set_workflow_card(WorkflowCard(id="workflow_id"))
-```
-
-### get_workflow_card
-
-```python
-get_workflow_card(self)
-```
-
-获取本次会话的工作流卡片信息。
-
-**返回**：
-
-**WorkflowCard**：当前会话的工作流卡片信息。
-
-**样例**：
-
-```python
->>> from openjiuwen.core.workflow import Session, WorkflowCard
->>> 
->>> session = Session()
->>> session.set_workflow_card(WorkflowCard(id="workflow_id"))
->>> print(session.get_workflow_card())
-id='workflow_id' name='' description='' version='' input_params=None
-```
-
-## function create_workflow_session
-
-```python
-create_workflow_session(parent: "AgentSession" = None, session_id: str = None, envs: dict[str, Any] = None) -> Session
-```
-
-创建工作流执行所需的会话。
-
-**参数**：
-
-- **parent**(AgentSession, 可选)：Agent的Session，默认值：`None`。
-- **session_id**(str, 可选)：会话唯一标识。默认值：`None`，未提供时自动生成 UUID。
-- **envs**(dict[str, Any], 可选)：工作流执行过程中使用的环境变量，默认值：`None`。
-
-**返回**：
-
-**Session**：工作流执行所需的会话。
-
-**样例**：
-
-```python
->>> from openjiuwen.core.workflow import create_workflow_session
->>> 
->>> session = create_workflow_session(session_id="123")
->>> 
->>> print(f"session id is: {session.get_session_id()}")
-session id is: 123
-```
