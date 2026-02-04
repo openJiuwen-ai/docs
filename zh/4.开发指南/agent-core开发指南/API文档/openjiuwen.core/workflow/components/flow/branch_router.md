@@ -1,9 +1,9 @@
-# openjiuwen.core.workflow.components.branch_router
+# openjiuwen.core.workflow.branch_router
 
-## class openjiuwen.core.workflow.components.branch_router.BranchRouter
+## class openjiuwen.core.workflow.branch_router.BranchRouter
 
 ```python
-class openjiuwen.core.workflow.components.branch_router.BranchRouter(report_trace: bool = False)
+class openjiuwen.core.workflow.branch_router.BranchRouter(report_trace: bool = False)
 ```
 
 `BranchRouter` 是实现分支路由器的核心类，提供了管理和切换不同的执行分支的能力，用于设计工作流的分支流程，通常和工作流的[add_conditional_connection]方法配合使用。工作流会在源组件执行完成后，调用`BranchRouter` 的可调用对象，根据其返回值来决定下一步工作流的走向。若分支路由器所管理的分支均不满足预设条件，会抛出 `JiuWenBaseException`异常，错误码为101102，错误信息为"Branch meeting the condition was not found."。

@@ -160,7 +160,7 @@ class openjiuwen.core.component.loop_comp.LoopComponent(loop_group: LoopGroup, o
 >>> from openjiuwen.core.component.base import WorkflowComponent
 >>> from openjiuwen.core.component.break_comp import BreakComponent
 >>> from openjiuwen.core.workflow.end_comp import End
->>> from openjiuwen.core.component.loop_comp import LoopComponent, LoopGroup
+>>> from openjiuwen.core.workflow.loop.loop_comp import LoopComponent, LoopGroup
 >>> from openjiuwen.core.component.set_variable_comp import SetVariableComponent
 >>> from openjiuwen.core.component.branch_comp import BranchComponent
 >>> from openjiuwen.core.workflow.start_comp import Start

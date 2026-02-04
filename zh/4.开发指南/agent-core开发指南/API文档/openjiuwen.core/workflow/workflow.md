@@ -40,7 +40,7 @@ Workflow(workflow_config: WorkflowConfig = None)
 ​**样例**​：
 
 ```python
->>> from openjiuwen.core.workflow.base import Workflow
+>>> from openjiuwen.core.workflow import Workflow
 >>> from openjiuwen.core.workflow.workflow_config import WorkflowConfig, WorkflowMetadata
 >>> 
 >>> # 建一个工作流配置包含工作流的ID、名称、版本信息
@@ -301,7 +301,7 @@ add_stream_connection(self,  src_comp_id: str,  target_comp_id: str) -> Self
 ### invoke
 
 ```
-async invoke(self, inputs: Input, runtime: BaseRuntime,  context: Context = None) -> Output
+async invoke(self, inputs: Input, session: Session,  context: Context = None) -> Output
 ```
 
 一次性处理完整批次数据的工作流执行方式。它接收一组完整数据作为输入，经过工作流处理后，一次性返回完整的处理结果。
@@ -309,7 +309,7 @@ async invoke(self, inputs: Input, runtime: BaseRuntime,  context: Context = None
 ​**参数**​：
 
 * ​**inputs**​(Input)：工作流的输入数据，作为执行的初始参数。
-* ​**runtime**​(BaseRuntime)：工作流运行时环境，提供执行上下文和状态管理。
+* ​**session**​(Session)：工作流运行时环境，提供执行上下文和状态管理。
 * **context**(Context, 可选)：用于存储用户对话信息的上下文引擎对象。默认值：`None`，表示不开启上下文引擎功能。
 
 ​**返回**​：
@@ -372,7 +372,7 @@ openJiuwen提供了**三种流式输出方式**，提供了对于流式信息的
   >>> from openjiuwen.core.component.base import WorkflowComponent
   >>> from openjiuwen.core.workflow.end_comp import End
   >>> from openjiuwen.core.workflow import create_workflow_session
-  >>> from openjiuwen.core.component.loop_comp import LoopGroup, LoopComponent
+  >>> from openjiuwen.core.workflow.loop.loop_comp import LoopGroup, LoopComponent
   >>> from openjiuwen.core.workflow.start_comp import Start
   >>> from openjiuwen.core.component.workflow_comp import SubWorkflowComponent
   >>> from openjiuwen.core.context_engine.base import Context
@@ -385,7 +385,7 @@ openJiuwen提供了**三种流式输出方式**，提供了对于流式信息的
   >>> # 自定义组件`CustomComponent`，将输入直接作为输出返回
   >>> # 定义一个自定义组件
   >>> class CustomComponent(WorkflowComponent):
-  ...     async def invoke(self, inputs: Input, runtime: Runtime, context: Context) -> Output:
+  ...     async def invoke(self, inputs: Input, session: Session, context: Context) -> Output:
   ...         return inputs
   ... 
   >>> # 搭建基础工作流
@@ -459,7 +459,7 @@ openJiuwen提供了**三种流式输出方式**，提供了对于流式信息的
   >>> # 使用自定义组件`CustomComponent`搭建一个包含循环组件、开始组件、结束组件的工作流，循环组件使用数组循环模式，其中循环体内有三个串联的自定义组件`a`，`b`，`c`，分别输出每次循环迭代的数组元素：
   >>> # 自定义组件返回组件输入中"value"字段的值，赋值给output变量
   >>> class CustomComponent(WorkflowComponent):
-  ...     async def invoke(self, inputs: Input, runtime: Runtime, context: Context) -> Output:
+  ...     async def invoke(self, inputs: Input, session: Session, context: Context) -> Output:
   ...         return {"output": inputs["value"]}
   ... 
   >>> # 创建LoopGroup
@@ -680,230 +680,6 @@ openJiuwen提供了**三种流式输出方式**，提供了对于流式信息的
   ...      print(chunk)
   >>> CustomSchema(custom_output = 'Check the weather in Shanghai on 2025-08-22')
   ```
-
-### to_mermaid
-
-```python
-to_mermaid(self, title, expand_subgraph, enable_animation) -> str
-```
-
-将工作流转化为[mermaid](https://mermaid.js.org/)脚本，用于可视化工作流。
-
-​**参数**​：
-
-* ​**title**​(str)：[mermaid](https://mermaid.js.org/)脚本的title，渲染后为图的标题。默认值：`""`。
-* ​**expand_subgraph**(bool | int)：
-  
-  - bool，代表是否展开子图并输出其[mermaid](https://mermaid.js.org/)脚本。`True`，输出[mermaid](https://mermaid.js.org/)脚本时展开全部层级的子图并输出子图的[mermaid](https://mermaid.js.org/)脚本；`False`，不展开子图，仅输出主图的[mermaid](https://mermaid.js.org/)脚本。
-  - int，非负整数，代表在输出[mermaid](https://mermaid.js.org/)脚本时展开多少层的子图并输出其脚本。
-  
-  默认值：`False`。
-* ​**enable_animation**​(bool)：代表工作流的组件间流式边的[mermaid](https://mermaid.js.org/)脚本是否开启动态特性。
-  - `True`：代表工作流的组件间的流式边的[mermaid](https://mermaid.js.org/)脚本开启动态特性，即脚本可让流式边的连线动起来。
-  - `False`：表示不开启动态特性。  
-
-  默认值：`False`。
-
-​**返回**​：
-**str**，[mermaid](https://mermaid.js.org/)脚本。
-
-​**样例**​：
-
-```python
->>> from openjiuwen.core.component.base import WorkflowComponent
->>> from openjiuwen.core.workflow  import End
->>> from openjiuwen.core.workflow import Start
->>> from openjiuwen.core.workflow import create_workflow_session
->>> from openjiuwen.core.context_engine.base import Context
->>> from openjiuwen.core.graph.executable import Output
->>> from openjiuwen.core.runtime.base import ComponentExecutable, Input
->>> from openjiuwen.core.workflow.base import Workflow
->>> 
->>> 
->>> # 自定义的组件
->>> class Node1(ComponentExecutable, WorkflowComponent):
-...     def __init__(self):
-...         super().__init__()
-... 
-...     async def invoke(self, inputs: Input, runtime: Runtime, context: Context) -> Output:
-...         return {}
->>> 
->>> 
->>> # 设置环境变量，启用工作流可视化功能
->>> import os
->>> os.environ["WORKFLOW_DRAWABLE"] = "true"
->>> 
->>> # 构建工作流
->>> flow = Workflow()
->>> flow.set_start_comp("start", Start())
->>> flow.add_workflow_comp("a", Node1())
->>> flow.set_end_comp("end", End())
->>> flow.add_connection("start", "a")
->>> flow.add_connection("a", "end")
->>> 
->>> # 打印工作流的mermaid脚本
->>> print(flow.to_mermaid(title="simple workflow"))
----
-title: simple workflow
----
-flowchart TB
-	node_1("start")
-	node_2["a"]
-	node_3("end")
-	node_1 --> node_2
-	node_2 --> node_3
-```
-
-将打印出的mermaid脚本用[mermaid.live](https://mermaid.live)渲染出图像如下：
-
-<div style="text-align: center"><img src="../../images/openjiuwen.core_workflow_base_base_Workflow_to_mermaid.png">
-</div>
-
-> **说明**
-> 
-> 要开启工作流可视化功能需要在构造工作流之前配置环境变量`WORKFLOW_DRAWABLE`为`true`，可使用`python`内置的`os`包来配置，参考[os.environ](https://docs.python.org/3.11/library/os.html#os.environ)。
-
-### to_mermaid_png
-
-```python
-to_mermaid_png(self, title, expand_subgraph) -> bytes
-```
-
-将[to_mermaid](#to_mermaid)生成的脚本渲染为png格式的图片并返回其二进制表示，png格式仅支持静态图片。
-
-​**参数**​：
-
-* ​**title**​(str)：渲染出的图片的标题。默认值：`""`。
-* ​**expand_subgraph**(bool | int)：
-  - bool，代表渲染出的图片是否包含展开的子图。`True`，渲染出的图片包含展开的子图；`False`，渲染出的图片不包含展开的子图。
-  - int，需为非负整数，代表渲染出的图片需包含展开的多少层的子图。
-  
-  默认值：`False`。
-
-​**返回**​：
-**bytes**，图片的二进制表示。
-
-​**样例**​：
-
-```python
->>> from openjiuwen.core.component.base import WorkflowComponent
->>> from openjiuwen.core.workflow  import End
->>> from openjiuwen.core.workflow import Start
->>> from openjiuwen.core.workflow import create_workflow_session
->>> from openjiuwen.core.context_engine.base import Context
->>> from openjiuwen.core.graph.executable import Output
->>> from openjiuwen.core.runtime.base import ComponentExecutable, Input
->>> from openjiuwen.core.runtime.runtime import Runtime
->>> from openjiuwen.core.workflow.base import Workflow
->>> 
->>> 
->>> # 自定义的组件
->>> class Node1(WorkflowComponent):
-...     def __init__(self):
-...         super().__init__()
-... 
-...     async def invoke(self, inputs: Input, runtime: Runtime, context: Context) -> Output:
-...         return {}
->>> 
->>> 
->>> # 设置环境变量，启用工作流可视化功能
->>> import os
->>> os.environ["WORKFLOW_DRAWABLE"] = "true"
->>> 
->>> # 构建工作流
->>> flow = Workflow()
->>> flow.set_start_comp("start", Start())
->>> flow.add_workflow_comp("a", Node1())
->>> flow.set_end_comp("end", End())
->>> flow.add_connection("start", "a")
->>> flow.add_connection("a", "end")
->>> 
->>> # 展示渲染出的图片
->>> from IPython.display import Image, display
->>> display(Image(flow.to_mermaid_png(title="simple workflow")))
-```
-
-展示出如下图片：
-
-<div style="text-align: center"><img src="../../images/openjiuwen.core_workflow_base_base_Workflow_to_mermaid_png.png">
-</div>
-
-> **说明**
-> 
-> - 要开启工作流可视化功能需要配置环境变量`WORKFLOW_DRAWABLE`为`true`，可使用`python`内置的`os`包来配置，参考[os.environ](https://docs.python.org/3.11/library/os.html#os.environ)。
-> - 该样例需要在[Jupyter Notebook](https://jupyter.org/)中执行。
-
-### to_mermaid_svg
-
-```python
-to_mermaid_svg(self, title, expand_subgraph) -> bytes
-```
-
-将[to_mermaid](#to_mermaid)生成的脚本渲染为svg格式图片并返回其二进制表示，svg格式支持动态图片。
-
-​**参数**​：
-
-* ​**title**​(str)：渲染出的图片的标题。默认值：`""`。
-* ​**expand_subgraph**(bool | int)：
-  - bool，代表渲染出的图片是否包含展开的子图。`True`，渲染出的图片包含展开的子图；`False`，渲染出的图片不包含展开的子图。
-  - int，需为非负整数，代表渲染出的图片需包含展开的多少层的子图。
-
-  默认值：`False`。
-
-​**返回**​：
-**bytes**，图片的二进制表示。
-
-​**样例**​：
-
-```python
->>> from openjiuwen.core.component.base import WorkflowComponent
->>> from openjiuwen.core.workflow  import End
->>> from openjiuwen.core.workflow import Start
->>> from openjiuwen.core.workflow import create_workflow_session
->>> from openjiuwen.core.context_engine.base import Context
->>> from openjiuwen.core.graph.executable import Output
->>> from openjiuwen.core.runtime.base import ComponentExecutable, Input
->>> from openjiuwen.core.workflow.base import Workflow
->>> 
->>> 
->>> # 自定义的组件
->>> class Node1(WorkflowComponent):
-...     def __init__(self):
-...         super().__init__()
-... 
-...     async def invoke(self, inputs: Input, runtime: Runtime, context: Context) -> Output:
-...         return {}
->>> 
->>> 
->>> # 设置环境变量，启用工作流可视化功能
->>> import os
->>> os.environ["WORKFLOW_DRAWABLE"] = "true"
->>> 
->>> # 构建工作流
->>> flow = Workflow()
->>> flow.set_start_comp("start", Start())
->>> flow.add_workflow_comp("a", Node1())
->>> flow.set_end_comp("end", End())
->>> flow.add_connection("start", "a")
->>> flow.add_stream_connection("a", "end")
->>> 
->>> # 展示渲染出的图片
->>> from IPython.display import SVG, display, HTML
->>> svg_data = SVG(flow.to_mermaid_svg(title="simple workflow")).data
->>> # 直接展示svg图片可能显示不全，进行缩放
->>> display(HTML(f'<div style="zoom:0.9">{svg_data}</div>'))
-```
-
-展示出如下图片：
-
-<div style="text-align: center"><img src="../../images/openjiuwen.core_workflow_base_base_Workflow_to_mermaid_svg.gif">
-</div>
-
-> **说明**
-> 
-> - 要开启工作流可视化功能需要配置环境变量`WORKFLOW_DRAWABLE`为`true`，可使用`python`内置的`os`包来配置，参考[os.environ](https://docs.python.org/3.11/library/os.html#os.environ)。
-> - 组件a到end之间为流式边，转为svg图片可展示动态效果。
-> - 该样例需要在[Jupyter Notebook](https://jupyter.org/)中执行。
 
 
 ### draw

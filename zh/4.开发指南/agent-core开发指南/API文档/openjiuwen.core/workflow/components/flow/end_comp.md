@@ -1,9 +1,9 @@
-# openjiuwen.core.workflow.components.flow.end_comp
+# openjiuwen.core.workflow.end_comp
 
-## class openjiuwen.core.workflow.components.flow.end_comp.End
+## class openjiuwen.core.workflow.end_comp.End
 
 ```python
-class openjiuwen.core.workflow.components.flow.end_comp.End(conf: Union[EndConfig, dict] = None)
+class openjiuwen.core.workflow.end_comp.End(conf: Union[EndConfig, dict] = None)
 ```
 
 `End`组件是openJiuwen内置的工作流结束组件，该组件定义了工作流的输出，支持按照预定义的模板格式输出数据和按照输入定义输出两个方式。`End`组件实现了基类组件`ComponentExecutable`的四个能力 `invoke`，`stream`，`transform`和`collect`，实现的原理是对不同的输入进行相应的格式化输出。
@@ -23,10 +23,7 @@ class openjiuwen.core.workflow.components.flow.end_comp.End(conf: Union[EndConfi
 ```python
 >>> # 样例1: 演示End组件的基本用法和工作流创建流程
 >>> import asyncio
->>> from openjiuwen.core.workflow  import End
->>> from openjiuwen.core.workflow import Start
->>> from openjiuwen.core.workflow import create_workflow_session
->>> from openjiuwen.core.workflow.base import Workflow
+>>> from openjiuwen.core.workflow  import Start, End, Workflow, create_workflow_session
 >>> 
 >>> async def demo_end_component():
 ...     workflow = Workflow()
@@ -47,7 +44,7 @@ class openjiuwen.core.workflow.components.flow.end_comp.End(conf: Union[EndConfi
 ...             "query": "你好",
 ...             "content": "杭州"
 ...         }},
-...         create_workflow_session()
+...         session=create_workflow_session()
 ...     )
 ... 
 ...     print(f"{result}")
@@ -63,10 +60,8 @@ result={'output': {'param1': '你好', 'param2': '杭州'}} state=<WorkflowExecu
 >>> # 样例2: 演示End组件的响应模板用法
 >>> import asyncio
 >>> 
->>> from openjiuwen.core.workflow  import End
->>> from openjiuwen.core.workflow import Start
->>> from openjiuwen.core.workflow import create_workflow_session
->>> from openjiuwen.core.workflow.base import Workflow
+>>> import asyncio
+>>> from openjiuwen.core.workflow  import Start, End, Workflow, create_workflow_session
 >>> 
 >>> async def demo_end_component():
 ...     workflow = Workflow()
