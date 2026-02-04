@@ -170,9 +170,8 @@ def add_workflow_comp(
 >>> import os
 >>> from datetime import datetime
 >>> 
->>> from openjiuwen.core.component.common.configs.model_config import ModelConfig
->>> from openjiuwen.core.component.llm_comp import LLMCompConfig, LLMComponent
->>> from openjiuwen.core.utils.llm.base import BaseModelInfo
+>>> from openjiuwen.core.foundation.llm import ModelClientConfig, ModelRequestConfig
+>>> from openjiuwen.core.workflow import LLMComponent, LLMCompConfig, Workflow
 >>> 
 >>> API_BASE = os.getenv("API_BASE", "mock://api.openai.com/v1")
 >>> API_KEY = os.getenv("API_KEY", "sk-fake")
@@ -181,43 +180,40 @@ def add_workflow_comp(
 >>> os.environ.setdefault("LLM_SSL_VERIFY", "false")  # 关闭SSL校验仅用于本地调试，生产环境请务必打开
 >>> SYSTEM_PROMPT_TEMPLATE = "你是一个query改写的AI助手。今天的日期是{}。"
 >>> 
->>> def _create_model_config() -> ModelConfig:
-...     """根据环境变量构造模型配置。"""
-...     return ModelConfig(
-...         model_provider=MODEL_PROVIDER,
-...         model_info=BaseModelInfo(
-...             model=MODEL_NAME,
-...             api_base=API_BASE,
-...             api_key=API_KEY,
-...             temperature=0.7,
-...             top_p=0.9,
-...             timeout=120,  # 增加超时时间到120秒，避免网络问题
-...         ),
+>>> fake_model_client_config = ModelClientConfig(
+...         client_provider="OpenAI",
+...         api_key="sk-fake",
+...         api_base="https://api.openai.com/v1",
+...         timeout=30,
+...         max_retries=3,
+...         verify_ssl=False
+...     )
+>>> fake_model_config = ModelRequestConfig(
+...         model="fake-model",
+...         temperature=0.7,
+...         top_p=0.9
 ...     )
 >>> 
 >>> def build_current_date():
-...     current_datetime = datetime.now()
-...     return current_datetime.strftime("%Y-%m-%d")
->>> 
+...      current_datetime = datetime.now()
+...      return current_datetime.strftime("%Y-%m-%d")
+... 
 >>> def _create_llm_component() -> LLMComponent:
-...     """创建 LLM 组件，仅用于抽取结构化字段（location/date）。"""
-...     model_config = WorkflowAgentTest._create_model_config()
-...     current_date = build_current_date()
-...     user_prompt = ("\n原始query为：{{query}}\n\n帮我改写原始query，要求：\n"
-...         "1. 改为英文；\n"
-...         "2. 改写后的query必须包含当前的日期，默认日期为今天；\n"
-...         "3. 日期为YYYY-MM-DD格式。")
-...     config = LLMCompConfig(
-...         model=model_config,
-...         template_content=[{"role": "user", "content": SYSTEM_PROMPT_TEMPLATE.format(current_date) + user_prompt}],
-...         response_format={"type": "text"},
-...         output_config={
-...             "query": {"type": "string", "description": "改写后的query", "required": True}
-...         },
-...     )
-...     return LLMComponent(config)
+...      """创建 LLM 组件，仅用于抽取结构化字段（location/date）。"""
+...      config = LLMCompConfig(
+...             model_client_config=fake_model_client_config,
+...             model_config=fake_model_config,
+...             template_content=[{"role": "user", "content": "Hello {query}"}],
+...             response_format={"type": "text"},
+...             output_config={"result": {
+...                 "type": "string",
+...                 "required": True,
+...             }},
+...         )
+...      return LLMComponent(config)
 ... 
 >>> llm = _create_llm_component()
+>>> workflow = Workflow()
 >>> 
 >>> # 注册大模型组件到工作流
 >>> workflow.add_workflow_comp("llm", llm, inputs_schema={"query": "${start.query}"})
@@ -386,18 +382,10 @@ openJiuwen提供了**三种流式输出方式**，提供了对于流式信息的
   >>> import asyncio
   >>> import datetime
   >>> 
-  >>> from openjiuwen.core.component.base import WorkflowComponent
-  >>> from openjiuwen.core.workflow.end_comp import End
-  >>> from openjiuwen.core.workflow import create_workflow_session
-  >>> from openjiuwen.core.workflow.loop.loop_comp import LoopGroup, LoopComponent
-  >>> from openjiuwen.core.workflow.start_comp import Start
-  >>> from openjiuwen.core.component.workflow_comp import SubWorkflowComponent
-  >>> from openjiuwen.core.context_engine.base import Context
-  >>> from openjiuwen.core.runtime.base import ComponentExecutable, Input, Output
-  >>> from openjiuwen.core.runtime.runtime import Runtime
-  >>> from openjiuwen.core.runtime.workflow import WorkflowRuntime
-  >>> from openjiuwen.core.stream.base import BaseStreamMode, TraceSchema
-  >>> from openjiuwen.core.workflow.base import Workflow
+  >>> from openjiuwen.core.context_engine import ModelContext
+  >>> from openjiuwen.core.session.stream import TraceSchema, BaseStreamMode
+  >>> from openjiuwen.core.workflow import create_workflow_session, WorkflowComponent, Input, Output, Workflow, Start, End, \
+  ...   LoopGroup, LoopComponent, SubWorkflowComponent
   >>> # 1. 基础工作流
   >>> # 自定义组件`CustomComponent`，将输入直接作为输出返回
   >>> # 定义一个自定义组件
@@ -476,7 +464,7 @@ openJiuwen提供了**三种流式输出方式**，提供了对于流式信息的
   >>> # 使用自定义组件`CustomComponent`搭建一个包含循环组件、开始组件、结束组件的工作流，循环组件使用数组循环模式，其中循环体内有三个串联的自定义组件`a`，`b`，`c`，分别输出每次循环迭代的数组元素：
   >>> # 自定义组件返回组件输入中"value"字段的值，赋值给output变量
   >>> class CustomComponent(WorkflowComponent):
-  ...     async def invoke(self, inputs: Input, session: Session, context: Context) -> Output:
+  ...     async def invoke(self, inputs: Input, session: Session, context: ModelContext) -> Output:
   ...         return {"output": inputs["value"]}
   ... 
   >>> # 创建LoopGroup
@@ -674,28 +662,35 @@ openJiuwen提供了**三种流式输出方式**，提供了对于流式信息的
 * 样例三：当stream_modes为`BaseStreamMode.CUSTOM​`时，只输出用户自定义流式数据，数据为`CustomSchema`类型。
   
   ```python
-  >>> from openjiuwen.core.runtime.runtime import Runtime
-  >>> from openjiuwen.core.workflow import create_workflow_session
-  >>> from openjiuwen.core.component.base import WorkflowComponent
-  >>> from openjiuwen.core.runtime.base import ComponentExecutable, Input, Output
-  >>> from openjiuwen.core.context_engine.base import Context
-  >>> from openjiuwen.core.runtime.workflow import WorkflowRuntime
-  >>> from openjiuwen.core.stream.base import BaseStreamMode, CustomSchema
-  >>> 
-  >>> # 1. 创建自定义组件，并流式输出
+  >>> class TestLLMExecutable(LLMExecutable):
+  ...     async def prepare_model_inputs(self, input_):
+  ...         return await super()._prepare_model_inputs(input_)
+  ...
   >>> class LLMComponent(WorkflowComponent):
-  ...     async def invoke(self, inputs: Input, runtime: Runtime, context: Context) -> Output:
-  ...         ...
-  ...         llm_response = await self._llm.ainvoke(model_inputs)
-  ...         # 若response为 {"role": "user", "content": "Check the weather in Shanghai on 2025-08-22"}
+  ...     async def invoke(self, inputs: Input, session: BaseSession, context: ModelContext) -> Output:
+  ...         exe = TestLLMExecutable(LLMCompConfig(
+  ...             model_client_config=fake_model_client_config,
+  ...             model_config=fake_model_config,
+  ...             template_content=[{"role": "user", "content": "Hello {query}"}],
+  ...             response_format={"type": "text"},
+  ...             output_config={"result": {
+  ...                 "type": "string",
+  ...                 "required": True,
+  ...             }},
+  ...         ))
+  ...         model_inputs = await exe.prepare_model_inputs(fake_input(userFields=dict(query="pytest")))
+  ...         llm_response = await llm.ainvoke(model_inputs)
   ...         response = llm_response.content
-  ...         await runtime.write_custom_stream(**dict(custom_output=response))
-  ...         ...
-  ... 
-  >>> # 2. 调用工作流流式输出
-  >>> async for chunk in workflow.stream({"query": "查询上海的天气"}, session=create_workflow_session(), stream_modes=[BaseStreamMode.CUSTOM]):
-  ...      print(chunk)
-  >>> CustomSchema(custom_output = 'Check the weather in Shanghai on 2025-08-22')
+  ...
+  ...         await session.write_custom_stream(**dict(custom_output=response))
+  ...
+  ...         # 2. 调用工作流流式输出
+  ...         async for chunk in workflow.stream({"query": "查询上海的天气"}, session=create_workflow_session(),
+  ...                                           stream_modes=[BaseStreamMode.CUSTOM]):
+  ...             print(chunk)
+  ...
+  >>> def fake_input():
+  ...     return lambda **kw: {USER_FIELDS: kw}
   ```
 
 

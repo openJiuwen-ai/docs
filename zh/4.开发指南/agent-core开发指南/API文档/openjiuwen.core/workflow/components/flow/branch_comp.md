@@ -1,6 +1,6 @@
-# openjiuwen.core.workflow.branch_comp
+# openjiuwen.core.workflow
 
-## class openjiuwen.core.workflow.branch_comp.BranchComponent
+## class BranchComponent
 
 `BranchComponent`是openJiuwen内置的工作流的分支组件，该组件提供了多分支条件判断、动态控制工作流跳转至目标组件的能力，用于设计工作流的分支流程，实现逻辑判断功能。
 
@@ -52,24 +52,20 @@ add_branch(condition: Union[str, Callable[[], bool], Condition], target: Union[s
 >>> import asyncio
 >>> import os
 >>> from openjiuwen.core.common.exception.exception import JiuWenBaseException
->>> from openjiuwen.core.component.condition.expression import ExpressionCondition
->>> from openjiuwen.core.context_engine.base import Context
->>> from openjiuwen.core.runtime.base import ComponentExecutable
->>> from openjiuwen.core.runtime.runtime import Runtime
->>> from openjiuwen.core.component.base import WorkflowComponent
->>> from openjiuwen.core.runtime.workflow import WorkflowRuntime
->>> from openjiuwen.core.workflow.base import Workflow, WorkflowOutput
->>> from openjiuwen.core.workflow.start_comp import Start
->>> from openjiuwen.core.workflow.end_comp import End
->>> from openjiuwen.core.workflow.branch_comp import BranchComponent
+>>> from openjiuwen.core.context_engine import ModelContext
+>>> from openjiuwen.core.session import WorkflowSession
+>>> from openjiuwen.core.session.workflow import create_workflow_session
+>>> from openjiuwen.core.workflow import WorkflowComponent, WorkflowOutput, Workflow, Start, End, BranchRouter, \
+...     ExpressionCondition
 >>> 
 >>> 
 >>> class AbsComponent(WorkflowComponent):
-...     async def invoke(self, inputs, session: WorkflowSession, context: Context):
-...         num = inputs["num"]
-...         if num < 0:
-...             return {"result": -num}
-...         return {"result": num}
+...      async def invoke(self, inputs, session: WorkflowSession, context: ModelContext):
+...          num = inputs["num"]
+...          if num < 0:
+...              return {"result": -num}
+...          return {"result": num}
+... 
 >>> 
 >>> 
 >>> async def run_workflow(num: int) -> tuple[WorkflowOutput | str, bool]:
