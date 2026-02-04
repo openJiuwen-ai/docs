@@ -1,9 +1,9 @@
-# openjiuwen.core.workflow.branch_router
+# openjiuwen.core.workflow
 
-## class openjiuwen.core.workflow.branch_router.BranchRouter
+## class BranchRouter
 
 ```python
-class openjiuwen.core.workflow.branch_router.BranchRouter(report_trace: bool = False)
+class BranchRouter(report_trace: bool = False)
 ```
 
 `BranchRouter` 是实现分支路由器的核心类，提供了管理和切换不同的执行分支的能力，用于设计工作流的分支流程，通常和工作流的[add_conditional_connection]方法配合使用。工作流会在源组件执行完成后，调用`BranchRouter` 的可调用对象，根据其返回值来决定下一步工作流的走向。若分支路由器所管理的分支均不满足预设条件，会抛出 `JiuWenBaseException`异常，错误码为101102，错误信息为"Branch meeting the condition was not found."。
@@ -39,9 +39,6 @@ add_branch(self, condition: Union[str, Callable[[], bool], Condition], target: U
   * 若为`list[str]`，表示多个目标组件的组件ID列表。
 * **branch_id**(str, 可选)：表示该条件分支的标识。默认值：`None`。
 
-**异常**：
-
-* **JiuWenBaseException**：openJiuwen异常基类，具体详细信息和解决方法，参见[StatusCode]。
 
 **样例**：
 
@@ -56,105 +53,99 @@ add_branch(self, condition: Union[str, Callable[[], bool], Condition], target: U
 >>> import os
 >>> 
 >>> from openjiuwen.core.common.exception.exception import JiuWenBaseException
->>> from openjiuwen.core.workflow.branch_router import BranchRouter
->>> from openjiuwen.core.component.condition.expression import ExpressionCondition
->>> from openjiuwen.core.context_engine.base import Context
->>> from openjiuwen.core.runtime.base import ComponentExecutable
->>> from openjiuwen.core.runtime.runtime import Runtime
->>> from openjiuwen.core.component.base import WorkflowComponent
->>> from openjiuwen.core.runtime.workflow import WorkflowRuntime
->>> from openjiuwen.core.workflow.base import Workflow, WorkflowOutput
->>> from openjiuwen.core.workflow.start_comp import Start
->>> from openjiuwen.core.workflow.end_comp import End
->>> from openjiuwen.core.workflow import create_workflow_session
+>>> from openjiuwen.core.context_engine import ModelContext
+>>> from openjiuwen.core.session import WorkflowSession
+>>> from openjiuwen.core.session.workflow import create_workflow_session
+>>> from openjiuwen.core.workflow import WorkflowComponent, WorkflowOutput, Workflow, Start, End, BranchRouter, \
+...     ExpressionCondition
+>>> 
 >>> 
 >>> class AbsComponent(WorkflowComponent):
-...     async def invoke(self, inputs, session: WorkflowSession, context: Context):
-...         num = inputs["num"]
-...         if num < 0:
-...             return {"result": -num}
-...         return {"result": num}
->>> 
+...      async def invoke(self, inputs, session: WorkflowSession, context: ModelContext):
+...          num = inputs["num"]
+...          if num < 0:
+...              return {"result": -num}
+...          return {"result": num}
+... 
 >>> 
 >>> async def run_workflow(num: int) -> tuple[WorkflowOutput | str, bool]:
-...     # 构造工作流、初始化工作流运行时
-...     workflow = Workflow()
-...     runtime = WorkflowRuntime()
+...      # 构造工作流、初始化工作流运行时
+...      workflow = Workflow()
 ... 
-...     # 添加开始、结束组件到工作流
-...     workflow.set_start_comp("start", Start(), inputs_schema={"query": "${user_inputs.query}"})
-...     workflow.set_end_comp("end", End(), inputs_schema={"raw": "${start.query}", "updated": "${abs.result}"})
+...      # 添加开始、结束组件到工作流
+...      workflow.set_start_comp("start", Start(), inputs_schema={"query": "${user_inputs.query}"})
+...      workflow.set_end_comp("end", End(), inputs_schema={"raw": "${start.query}", "updated": "${abs.result}"})
 ... 
-...     # 添加实现绝对值计算的自定义组件
-...     abs_comp = AbsComponent()
-...     workflow.add_workflow_comp("abs", abs_comp, inputs_schema={"num": "${start.query}"})
+...      # 添加实现绝对值计算的自定义组件
+...      abs_comp = AbsComponent()
+...      workflow.add_workflow_comp("abs", abs_comp, inputs_schema={"num": "${start.query}"})
 ... 
-...     # 定义分支路由器，增加分支
-...     router = BranchRouter()
+...      # 定义分支路由器，增加分支
+...      router = BranchRouter()
 ... 
-...     # 1. 分支pos_branch：condition为str类型
-...     expression_str = "${start.query} > 0"
-...     router.add_branch(expression_str, ["end"], "pos_branch")
+...      # 1. 分支pos_branch：condition为str类型
+...      expression_str = "${start.query} > 0"
+...      router.add_branch(expression_str, ["end"], "pos_branch")
 ... 
-...     # 2. 分支neg_branch：condition为Condition类型
-...     expression_condition = ExpressionCondition("${start.query} < 0")
-...     router.add_branch(expression_condition, ["abs"], "neg_branch")
+...      # 2. 分支neg_branch：condition为Condition类型
+...      expression_condition = ExpressionCondition("${start.query} < 0")
+...      router.add_branch(expression_condition, ["abs"], "neg_branch")
 ... 
-...     # 3. 分支zero_branch：condition为Callable[[], bool]类型
-...     def expression_callable() -> bool:
-...         return str(os.environ.get("ALLOW_ZERO", "false")).lower() == "true"
+...      # 3. 分支zero_branch：condition为Callable[[], bool]类型
+...      def expression_callable() -> bool:
+...          return str(os.environ.get("ALLOW_ZERO", "false")).lower() == "true"
 ... 
-...     router.add_branch(expression_callable, ["abs"], "zero_branch")
+...      router.add_branch(expression_callable, ["abs"], "zero_branch")
 ... 
-...     # 定义节点连接
-...     workflow.add_conditional_connection("start", router=router)
-...     workflow.add_connection("abs", "end")
+...      # 定义节点连接
+...      workflow.add_conditional_connection("start", router=router)
+...      workflow.add_connection("abs", "end")
 ... 
-...     # 构造输入、调用工作流
-...     inputs = {"user_inputs": {"query": num}}
+...      # 构造输入、调用工作流
+...      inputs = {"user_inputs": {"query": num}}
 ... 
-...     try:
-...         workflow_output = await workflow.invoke(inputs, create_workflow_session())
-...         return workflow_output, True
-...     except JiuWenBaseException as e:
-...         print(f"workflow execute error: {e}")
-...         return e.message, False
-...
+...      try:
+...          workflow_output = await workflow.invoke(inputs, create_workflow_session())
+...          return workflow_output, True
+...      except JiuWenBaseException as e:
+...          print(f"workflow execute error: {e}")
+...          return e.message, False
+... 
 >>> async def main():
-...     # 当用户输入为10时，满足分支pos_branch，依次执行组件start，branch，end，工作流执行成功。
-...     workflow_output, run_success = await run_workflow(num=10)
-...     assert run_success is True
-...     assert workflow_output is not None
-...     result = workflow_output.result
-...     assert result.get("output", {}).get("raw") == 10
-...     assert result.get("output", {}).get("updated") is None
-...     print(result)
+...      # 当用户输入为10时，满足分支pos_branch，依次执行组件start，branch，end，工作流执行成功。
+...      workflow_output, run_success = await run_workflow(num=10)
+...      assert run_success is True
+...      assert workflow_output is not None
+...      result = workflow_output.result
+...      assert result.get("output", {}).get("raw") == 10
+...      assert result.get("output", {}).get("updated") is None
+...      print(result)
 ... 
-...     # 当用户输入为-10时，满足分支neg_branch，依次执行组件start，branch，abs，end，工作流执行成功。
-...     workflow_output, run_success = await run_workflow(num=-10)
-...     assert run_success is True
-...     assert workflow_output is not None
-...     result = workflow_output.result
-...     assert result.get("output", {}).get("raw") == -10
-...     assert result.get("output", {}).get("updated") == 10
-...     print(result)
+...      # 当用户输入为-10时，满足分支neg_branch，依次执行组件start，branch，abs，end，工作流执行成功。
+...      workflow_output, run_success = await run_workflow(num=-10)
+...      assert run_success is True
+...      assert workflow_output is not None
+...      result = workflow_output.result
+...      assert result.get("output", {}).get("raw") == -10
+...      assert result.get("output", {}).get("updated") == 10
+...      print(result)
 ... 
-...     # 当用户输入为0，环境变量ALLOW_ZERO为true时，满足zero_branch，依次执行组件start，branch，abs，end，工作流执行成功。
-...     os.environ["ALLOW_ZERO"] = "true"
-...     workflow_output, run_success = await run_workflow(num=0)
-...     assert run_success is True
-...     assert workflow_output is not None
-...     result = workflow_output.result
-...     assert result.get("output", {}).get("raw") == 0
-...     assert result.get("output", {}).get("updated") == 0
-...     print(result)
+...      # 当用户输入为0，环境变量ALLOW_ZERO为true时，满足zero_branch，依次执行组件start，branch，abs，end，工作流执行成功。
+...      os.environ["ALLOW_ZERO"] = "true"
+...      workflow_output, run_success = await run_workflow(num=0)
+...      assert run_success is True
+...      assert workflow_output is not None
+...      result = workflow_output.result
+...      assert result.get("output", {}).get("raw") == 0
+...      assert result.get("output", {}).get("updated") == 0
+...      print(result)
 ... 
-...     # 当用户输入为0，环境变量ALLOW_ZERO为false时，找不到满足的条件分支，工作流执行失败并抛出异常。
-...     os.environ["ALLOW_ZERO"] = "false"
-...     workflow_output, run_success = await run_workflow(num=0)
-...     assert run_success is False
-...     assert workflow_output == "Branch meeting the condition was not found."
-...     print(workflow_output)
+...      # 当用户输入为0，环境变量ALLOW_ZERO为false时，找不到满足的条件分支，工作流执行失败并抛出异常。
+...      os.environ["ALLOW_ZERO"] = "false"
+...      workflow_output, run_success = await run_workflow(num=0)
+...      assert run_success is False
+...      assert workflow_output == "Branch meeting the condition was not found."
+...      print(workflow_output)
 ... 
 >>> asyncio.run(main())
 {'output': {'raw': 10}}
