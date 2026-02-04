@@ -15,30 +15,26 @@ async def add_agent_group(self,
 
 **参数：**
 
-* **card(GroupCard)**：代理组的元数据卡片，包含配置和标识信息。
-
-* **agent_group(AgentGroupProvider)**：可调用提供者，用于创建或返回代理组实例。
-
-* **tag(Optional[Tag | list[Tag]]，可选)**：用于分类和过滤代理组的标签。如果为None，则不添加或更新标签。
+* **card**(GroupCard)：代理组的元数据卡片，包含配置和标识信息。
+* **agent_group**(AgentGroupProvider)：可调用提供者，用于创建或返回代理组实例。
+* **tag**(Optional[Tag | list[Tag]]，可选)：用于分类和过滤代理组的标签。如果为None，则不添加或更新标签。
 
 **返回：**
 
-**Result[GroupCard, Exception]**：包含添加的组卡片或异常的Result对象。
-
+**Result[GroupCard, Exception]**，包含添加的组卡片或异常的Result对象。
 
 
 **样例：**
 
 ```python
->>> from openjiuwen.core.runner.resources_manager.resource_mgr import ResourceMgr
+>>> from openjiuwen.core.runner import Runner
 >>> from openjiuwen.core.multi_agent import BaseGroup, GroupCard
->>> from openjiuwen.core.runner.resources_manager.base import AgentGroupProvider
 >>> 
->>> resource_mgr = ResourceMgr()
+>>>
 >>> card = GroupCard(id="team_analyzer", name="分析团队", description="数据分析专家团队")
 >>> agent_group_provider: AgentGroupProvider = lambda _: BaseGroup()
 >>> 
->>> result = await resource_mgr.add_agent_group(card, agent_group_provider, tag=["analysis", "team"])
+>>> result = await Runner.resource_mgr.add_agent_group(card, agent_group_provider, tag=["analysis", "team"])
 >>> if result.is_ok():
 ...     print(f"添加代理组成功: {result.msg()}")
 ```
@@ -58,31 +54,28 @@ async def remove_agent_group(self,
 
 **参数：**
 
-* **group_id(Optional[str | list[str]]，可选)**：要删除的代理组的单个ID或ID列表。不能与tag参数同时使用。
-
-* **tag(Optional[Tag | list[Tag]]，可选)**：单个标签或标签列表；删除所有匹配标签的代理组。不能与id参数同时使用。
-
-* **tag_match_strategy(TagMatchStrategy，可选)**：使用tag参数时的标签匹配策略。ALL - 资源必须具有所有指定的标签。ANY - 资源必须至少具有一个指定的标签。默认值：TagMatchStrategy.ALL。
-
-* **skip_if_tag_not_exists(bool，可选)**：如果为True，则静默跳过不存在的资源。
+* **group_id**(Optional[str | list[str]]，可选)：要删除的代理组的单个ID或ID列表。不能与tag参数同时使用。
+* **tag**(Optional[Tag | list[Tag]]，可选)：单个标签或标签列表；删除所有匹配标签的代理组。不能与id参数同时使用。
+* **tag_match_strategy**(TagMatchStrategy，可选)：使用tag参数时的标签匹配策略。ALL - 资源必须具有所有指定的标签。ANY - 资源必须至少具有一个指定的标签。默认值：TagMatchStrategy.ALL。
+* **skip_if_tag_not_exists**(bool，可选)：如果为True，则静默跳过不存在的资源。
 
 **返回：**
 
-**Result[Optional[GroupCard], Exception] 或 list[Result[Optional[GroupCard], Exception]]** ：包含删除的组卡片或异常的Result对象或列表。
+**Result[Optional[GroupCard], Exception]|list[Result[Optional[GroupCard], Exception]]**，包含删除的组卡片或异常的Result对象或列表。
 
 
 
 **样例：**
 
 ```python
->>> from openjiuwen.core.runner.resources_manager.resource_mgr import ResourceMgr
+>>> from openjiuwen.core.runner import Runner
 >>> from openjiuwen.core.runner.resources_manager.base import TagMatchStrategy
 >>> 
->>> resource_mgr = ResourceMgr()
+>>>
 >>> # 通过ID删除
->>> result = await resource_mgr.remove_agent_group(group_id="team_analyzer")
+>>> result = await Runner.resource_mgr.remove_agent_group(group_id="team_analyzer")
 >>> # 通过标签删除
->>> result = await resource_mgr.remove_agent_group(tag=["analysis"], tag_match_strategy=TagMatchStrategy.ANY)
+>>> result = await Runner.resource_mgr.remove_agent_group(tag=["analysis"], tag_match_strategy=TagMatchStrategy.ANY)
 ```
 
 ### get_agent_group
@@ -99,30 +92,25 @@ async def get_agent_group(self,
 
 **参数：**
 
-* **group_id(str，可选)**：代理组的唯一标识符。必须提供id或tag之一。
-
-* **tag(Optional[Tag | list[Tag]]，可选)**：提供id时的可选标签过滤器，或未提供id时的主要查找条件。
-
-* **tag_match_strategy(TagMatchStrategy，可选)**：使用tag参数时的标签匹配策略。默认值：TagMatchStrategy.ALL。
-
-* **session(Optional[Session]，可选)**：代理组的可选会话上下文。如果提供，代理组将使用此会话进行初始化。
+* **group_id**(str，可选)：代理组的唯一标识符。必须提供id或tag之一。
+* **tag**(Optional[Tag | list[Tag]]，可选)：提供id时的可选标签过滤器，或未提供id时的主要查找条件。
+* **tag_match_strategy**(TagMatchStrategy，可选)：使用tag参数时的标签匹配策略。默认值：TagMatchStrategy.ALL。
+* **session**(Optional[Session]，可选)：代理组的可选会话上下文。如果提供，代理组将使用此会话进行初始化。
 
 **返回：**
 
-**Optional[BaseGroup] 或 list[Optional[BaseGroup]]**：找到的BaseGroup实例，否则为None。
+**Optional[BaseGroup]|list[Optional[BaseGroup]]**，找到的BaseGroup实例，否则为None。
 
 
 **样例：**
 
 ```python
->>> from openjiuwen.core.runner.resources_manager.resource_mgr import ResourceMgr
->>> from openjiuwen.core.session import Session
+>>> from openjiuwen.core.runner import Runner
 >>> 
->>> resource_mgr = ResourceMgr()
 >>> # 通过ID获取
->>> group = await resource_mgr.get_agent_group(group_id="team_analyzer")
+>>> group = await Runner.resource_mgr.get_agent_group(group_id="team_analyzer")
 >>> # 通过标签获取
->>> groups = await resource_mgr.get_agent_group(tag=["analysis"], session=Session())
+>>> groups = await Runner.resource_mgr.get_agent_group(tag=["analysis"])
 ```
 
 ### add_agent
@@ -138,30 +126,28 @@ def add_agent(self,
 
 **参数：**
 
-* **card(AgentCard)**：代理的元数据卡片，包含配置和标识信息。
-
-* **agent(AgentProvider | RemoteAgent)**：可调用提供者，用于创建或返回代理实例。
-
-* **tag(Optional[Tag | list[Tag]]，可选)**：用于分类和过滤代理的标签。
+* **card**(AgentCard)：代理的元数据卡片，包含配置和标识信息。
+* **agent**(AgentProvider | RemoteAgent)：可调用提供者，用于创建或返回代理实例。
+* **tag**(Optional[Tag | list[Tag]]，可选)：用于分类和过滤代理的标签。
 
 **返回：**
 
-**Result[AgentCard, Exception]**：包含添加的代理卡片或异常的Result对象。
+**Result[AgentCard, Exception]**，包含添加的代理卡片或异常的Result对象。
 
 
 
 **样例：**
 
 ```python
->>> from openjiuwen.core.runner.resources_manager.resource_mgr import ResourceMgr
->>> from openjiuwen.core.single_agent.schema.agent_card import AgentCard
+>>> from openjiuwen.core.runner import Runner
+>>> from openjiuwen.core.single_agent.agent_card import AgentCard
 >>> from openjiuwen.core.single_agent.legacy import LegacyBaseAgent as BaseAgent
 >>> 
->>> resource_mgr = ResourceMgr()
+>>>
 >>> card = AgentCard(id="data_analyzer", name="数据分析师", description="专业数据分析代理")
 >>> agent_provider = lambda _: BaseAgent()
 >>> 
->>> result = resource_mgr.add_agent(card, agent_provider, tag=["analysis", "expert"])
+>>> result = Runner.resource_mgr.add_agent(card, agent_provider, tag=["analysis", "expert"])
 ```
 
 ### add_agents
@@ -176,26 +162,25 @@ def add_agents(self,
 
 **参数：**
 
-* **agents(list[Tuple[AgentCard, AgentProvider]])**：元组列表，每个元组包含(AgentCard, AgentProvider)。
-
-* **tag(Optional[Tag | list[Tag]]，可选)**：要应用于所有被添加代理的可选标签。除了单个AgentCard上的任何标签外，还会应用这些标签。
+* **agents**(list[Tuple[AgentCard, AgentProvider]])：元组列表，每个元组包含(AgentCard, AgentProvider)。
+* **tag**(Optional[Tag | list[Tag]]，可选)：要应用于所有被添加代理的可选标签。除了单个AgentCard上的任何标签外，还会应用这些标签。
 
 **返回：**
 
-**Result[AgentCard, Exception] 或 list[Result[AgentCard, Exception]]**：包含添加的代理卡片或异常的Result对象或列表。
+**Result[AgentCard, Exception]|list[Result[AgentCard, Exception]]**，包含添加的代理卡片或异常的Result对象或列表。
 
 **样例：**
 
 ```python
->>> from openjiuwen.core.runner.resources_manager.resource_mgr import ResourceMgr
+>>> from openjiuwen.core.runner import Runner
 >>> from openjiuwen.core.single_agent.schema.agent_card import AgentCard
 >>> 
->>> resource_mgr = ResourceMgr()
+>>>
 >>> agents = [
 ...     (AgentCard(id="agent1", name="代理1"), lambda _: BaseAgent()),
 ...     (AgentCard(id="agent2", name="代理2"), lambda _: BaseAgent())
 ... ]
->>> results = resource_mgr.add_agents(agents, tag=["batch_added"])
+>>> results = Runner.resource_mgr.add_agents(agents, tag=["batch_added"])
 ```
 
 ### remove_agent
@@ -213,23 +198,20 @@ def remove_agent(self,
 
 **参数：**
 
-* **agent_id(str | list[str]，可选)**：要删除的代理的单个ID或ID列表。
-
-* **tag(Optional[Tag | list[Tag]]，可选)**：单个标签或标签列表；删除所有匹配标签的代理。
-
-* **tag_match_strategy(TagMatchStrategy，可选)**：使用tag参数时的标签匹配策略。
-
-* **skip_if_tag_not_exists(bool，可选)**：如果为True，跳过不存在的资源。
+* **agent_id**(str | list[str]，可选)：要删除的代理的单个ID或ID列表。
+* **tag**(Optional[Tag | list[Tag]]，可选)：单个标签或标签列表；删除所有匹配标签的代理。
+* **tag_match_strategy**(TagMatchStrategy，可选)：使用tag参数时的标签匹配策略。
+* **skip_if_tag_not_exists**(bool，可选)：如果为True，跳过不存在的资源。
 
 **返回：**
 
-**Result[Optional[AgentCard], Exception] 或 list[Result[Optional[AgentCard], Exception]]**：包含删除的代理卡片或异常的Result对象或列表。
+**Result[Optional[AgentCard], Exception]|list[Result[Optional[AgentCard], Exception]]**，包含删除的代理卡片或异常的Result对象或列表。
 
 **样例：**
 
 ```python
->>> resource_mgr.remove_agent(agent_id=["agent1", "agent2"])
->>> resource_mgr.remove_agent(tag=["obsolete"], tag_match_strategy=TagMatchStrategy.ANY)
+>>> Runner.resource_mgr.remove_agent(agent_id=["agent1", "agent2"])
+>>> Runner.resource_mgr.remove_agent(tag=["obsolete"], tag_match_strategy=TagMatchStrategy.ANY)
 ```
 
 ### get_agent
@@ -246,23 +228,20 @@ async def get_agent(self,
 
 **参数：**
 
-* **agent_id(str | list[str]，可选)**：要检索的代理的单个ID或ID列表。
-
-* **tag(Optional[Tag | list[Tag]]，可选)**：单个标签或标签列表；返回所有匹配标签的代理。
-
-* **tag_match_strategy(TagMatchStrategy，可选)**：使用tag参数时的标签匹配策略。
-
-* **session(Optional[Session]，可选)**：代理的可选会话上下文。
+* **agent_id**(str | list[str]，可选)：要检索的代理的单个ID或ID列表。
+* **tag**(Optional[Tag | list[Tag]]，可选)：单个标签或标签列表；返回所有匹配标签的代理。
+* **tag_match_strategy**(TagMatchStrategy，可选)：使用tag参数时的标签匹配策略。
+* **session**(Optional[Session]，可选)：代理的可选会话上下文。
 
 **返回：**
 
-**BaseAgent** 或 **list[BaseAgent]**：如果找到则返回代理实例，否则为None。
+**BaseAgent|list[BaseAgent]**，如果找到则返回代理实例，否则为None。
 
 **样例：**
 
 ```python
->>> agent = await resource_mgr.get_agent(agent_id="data_analyzer")
->>> agents = await resource_mgr.get_agent(tag=["expert"], session=Session())
+>>> agent = await Runner.resource_mgr.get_agent(agent_id="data_analyzer")
+>>> agents = await Runner.resource_mgr.get_agent(tag=["expert"], session=Session())
 ```
 
 ### add_workflow
@@ -278,15 +257,13 @@ def add_workflow(self,
 
 **参数：**
 
-* **card(WorkflowCard)**：工作流的元数据卡片，包含配置和标识信息。
-
-* **workflow(WorkflowProvider)**：可调用提供者，用于创建或返回工作流实例。
-
-* **tag(Optional[Tag | list[Tag]]，可选)**：用于分类和过滤工作流的标签。
+* **card**(WorkflowCard)：工作流的元数据卡片，包含配置和标识信息。
+* **workflow**(WorkflowProvider)：可调用提供者，用于创建或返回工作流实例。
+* **tag**(Optional[Tag | list[Tag]]，可选)：用于分类和过滤工作流的标签。
 
 **返回：**
 
-**Result[WorkflowCard, Exception]**：包含添加的工作流卡片或异常的Result对象。
+**Result**[WorkflowCard, Exception]，包含添加的工作流卡片或异常的Result对象。
 
 **样例：**
 
@@ -295,7 +272,7 @@ def add_workflow(self,
 >>> 
 >>> card = WorkflowCard(id="data_pipeline", name="数据处理流水线")
 >>> workflow_provider = lambda c: Workflow(card=c)
->>> result = resource_mgr.add_workflow(card, workflow_provider, tag=["pipeline", "data"])
+>>> result = Runner.resource_mgr.add_workflow(card, workflow_provider, tag=["pipeline", "data"])
 ```
 
 
@@ -311,13 +288,12 @@ def add_workflows(self,
 
 **参数：**
 
-* **workflows(list[Tuple[WorkflowCard, WorkflowProvider]])**：元组列表，每个元组包含(WorkflowCard, WorkflowProvider)。
-
-* **tag(Optional[Tag | list[Tag]]，可选)**：要应用于所有被添加工作流的可选标签。
+* **workflows**(list[Tuple[WorkflowCard, WorkflowProvider]])：元组列表，每个元组包含(WorkflowCard, WorkflowProvider)。
+* **tag**(Optional[Tag | list[Tag]]，可选)：要应用于所有被添加工作流的可选标签。
 
 **返回：**
 
-**Result[WorkflowCard, Exception]** 或 **list[Result[WorkflowCard, Exception]]**：包含添加的工作流卡片或异常的Result对象或列表。
+**Result[WorkflowCard, Exception]|list[Result[WorkflowCard, Exception]]**，包含添加的工作流卡片或异常的Result对象或列表。
 
 **样例：**
 
@@ -326,7 +302,7 @@ def add_workflows(self,
 ...     (WorkflowCard(id="wf1", name="工作流1"), lambda c: Workflow(card=c)),
 ...     (WorkflowCard(id="wf2", name="工作流2"), lambda c: Workflow(card=c))
 ... ]
->>> results = resource_mgr.add_workflows(workflows, tag=["batch"])
+>>> results = Runner.resource_mgr.add_workflows(workflows, tag=["batch"])
 ```
 
 ### remove_workflow
@@ -344,23 +320,20 @@ def remove_workflow(self,
 
 **参数：**
 
-* **workflow_id(str | list[str]，可选)**：要删除的工作流的单个ID或ID列表。
-
-* **tag(Optional[Tag | list[Tag]]，可选)**：单个标签或标签列表；删除所有匹配标签的工作流。
-
-* **tag_match_strategy(TagMatchStrategy，可选)**：使用tag参数时的标签匹配策略。
-
-* **skip_if_tag_not_exists(bool，可选)**：如果为True，跳过不存在的工作流。
+* **workflow_id**(str | list[str]，可选)：要删除的工作流的单个ID或ID列表。
+* **tag**(Optional[Tag | list[Tag]]，可选)：单个标签或标签列表；删除所有匹配标签的工作流。
+* **tag_match_strategy**(TagMatchStrategy，可选)：使用tag参数时的标签匹配策略。
+* **skip_if_tag_not_exists**(bool，可选)：如果为True，跳过不存在的工作流。
 
 **返回：**
 
-**Result[Optional[WorkflowCard], Exception]** 或 **list[Result[Optional[WorkflowCard], Exception]]**：包含删除的工作流卡片或异常的Result对象或列表。
+**Result[Optional[WorkflowCard], Exception]|list[Result[Optional[WorkflowCard], Exception]]**，包含删除的工作流卡片或异常的Result对象或列表。
 
 **样例：**
 
 ```python
->>> resource_mgr.remove_workflow(workflow_id="data_pipeline")
->>> resource_mgr.remove_workflow(tag=["deprecated"])
+>>> Runner.resource_mgr.remove_workflow(workflow_id="data_pipeline")
+>>> Runner.resource_mgr.remove_workflow(tag=["deprecated"])
 ```
 
 ### get_workflow
@@ -377,23 +350,20 @@ async def get_workflow(self,
 
 **参数：**
 
-* **workflow_id(str | list[str]，可选)**：要检索的工作流的单个ID或ID列表。
-
-* **tag(Optional[Tag | list[Tag]]，可选)**：单个标签或标签列表；返回所有匹配标签的工作流。
-
-* **tag_match_strategy(TagMatchStrategy，可选)**：使用tag参数时的标签匹配策略。
-
-* **session(Optional[Session]，可选)**：工作流的可选会话上下文。
+* **workflow_id**(str | list[str]，可选)：要检索的工作流的单个ID或ID列表。
+* **tag**(Optional[Tag | list[Tag]]，可选)：单个标签或标签列表；返回所有匹配标签的工作流。
+* **tag_match_strategy**(TagMatchStrategy，可选)：使用tag参数时的标签匹配策略。
+* **session**(Optional[Session]，可选)：工作流的可选会话上下文。
 
 **返回：**
 
-**Workflow** 或 **list[Workflow]**：如果找到则返回工作流实例，否则为None。
+**Workflow|list[Workflow]**，如果找到则返回工作流实例，否则为None。
 
 **样例：**
 
 ```python
->>> workflow = await resource_mgr.get_workflow(workflow_id="data_pipeline")
->>> workflows = await resource_mgr.get_workflow(tag=["data_processing"])
+>>> workflow = await Runner.resource_mgr.get_workflow(workflow_id="data_pipeline")
+>>> workflows = await Runner.resource_mgr.get_workflow(tag=["data_processing"])
 ```
 ### add_tool
 ```python
@@ -407,13 +377,12 @@ def add_tool(self,
 
 **参数：**
 
-* **tool(Tool | list[Tool])**：要添加的单个Tool实例或Tool实例列表。
-
-* **tag(Optional[Tag | list[Tag]]，可选)**：用于分类和过滤工具的可选标签。
+* **tool**(Tool | list[Tool])：要添加的单个Tool实例或Tool实例列表。
+* **tag**(Optional[Tag | list[Tag]]，可选)：用于分类和过滤工具的可选标签。
 
 **返回：**
 
-**Result[ToolCard, Exception]** 或 **list[Result[ToolCard, Exception]]**：包含添加的工具卡片或异常的Result对象或列表。
+**Result[ToolCard, Exception]|list[Result[ToolCard, Exception]]**，包含添加的工具卡片或异常的Result对象或列表。
 
 **样例：**
 
@@ -422,7 +391,7 @@ def add_tool(self,
 >>> 
 >>> tool_card = ToolCard(id="calculator", name="计算器", description="数学计算工具")
 >>> tool = Tool(card=tool_card, func=lambda x: x*2)
->>> result = resource_mgr.add_tool(tool, tag=["utility", "math"])
+>>> result = Runner.resource_mgr.add_tool(tool, tag=["utility", "math"])
 ```
 ### get_tool
 ```python
@@ -438,23 +407,20 @@ def get_tool(self,
 
 **参数：**
 
-* **tool_id(str | list[str]，可选)**：要检索的工具的单个ID或ID列表。
-
-* **tag(Optional[Tag | list[Tag]]，可选)**：单个标签或标签列表；返回所有匹配标签的工具。
-
-* **tag_match_strategy(TagMatchStrategy，可选)**：使用tag参数时的标签匹配策略。
-
-* **session(Optional[Session]，可选)**：工具的可选会话上下文。
+* **tool_id**(str | list[str]，可选)：要检索的工具的单个ID或ID列表。
+* **tag**(Optional[Tag | list[Tag]]，可选)：单个标签或标签列表；返回所有匹配标签的工具。
+* **tag_match_strategy**(TagMatchStrategy，可选)：使用tag参数时的标签匹配策略。
+* **session**(Optional[Session]，可选)：工具的可选会话上下文。
 
 **返回：**
 
-**Tool** 或 **list[Tool]**：如果找到则返回工具实例，否则为None。
+**Tool|list[Tool]**，如果找到则返回工具实例，否则为None。
 
 **样例：**
 
 ```python
->>> tool = resource_mgr.get_tool(tool_id="calculator")
->>> tools = resource_mgr.get_tool(tag=["utility"])
+>>> tool = Runner.resource_mgr.get_tool(tool_id="calculator")
+>>> tools = Runner.resource_mgr.get_tool(tag=["utility"])
 ```
 ### remove_tool
 ```python
@@ -470,23 +436,20 @@ def remove_tool(self,
 
 **参数：**
 
-* **tool_id(str | list[str]，可选)**：要删除的工具的单个ID或ID列表。
-
-* **tag(Optional[Tag | list[Tag]]，可选)**：单个标签或标签列表；删除所有匹配标签的工具。
-
-* **tag_match_strategy(TagMatchStrategy，可选)**：使用tag参数时的标签匹配策略。
-
-* **skip_if_tag_not_exists(bool，可选)**：如果为True，跳过不存在的标签。
+* **tool_id**(str | list[str]，可选)：要删除的工具的单个ID或ID列表。
+* **tag**(Optional[Tag | list[Tag]]，可选)：单个标签或标签列表；删除所有匹配标签的工具。
+* **tag_match_strategy**(TagMatchStrategy，可选)：使用tag参数时的标签匹配策略。
+* **skip_if_tag_not_exists**(bool，可选)：如果为True，跳过不存在的标签。
 
 **返回：**
 
-**Result[Optional[ToolCard], Exception]** 或 **list[Result[Optional[ToolCard], Exception]]**：包含删除的工具卡片或异常的Result对象或列表。
+**Result[Optional[ToolCard], Exception]|list[Result[Optional[ToolCard], Exception]]**，包含删除的工具卡片或异常的Result对象或列表。
 
 **样例：**
 
 ```python
->>> resource_mgr.remove_tool(tool_id="calculator")
->>> resource_mgr.remove_tool(tag=["obsolete"])
+>>> Runner.resource_mgr.remove_tool(tool_id="calculator")
+>>> Runner.resource_mgr.remove_tool(tag=["obsolete"])
 ```
 ### add_model
 ```python
@@ -501,15 +464,13 @@ def add_model(self,
 
 **参数：**
 
-* **model_id(str)**：模型的唯一标识符。
-
-* **model(ModelProvider)**：可调用提供者，用于创建或返回模型实例。
-
-* **tag(Optional[Tag | list[Tag]]，可选)**：用于分类和过滤模型的标签。
+* **model_id**(str)：模型的唯一标识符。
+* **model**(ModelProvider)：可调用提供者，用于创建或返回模型实例。
+* **tag**(Optional[Tag | list[Tag]]，可选)：用于分类和过滤模型的标签。
 
 **返回：**
 
-**Result[str, Exception]**：包含模型ID或异常的Result对象。
+**Result[str, Exception]**，包含模型ID或异常的Result对象。
 
 **样例：**
 
@@ -517,7 +478,7 @@ def add_model(self,
 >>> from openjiuwen.core.runner.resources_manager.base import ModelProvider
 >>> 
 >>> model_provider: ModelProvider = lambda *args: SomeModel()
->>> result = resource_mgr.add_model(model_id="gpt-4", model=model_provider, tag=["llm", "gpt"])
+>>> result = Runner.resource_mgr.add_model(model_id="gpt-4", model=model_provider, tag=["llm", "gpt"])
 ```
 ### add_models
 ```python
@@ -531,13 +492,12 @@ def add_models(self,
 
 **参数：**
 
-* **models(list[Tuple[str, ModelProvider]])**：元组列表，每个元组包含(model_id, ModelProvider)。
-
-* **tag(Optional[Tag | list[Tag]]，可选)**：要应用于所有被添加模型的可选标签。
+* **models**(list[Tuple[str, ModelProvider]])：元组列表，每个元组包含(model_id, ModelProvider)。
+* **tag**(Optional[Tag | list[Tag]]，可选)：要应用于所有被添加模型的可选标签。
 
 **返回：**
 
-**Result[str, Exception]** 或 **list[Result[str, Exception]]**：包含模型ID或异常的Result对象或列表。
+**Result[str, Exception]|list[Result[str, Exception]]**，包含模型ID或异常的Result对象或列表。
 
 **样例：**
 
@@ -546,7 +506,7 @@ def add_models(self,
 ...     ("gpt-3.5", lambda *args: GPTModel()),
 ...     ("claude-2", lambda *args: ClaudeModel())
 ... ]
->>> results = resource_mgr.add_models(models, tag=["language_model"])
+>>> results = Runner.resource_mgr.add_models(models, tag=["language_model"])
 ```
 ### remove_model
 ```python
@@ -562,23 +522,20 @@ def remove_model(self,
 
 **参数：**
 
-* **model_id(str | list[str]，可选)**：要删除的模型的单个ID或ID列表。
-
-* **tag(Optional[Tag | list[Tag]]，可选)**：单个标签或标签列表；删除所有匹配标签的模型。
-
-* **tag_match_strategy(TagMatchStrategy，可选)**：使用tag参数时的标签匹配策略。
-
-* **skip_if_tag_not_exists(bool，可选)**：如果为True，跳过不存在的模型。
+* **model_id**(str | list[str]，可选)：要删除的模型的单个ID或ID列表。
+* **tag**(Optional[Tag | list[Tag]]，可选)：单个标签或标签列表；删除所有匹配标签的模型。
+* **tag_match_strategy**(TagMatchStrategy，可选)：使用tag参数时的标签匹配策略。
+* **skip_if_tag_not_exists**(bool，可选)：如果为True，跳过不存在的模型。
 
 **返回：**
 
-**Result[str, Exception]** 或 **list[Result[str, Exception]]**：包含模型ID或异常的Result对象或列表。
+**Result[str, Exception]|list[Result[str, Exception]]**，包含模型ID或异常的Result对象或列表。
 
 **样例：**
 
 ```python
->>> resource_mgr.remove_model(model_id="gpt-3.5")
->>> resource_mgr.remove_model(tag=["deprecated_models"])
+>>> Runner.resource_mgr.remove_model(model_id="gpt-3.5")
+>>> Runner.resource_mgr.remove_model(tag=["deprecated_models"])
 ```
 ### get_model
 ```python
@@ -594,23 +551,20 @@ async def get_model(self,
 
 **参数：**
 
-* **model_id(str | list[str]，可选)**：要检索的模型的单个ID或ID列表。
-
-* **tag(Optional[Tag | list[Tag]]，可选)**：单个标签或标签列表；返回所有匹配标签的模型。
-
-* **tag_match_strategy(TagMatchStrategy，可选)**：使用tag参数时的标签匹配策略。
-
-* **session(Optional[Session]，可选)**：模型的可选会话上下文。
+* **model_id**(str | list[str]，可选)：要检索的模型的单个ID或ID列表。
+* **tag**(Optional[Tag | list[Tag]]，可选)：单个标签或标签列表；返回所有匹配标签的模型。
+* **tag_match_strategy**(TagMatchStrategy，可选)：使用tag参数时的标签匹配策略。
+* **session**(Optional[Session]，可选)：模型的可选会话上下文。
 
 **返回：**
 
-**Model** 或 **list[Model]**：如果找到则返回模型实例，否则为None。
+**Model|list[Model]**，如果找到则返回模型实例，否则为None。
 
 **样例：**
 
 ```python
->>> model = await resource_mgr.get_model(model_id="gpt-4")
->>> models = await resource_mgr.get_model(tag=["vision_model"])
+>>> model = await Runner.resource_mgr.get_model(model_id="gpt-4")
+>>> models = await Runner.resource_mgr.get_model(tag=["vision_model"])
 ```
 ### add_prompt
 ```python
@@ -625,15 +579,13 @@ def add_prompt(self,
 
 **参数：**
 
-* **prompt_id(str)**：提示模板的唯一标识符。
-
-* **template(PromptTemplate)**：包含提示内容和配置的PromptTemplate实例。
-
-* **tag(Optional[Tag | list[Tag]]，可选)**：用于分类和过滤提示的标签。
+* **prompt_id**(str)：提示模板的唯一标识符。
+* **template**(PromptTemplate)：包含提示内容和配置的PromptTemplate实例。
+* **tag**(Optional[Tag | list[Tag]]，可选)：用于分类和过滤提示的标签。
 
 **返回：**
 
-**Result[str, Exception]**：包含提示ID或异常的Result对象。
+**Result[str, Exception]**，包含提示ID或异常的Result对象。
 
 **样例：**
 
@@ -641,7 +593,7 @@ def add_prompt(self,
 >>> from openjiuwen.core.foundation.prompt import PromptTemplate
 >>> 
 >>> template = PromptTemplate(content="请分析以下数据: {data}")
->>> result = resource_mgr.add_prompt(prompt_id="data_analysis_prompt", template=template, tag=["analysis", "prompt"])
+>>> result = Runner.resource_mgr.add_prompt(prompt_id="data_analysis_prompt", template=template, tag=["analysis", "prompt"])
 ```
 ### add_prompts
 ```python
@@ -655,13 +607,12 @@ def add_prompts(self,
 
 **参数：**
 
-* **prompts(list[Tuple[str, PromptTemplate]])**：元组列表，每个元组包含(prompt_id, PromptTemplate)。
-
-* **tag(Optional[Tag | list[Tag]]，可选)**：要应用于所有被添加提示的可选标签。
+* **prompts**(list[Tuple[str, PromptTemplate]])：元组列表，每个元组包含(prompt_id, PromptTemplate)。
+* **tag**(Optional[Tag | list[Tag]]，可选)：要应用于所有被添加提示的可选标签。
 
 **返回：**
 
-**Result[str, Exception]** 或 **list[Result[str, Exception]]**：包含提示ID或异常的Result对象或列表。
+**Result[str, Exception]|list[Result[str, Exception]]**，包含提示ID或异常的Result对象或列表。
 
 **样例：**
 
@@ -670,7 +621,7 @@ def add_prompts(self,
 ...     ("prompt1", PromptTemplate(content="提示1: {input}")),
 ...     ("prompt2", PromptTemplate(content="提示2: {input}"))
 ... ]
->>> results = resource_mgr.add_prompts(prompts, tag=["batch_prompts"])
+>>> results = Runner.resource_mgr.add_prompts(prompts, tag=["batch_prompts"])
 ```
 ### remove_prompt
 ```python
@@ -686,23 +637,20 @@ def remove_prompt(self,
 
 **参数：**
 
-* **prompt_id(str | list[str]，可选)**：要删除的提示的单个ID或ID列表。
-
-* **tag(Optional[Tag | list[Tag]]，可选)**：单个标签或标签列表；删除所有匹配标签的提示。
-
-* **tag_match_strategy(TagMatchStrategy，可选)**：使用tag参数时的标签匹配策略。
-
-* **skip_if_tag_not_exists(bool，可选)**：如果为True，跳过不存在的提示。
+* **prompt_id**(str | list[str]，可选)：要删除的提示的单个ID或ID列表。
+* **tag**(Optional[Tag | list[Tag]]，可选)：单个标签或标签列表；删除所有匹配标签的提示。
+* **tag_match_strategy**(TagMatchStrategy，可选)：使用tag参数时的标签匹配策略。
+* **skip_if_tag_not_exists**(bool，可选)：如果为True，跳过不存在的提示。
 
 **返回：**
 
-**Result[str, Exception]** 或 **list[Result[str, Exception]]**：包含提示ID或异常的Result对象或列表。
+R**esult[str, Exception]|list[Result[str, Exception]]**，包含提示ID或异常的Result对象或列表。
 
 **样例：**
 
 ```python
->>> resource_mgr.remove_prompt(prompt_id="data_analysis_prompt")
->>> resource_mgr.remove_prompt(tag=["old_prompts"])
+>>> Runner.resource_mgr.remove_prompt(prompt_id="data_analysis_prompt")
+>>> Runner.resource_mgr.remove_prompt(tag=["old_prompts"])
 ```
 ### get_prompt
 ```python
@@ -717,21 +665,19 @@ def get_prompt(self,
 
 **参数：**
 
-* **prompt_id(str | list[str]，可选)**：要检索的提示的单个ID或ID列表。
-
-* **tag(Optional[Tag | list[Tag]]，可选)**：单个标签或标签列表；返回所有匹配标签的提示。
-
-* **tag_match_strategy(TagMatchStrategy，可选)**：使用tag参数时的标签匹配策略。
+* **prompt_id**(str | list[str]，可选)：要检索的提示的单个ID或ID列表。
+* **tag**(Optional[Tag | list[Tag]]，可选)：单个标签或标签列表；返回所有匹配标签的提示。
+* **tag_match_strategy**(TagMatchStrategy，可选)：使用tag参数时的标签匹配策略。
 
 **返回：**
 
-**PromptTemplate** 或 **list[PromptTemplate]**：如果找到则返回提示模板实例，否则为None。
+**PromptTemplate|list[PromptTemplate]**，如果找到则返回提示模板实例，否则为None。
 
 **样例：**
 
 ```python
->>> prompt = resource_mgr.get_prompt(prompt_id="data_analysis_prompt")
->>> prompts = resource_mgr.get_prompt(tag=["system_prompts"])
+>>> prompt = Runner.resource_mgr.get_prompt(prompt_id="data_analysis_prompt")
+>>> prompts = Runner.resource_mgr.get_prompt(tag=["system_prompts"])
 ```
 ### add_sys_operation
 ```python
@@ -745,13 +691,11 @@ def add_sys_operation(self,
 
 **参数：**
 
-* **card(SysOperationCard)**：带有有效id的SysOperationCard（必需）。
-
-* **tag(Optional[Tag | List[Tag]]，可选)**：用于分类的可选单个标签/标签列表。
-
+* **card**(SysOperationCard)：带有有效id的SysOperationCard（必需）。
+* **tag**(Optional[Tag | List[Tag]]，可选)：用于分类的可选单个标签/标签列表。
 **返回：**
 
-**Result[SysOperationCard, Exception]**：成功卡片或错误。
+**Result[SysOperationCard, Exception]**，成功卡片或错误。
 
 **样例：**
 
@@ -759,7 +703,7 @@ def add_sys_operation(self,
 >>> from openjiuwen.core.sys_operation import SysOperationCard
 >>> 
 >>> card = SysOperationCard(id="cleanup_op", name="清理操作")
->>> result = resource_mgr.add_sys_operation(card, tag=["maintenance"])
+>>> result = Runner.resource_mgr.add_sys_operation(card, tag=["maintenance"])
 ```
 ### remove_sys_operation
 ```python
@@ -776,23 +720,20 @@ List[Result[Optional[SysOperationCard], Exception]]]
 
 **参数：**
 
-* **sys_operation_id(Optional[str | List[str]]，可选)**：要删除的单个操作ID/ID列表。
-
-* **tag(Optional[Tag | List[Tag]]，可选)**：如果没有ID，则为可选单个标签/标签列表过滤器。
-
-* **tag_match_strategy(TagMatchStrategy，可选)**：标签匹配的ALL/ANY（默认：ALL）。
-
-* **skip_if_tag_not_exists(bool，可选)**：忽略缺失的标签（默认：False）。
+* **sys_operation_id**(Optional[str | List[str]]，可选)：要删除的单个操作ID/ID列表。
+* **tag**(Optional[Tag | List[Tag]]，可选)：如果没有ID，则为可选单个标签/标签列表过滤器。
+* **tag_match_strategy**(TagMatchStrategy，可选)：标签匹配的ALL/ANY（默认：ALL）。
+* **skip_if_tag_not_exists**(bool，可选)：忽略缺失的标签（默认：False）。
 
 **返回：**
 
-**Result/Result列表**：删除的卡片或错误。
+**Result|list[Result]**，删除的卡片或错误。
 
 **样例：**
 
 ```python
->>> resource_mgr.remove_sys_operation(sys_operation_id="cleanup_op")
->>> resource_mgr.remove_sys_operation(tag=["temporary"])
+>>> Runner.resource_mgr.remove_sys_operation(sys_operation_id="cleanup_op")
+>>> Runner.resource_mgr.remove_sys_operation(tag=["temporary"])
 ```
 
 ### get_sys_operation
@@ -809,23 +750,20 @@ def get_sys_operation(self,
 
 **参数：**
 
-* **sys_operation_id(Optional[str]，可选)**：可选特定操作ID。
-
-* **tag(Optional[Tag | List[Tag]]，可选)**：如果没有ID，则为可选单个标签/标签列表过滤器。
-
-* **tag_match_strategy(TagMatchStrategy，可选)**：标签匹配的ALL/ANY（默认：ALL）。
-
-* **session(Optional[Session]，可选)**：可选上下文会话。
+* **sys_operation_id**(Optional[str]，可选)：可选特定操作ID。
+* **tag**(Optional[Tag | List[Tag]]，可选)：如果没有ID，则为可选单个标签/标签列表过滤器。
+* **tag_match_strategy**(TagMatchStrategy，可选)：标签匹配的ALL/ANY（默认：ALL）。
+* **session**(Optional[Session]，可选)：可选上下文会话。
 
 **返回：**
 
-**SysOperation/List[SysOperation]**：匹配的操作或None。
+**SysOperation/List[SysOperation]**，匹配的操作或None。
 
 **样例：**
 
 ```python
->>> operation = resource_mgr.get_sys_operation(sys_operation_id="cleanup_op")
->>> operations = resource_mgr.get_sys_operation(tag=["scheduled"])
+>>> operation = Runner.resource_mgr.get_sys_operation(sys_operation_id="cleanup_op")
+>>> operations = Runner.resource_mgr.get_sys_operation(tag=["scheduled"])
 ```
 ### get_tool_infos
 ```python
@@ -842,25 +780,21 @@ async def get_tool_infos(self,
 
 **参数：**
 
-* **tool_id(str | list[str]，可选)**：要获取信息的工具的单个ID或ID列表。
-
-* **tool_type(str | list[str]，可选)**：用于过滤工具的单个类型或类型列表。常见类型：["function", "mcp", "workflow", "agent", "group"]。
-
-* **tag(Optional[Tag | list[Tag]]，可选)**：单个标签或标签列表；返回所有匹配标签的工具的信息。
-
-* **tag_match_strategy(TagMatchStrategy，可选)**：使用tag参数时的标签匹配策略。
-
-* **ignore_exception(bool，可选)**：如果为True，忽略异常并为失败项返回None。
+* **tool_id**(str | list[str]，可选)：要获取信息的工具的单个ID或ID列表。
+* **tool_type**(str | list[str]，可选)：用于过滤工具的单个类型或类型列表。常见类型：["function", "mcp", "workflow", "agent", "group"]。
+* **tag**(Optional[Tag | list[Tag]]，可选)：单个标签或标签列表；返回所有匹配标签的工具的信息。
+* **tag_match_strategy**(TagMatchStrategy，可选)：使用tag参数时的标签匹配策略。
+* **ignore_exception**(bool，可选)：如果为True，忽略异常并为失败项返回None。
 
 **返回：**
 
-**ToolInfo** 或 **list[ToolInfo]**：如果找到则返回工具信息实例，否则为None。
+**ToolInfo|list[ToolInfo]**，如果找到则返回工具信息实例，否则为None。
 
 **样例：**
 
 ```python
->>> tool_info = await resource_mgr.get_tool_infos(tool_id="calculator")
->>> tool_infos = await resource_mgr.get_tool_infos(tool_type=["function", "mcp"], tag=["utility"])
+>>> tool_info = await Runner.resource_mgr.get_tool_infos(tool_id="calculator")
+>>> tool_infos = await Runner.resource_mgr.get_tool_infos(tool_type=["function", "mcp"], tag=["utility"])
 ```
 ### add_mcp_server
 ```python
@@ -875,15 +809,13 @@ async def add_mcp_server(self,
 
 **参数：**
 
-* **server_config(McpServerConfig | list[McpServerConfig])**：单个或McpServerConfig实例列表。
-
-* **tag(Optional[Tag | list[Tag]]，可选)**：用于分类服务器的可选标签。
-
-* **expiry_time(Optional[float]，可选)**：服务器配置到期的可选Unix时间戳。如果为None，则配置永不过期。
+* **server_config**(McpServerConfig | list[McpServerConfig])：单个或McpServerConfig实例列表。
+* **tag**(Optional[Tag | list[Tag]]，可选)：用于分类服务器的可选标签。
+* **expiry_time**(Optional[float]，可选)：服务器配置到期的可选Unix时间戳。如果为None，则配置永不过期。
 
 **返回：**
 
-**Result[str, Exception]** 或 **list[Result[str, Exception]]**：包含服务器名称或异常的Result对象或列表。
+**Result[str, Exception]|list[Result[str, Exception]]**，包含服务器名称或异常的Result对象或列表。
 
 **样例：**
 
@@ -891,7 +823,7 @@ async def add_mcp_server(self,
 >>> from openjiuwen.core.foundation.tool import McpServerConfig
 >>> 
 >>> config = McpServerConfig(server_id="mcp1", server_name="MCP服务器1", ...)
->>> result = await resource_mgr.add_mcp_server(config, tag=["mcp", "external"], expiry_time=1735689600)
+>>> result = await Runner.resource_mgr.add_mcp_server(config, tag=["mcp", "external"], expiry_time=1735689600)
 ```
 ### refresh_mcp_server
 ```python
@@ -909,26 +841,21 @@ async def refresh_mcp_server(self,
 
 **参数：**
 
-* **server_id(Optional[str | list[str]]，可选)**：要刷新的MCP服务器ID的单个或列表。
-
-* **server_name(Optional[str | list[str]]，可选)**：要刷新的MCP服务器名称的单个或列表。
-
-* **tag(Optional[Tag | list[Tag]]，可选)**：用于过滤要刷新的服务器的可选标签。
-
-* **tag_match_strategy(TagMatchStrategy，可选)**：使用tag参数时的标签匹配策略。
-
-* **ignore_exception(bool，可选)**：如果为True，如果一个失败则继续刷新其他服务器。
-
-* **skip_if_tag_not_exists(bool，可选)**：如果为True，跳过不存在的服务器。
+* **server_id**(Optional[str | list[str]]，可选)：要刷新的MCP服务器ID的单个或列表。
+* **server_name**(Optional[str | list[str]]，可选)：要刷新的MCP服务器名称的单个或列表。
+* **tag**(Optional[Tag | list[Tag]]，可选)：用于过滤要刷新的服务器的可选标签。
+* **tag_match_strategy**(TagMatchStrategy，可选)：使用tag参数时的标签匹配策略。
+* **ignore_exception**(bool，可选)：如果为True，如果一个失败则继续刷新其他服务器。
+* **skip_if_tag_not_exists**(bool，可选)：如果为True，跳过不存在的服务器。
 
 **返回：**
 
-**Result[str, Exception]** 或 **list[Result[str, Exception]]**：包含服务器名称或异常的Result对象或列表。
+**Result[str, Exception]|list[Result[str, Exception]]**，包含服务器名称或异常的Result对象或列表。
 
 **样例：**
 
 ```python
->>> results = await resource_mgr.refresh_mcp_server(server_name=["MCP服务器1"], tag=["external"])
+>>> results = await Runner.resource_mgr.refresh_mcp_server(server_name=["MCP服务器1"], tag=["external"])
 ```
 ### remove_mcp_server
 ```python
@@ -946,27 +873,22 @@ async def remove_mcp_server(self,
 
 **参数：**
 
-* **server_id(Optional[str | list[str]]，可选)**：要删除的MCP服务器ID的单个或列表。
-
-* **server_name(Optional[str | list[str]]，可选)**：要删除的MCP服务器名称的单个或列表。
-
-* **tag(Optional[Tag | list[Tag]]，可选)**：单个标签或标签列表；删除所有匹配标签的服务器。
-
-* **tag_match_strategy(TagMatchStrategy，可选)**：使用tag参数时的标签匹配策略。
-
-* **skip_if_tag_not_exists(bool，可选)**：如果为True，跳过不存在的服务器。
-
-* **ignore_exception(bool，可选)**：如果为True，如果一个失败则继续删除其他服务器。
+* **server_id**(Optional[str | list[str]]，可选)：要删除的MCP服务器ID的单个或列表。
+* **server_name**(Optional[str | list[str]]，可选)：要删除的MCP服务器名称的单个或列表。
+* **tag**(Optional[Tag | list[Tag]]，可选)：单个标签或标签列表；删除所有匹配标签的服务器。
+* **tag_match_strategy**(TagMatchStrategy，可选)：使用tag参数时的标签匹配策略。
+* **skip_if_tag_not_exists**(bool，可选)：如果为True，跳过不存在的服务器。
+* **ignore_exception**(bool，可选)：如果为True，如果一个失败则继续删除其他服务器。
 
 **返回：**
 
-**Result[str, Exception]** 或 **list[Result[str, Exception]]**：包含服务器名称或异常的Result对象或列表。
+**Result[str, Exception]|list[Result[str, Exception]]**，包含服务器名称或异常的Result对象或列表。
 
 **样例：**
 
 ```python
->>> result = await resource_mgr.remove_mcp_server(server_name="MCP服务器1")
->>> results = await resource_mgr.remove_mcp_server(tag=["deprecated_mcp"])
+>>> result = await Runner.resource_mgr.remove_mcp_server(server_name="MCP服务器1")
+>>> results = await Runner.resource_mgr.remove_mcp_server(tag=["deprecated_mcp"])
 ```
 
 ### get_mcp_tool
@@ -987,31 +909,24 @@ async def get_mcp_tool(self,
 
 **参数：**
 
-* **name(str | list[str]，可选)**：要检索的MCP工具名称的单个或列表。
-
-* **server_id(str | list[str]，可选)**：包含工具的MCP服务器ID的单个或列表。
-
-* **server_name(str | list[str]，可选)**：包含工具的MCP服务器名称的单个或列表。
-
-* **tag(Optional[Tag | list[Tag]]，可选)**：用于过滤服务器/工具的可选标签。
-
-* **tag_match_strategy(TagMatchStrategy，可选)**：使用tag参数时的标签匹配策略。
-
-* **skip_if_tag_not_exists(bool，可选)**：如果为True，跳过不存在的服务器。
-
-* **ignore_exception(bool，可选)**：如果为True，忽略刷新MCP服务器所需的异常（如果需要）。
-
-* **session(Optional[Session]，可选)**：工具的可选会话上下文。
+* **name**(str | list[str]，可选)：要检索的MCP工具名称的单个或列表。
+* **server_id**(str | list[str]，可选)：包含工具的MCP服务器ID的单个或列表。
+* **server_name**(str | list[str]，可选)：包含工具的MCP服务器名称的单个或列表。
+* **tag**([Tag | list[Tag]]，可选)：用于过滤服务器/工具的可选标签。
+* **tag_match_strategy**(TagMatchStrategy，可选)：使用tag参数时的标签匹配策略。
+* **skip_if_tag_not_exists**(bool，可选)：如果为True，跳过不存在的服务器。
+**ignore_exception**(bool，可选)：如果为True，忽略刷新MCP服务器所需的异常（如果需要）。
+* **session**(Optional[Session]，可选)：工具的可选会话上下文。
 
 **返回：**
 
-**Tool** 或 **list[Tool]**：如果找到则返回MCP工具实例，否则为None。
+**Tool|list[Tool]**，如果找到则返回MCP工具实例，否则为None。
 
 **样例：**
 
 ```python
->>> tool = await resource_mgr.get_mcp_tool(name="weather_api", server_name="MCP服务器1")
->>> tools = await resource_mgr.get_mcp_tool(server_id="mcp1", tag=["external_tools"])
+>>> tool = await Runner.resource_mgr.get_mcp_tool(name="weather_api", server_name="MCP服务器1")
+>>> tools = await Runner.resource_mgr.get_mcp_tool(server_id="mcp1", tag=["external_tools"])
 ```
 ### get_mcp_tool_infos
 ```python
@@ -1030,29 +945,23 @@ async def get_mcp_tool_infos(self,
 
 **参数：**
 
-* **name(str | list[str]，可选)**：要获取信息的MCP工具名称的单个或列表。如果为None，则返回指定服务器中所有工具的信息。
-
-* **server_name(str | list[str]，可选)**：包含工具的MCP服务器名称的单个或列表。如果名称为None，则必须提供。
-
-* **server_id(str | list[str]，可选)**：包含工具的MCP服务器ID的单个或列表。
-
-* **tag(Optional[Tag | list[Tag]]，可选)**：用于过滤服务器/工具的可选标签。
-
-* **tag_match_strategy(TagMatchStrategy，可选)**：使用tag参数时的标签匹配策略。
-
-* **skip_if_tag_not_exists(bool，可选)**：如果为True，跳过不存在的服务器。
-
-* **ignore_exception(bool，可选)**：如果为True，忽略刷新MCP服务器所需的异常。
+* **name**(str | list[str]，可选)：要获取信息的MCP工具名称的单个或列表。如果为None，则返回指定服务器中所有工具的信息。
+* **server_name**(str | list[str]，可选)：包含工具的MCP服务器名称的单个或列表。如果名称为None，则必须提供。
+* **server_id**(str | list[str]，可选)：包含工具的MCP服务器ID的单个或列表。
+* **tag**(Optional[Tag | list[Tag]]，可选)：用于过滤服务器/工具的可选标签。
+* **tag_match_strategy**(TagMatchStrategy，可选)：使用tag参数时的标签匹配策略。
+* **skip_if_tag_not_exists**(bool，可选)：如果为True，跳过不存在的服务器。
+* **ignore_exception**(bool，可选)：如果为True，忽略刷新MCP服务器所需的异常。
 
 **返回：**
 
-**ToolInfo** 或 **list[ToolInfo]**：如果找到则返回MCP工具信息实例，否则为None。
+**ToolInfo|list[ToolInfo]**，如果找到则返回MCP工具信息实例，否则为None。
 
 **样例：**
 
 ```python
->>> tool_info = await resource_mgr.get_mcp_tool_infos(name="weather_api", server_name="MCP服务器1")
->>> tool_infos = await resource_mgr.get_mcp_tool_infos(server_id="mcp1")
+>>> tool_info = await Runner.resource_mgr.get_mcp_tool_infos(name="weather_api", server_name="MCP服务器1")
+>>> tool_infos = await Runner.resource_mgr.get_mcp_tool_infos(server_id="mcp1")
 ```
 
 ### get_resource_by_tag
@@ -1064,16 +973,16 @@ def get_resource_by_tag(self,
 
 **参数：**
 
-* **tag(Tag)**：要搜索的标签。
+* **tag**(Tag)：要搜索的标签。
 
 **返回：**
 
-**Optional[list[BaseCard]]**：表示具有指定标签的资源的BaseCard实例列表，如果未找到资源则为None。
+**Optional[list[BaseCard]]**，表示具有指定标签的资源的BaseCard实例列表，如果未找到资源则为None。
 
 **样例：**
 
 ```python
->>> cards = resource_mgr.get_resource_by_tag("analysis")
+>>> cards = Runner.resource_mgr.get_resource_by_tag("analysis")
 >>> for card in cards:
 ...     print(f"资源ID: {card.id}, 类型: {type(card).__name__}")
 ```
@@ -1087,12 +996,12 @@ def list_tags(self) -> list[Tag]
 
 **返回：**
 
-**list[Tag]**：唯一标签字符串列表。
+**list[Tag]**，唯一标签字符串列表。
 
 **样例：**
 
 ```python
->>> tags = resource_mgr.list_tags()
+>>> tags = Runner.resource_mgr.list_tags()
 >>> print(f"可用标签: {tags}")
 ```
 ### has_tag
@@ -1104,16 +1013,16 @@ def has_tag(self, tag: str) -> bool
 
 **参数：**
 
-* **tag(str)**：要检查是否存在的标签。
+* **tag**(str)：要检查是否存在的标签。
 
 **返回：**
 
-**bool**：如果标签存在则为True，否则为False。
+**bool**，如果标签存在则为True，否则为False。
 
 **样例：**
 
 ```python
->>> if resource_mgr.has_tag("analysis"):
+>>> if Runner.resource_mgr.has_tag("analysis"):
 ...     print("存在'analysis'标签")
 ```
 ### remove_tag
@@ -1128,19 +1037,18 @@ async def remove_tag(self,
 
 **参数：**
 
-* **tag(Tag | list[Tag])**：要从所有资源中删除的单个标签或标签列表。
-
-* **skip_if_tag_not_exists(bool，可选)**：如果为True，忽略不存在的标签。
+* **tag**(Tag | list[Tag])：要从所有资源中删除的单个标签或标签列表。
+* **skip_if_tag_not_exists**(bool，可选)：如果为True，忽略不存在的标签。
 
 **返回：**
 
-**Result[Tag, Exception]** 或 **list[Result[Tag, Exception]]**：包含标签或异常的Result对象或列表。
+**Result[Tag, Exception]|list[Result[Tag, Exception]]**，包含标签或异常的Result对象或列表。
 
 **样例：**
 
 ```python
->>> result = await resource_mgr.remove_tag("obsolete")
->>> results = await resource_mgr.remove_tag(["temp", "test"], skip_if_tag_not_exists=True)
+>>> result = await Runner.resource_mgr.remove_tag("obsolete")
+>>> results = await Runner.resource_mgr.remove_tag(["temp", "test"], skip_if_tag_not_exists=True)
 ```
 ### update_resource_tag
 ```python
@@ -1153,18 +1061,17 @@ def update_resource_tag(self,
 
 **参数：**
 
-* **resource_id(str)**：资源标识符。
-
-* **tag(Tag | list[Tag])**：要在资源上设置的新标签。
+* **resource_id**(str)：资源标识符。
+* **tag**(Tag | list[Tag])：要在资源上设置的新标签。
 
 **返回：**
 
-**Result[list[Tag], Exception]**：包含新标签列表或异常的Result对象。
+**Result[list[Tag], Exception]**，包含新标签列表或异常的Result对象。
 
 **样例：**
 
 ```python
->>> result = resource_mgr.update_resource_tag("data_analyzer", ["expert", "premium"])
+>>> result = Runner.resource_mgr.update_resource_tag("data_analyzer", ["expert", "premium"])
 >>> if result.is_ok():
 ...     print(f"更新后的标签: {result.msg()}")
 ```
@@ -1179,18 +1086,17 @@ def add_resource_tag(self,
 
 **参数：**
 
-* **resource_id(str)**：资源标识符。
-
-* **tag(Tag | list[Tag])**：要添加到资源的标签。
+* **resource_id**(str)：资源标识符。
+* **tag**(Tag | list[Tag])：要添加到资源的标签。
 
 **返回：**
 
-**Result[list[Tag], Exception]**：包含资源现在关联的所有标签的Result对象。
+**Result[list[Tag], Exception]**，包含资源现在关联的所有标签的Result对象。
 
 **样例：**
 
 ```python
->>> result = resource_mgr.add_resource_tag("calculator", ["math", "utility"])
+>>> result = Runner.resource_mgr.add_resource_tag("calculator", ["math", "utility"])
 >>> if result.is_ok():
 ...     print(f"当前标签: {result.msg()}")
 ```
@@ -1207,20 +1113,18 @@ def remove_resource_tag(self,
 
 **参数：**
 
-* **resource_id(str)**：资源标识符。
-
-* **tag(Tag | list[Tag])**：要从资源中删除的标签。
-
-* **skip_if_tag_not_exists(bool，可选)**：如果为True，忽略不存在的标签。
+* **resource_id**(str)：资源标识符。
+* **tag**(Tag | list[Tag])：要从资源中删除的标签。
+* **skip_if_tag_not_exists**(bool，可选)：如果为True，忽略不存在的标签。
 
 **返回：**
 
-**Result[list[Tag], Exception]**：包含资源上剩余标签的Result对象。
+**Result[list[Tag], Exception]**，包含资源上剩余标签的Result对象。
 
 **样例：**
 
 ```python
->>> result = resource_mgr.remove_resource_tag("data_analyzer", "test", skip_if_tag_not_exists=True)
+>>> result = Runner.resource_mgr.remove_resource_tag("data_analyzer", "test", skip_if_tag_not_exists=True)
 ```
 
 ### get_resource_tag
@@ -1231,16 +1135,16 @@ def get_resource_tag(self, resource_id: str) -> Optional[list[Tag]]
 
 **参数：**
 
-* **resource_id(str)**：资源标识符。
+* **resource_id**(str)：资源标识符。
 
 **返回：**
 
-**Optional[list[Tag]]**：与资源关联的标签列表，如果未找到资源则为None。
+**Optional[list[Tag]]**，与资源关联的标签列表，如果未找到资源则为None。
 
 **样例：**
 
 ```python
->>> tags = resource_mgr.get_resource_tag("data_analyzer")
+>>> tags = Runner.resource_mgr.get_resource_tag("data_analyzer")
 >>> print(f"资源标签: {tags}")
 ```
 ### resource_has_tag
@@ -1251,18 +1155,17 @@ def get_resource_tag(self, resource_id: str) -> Optional[list[Tag]]
 
 **参数：**
 
-* **resource_id(str)**：要检查的资源的唯一标识符。
-
-* **tag(Tag)**：要验证与资源关联的标签。
+* **resource_id**(str)：要检查的资源的唯一标识符。
+* **tag**(Tag)：要验证与资源关联的标签。
 
 **返回：**
 
-**bool**：如果资源具有指定的标签则为True，否则为False。
+**bool**，如果资源具有指定的标签则为True，否则为False。
 
 **样例：**
 
 ```python
->>> if resource_mgr.resource_has_tag("data_analyzer", "expert"):
+>>> if Runner.resource_mgr.resource_has_tag("data_analyzer", "expert"):
 ...     print("资源具有'expert'标签")
 ```
 
@@ -1278,5 +1181,5 @@ def get_resource_tag(self, resource_id: str) -> Optional[list[Tag]]
 **样例：**
 
 ```python
->>> await resource_mgr.release()
+>>> await Runner.resource_mgr.release()
 ```
