@@ -6,11 +6,11 @@
 class openjiuwen.core.application.workflow_agent.workflow_agent.WorkflowAgent(agent_config: WorkflowAgentConfig)
 ```
 
-基于多工作流控制器的 Agent，实现预定义工作流的执行，继承 `ControllerAgent`。
+基于多工作流控制器的 Agent，实现预定义工作流的执行。
 
 ### async invoke(inputs: Dict, session: Session = None) -> Dict
 
-同步（非流式）执行入口：直接调用 `ControllerAgent.invoke`，由内部的 `WorkflowController` 执行工作流并返回结果。
+同步（非流式）执行工作流并返回完整结果。
 
 **参数：**
 
@@ -23,7 +23,7 @@ class openjiuwen.core.application.workflow_agent.workflow_agent.WorkflowAgent(ag
 
 ### async stream(inputs: Dict, session: Session = None) -> AsyncIterator[Any]
 
-流式执行入口：委托 `ControllerAgent.stream`，由 `WorkflowController` 执行并逐块产出流式输出。
+流式执行工作流，实时产出输出块。
 
 **参数：**
 
@@ -33,3 +33,17 @@ class openjiuwen.core.application.workflow_agent.workflow_agent.WorkflowAgent(ag
 **返回：**
 
 * **AsyncIterator[Any]**：流式输出迭代器。
+
+# openjiuwen.core.single_agent.legacy.config
+
+## class openjiuwen.core.single_agent.legacy.config.WorkflowAgentConfig
+
+工作流 Agent 的配置模型。
+
+- **controller_type**(ControllerType)：控制器类型，默认`WorkflowController`。
+- **start_workflow**(WorkflowSchema)：起始工作流定义，默认空`WorkflowSchema()`。
+- **end_workflow**(WorkflowSchema)：结束工作流定义，默认空`WorkflowSchema()`。
+- **global_variables**(List[dict])：全局变量列表，默认空列表。
+- **global_params**(Dict[str, Any])：全局参数字典，默认空字典。
+- **constrain**(ConstrainConfig)：行为约束配置，默认`ConstrainConfig()`。
+- **default_response**(DefaultResponse)：默认回复配置，默认构造。
