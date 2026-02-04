@@ -1,40 +1,39 @@
-# Skills
-# openjiuwen.core.skills.skill_util
+# openjiuwen.core.skills
 
 ## class openjiuwen.core.skills.skill_util.SkillUtil
 
 ```python
-class openjiuwen.core.skills.skill_util.SkillUtil
+class openjiuwen.core.skills.skill_util.SkillUtil(...)
 ```
 
 `SkillUtil` 是对 `SkillManager` 与 `SkillToolKit` 的高级封装，为业务侧提供一站式的**技能注册、工具挂载与技能提示词生成**能力。
 
 ### 参数
 
-- sys_operation_id(str)：用于构造内部的 `SkillManager` 与 `SkillToolKit`。该 id 会被用于从 `Runner.resource_mgr` 获取对应的 `SysOperation` 实例，以完成文件/代码/命令相关操作。
+* **sys_operation_id**(str)：用于构造内部的 `SkillManager` 与 `SkillToolKit`。该 id 会被用于从 `Runner.resource_mgr` 获取对应的 `SysOperation` 实例，以完成文件/代码/命令相关操作。
 
 ### 内部成员
 
-- _skill_manager(SkillManager)：技能元数据管理器。
-- _skill_tool_kit(SkillToolKit)：技能相关工具创建与挂载组件。
+* **_skill_manager**(SkillManager)：技能元数据管理器。
+* **_skill_tool_kit**(SkillToolKit)：技能相关工具创建与挂载组件。
 
 ### set_sys_operation_id
 
 ```python
-def set_sys_operation_id(self, sys_operation_id: str) -> None
+def set_sys_operation_id(sys_operation_id: str) -> None
 ```
 
 同步更新内部所有与 `SysOperation` 相关的组件。
 
-#### 参数
+**参数：**
 
-- sys_operation_id(str)：新的 SysOperation id。
+* **sys_operation_id**(str)：新的 SysOperation id。
 
 ### property skill_manager
 
 ```python
 @property
-def skill_manager(self) -> SkillManager
+def skill_manager() -> SkillManager
 ```
 
 返回内部持有的 `SkillManager` 实例，便于在需要时直接访问底层能力。
@@ -43,7 +42,7 @@ def skill_manager(self) -> SkillManager
 
 ```python
 @property
-def skill_tool_kit(self) -> SkillToolKit
+def skill_tool_kit() -> SkillToolKit
 ```
 
 返回内部持有的 `SkillToolKit` 实例，便于在需要时直接访问底层能力。
@@ -52,7 +51,6 @@ def skill_tool_kit(self) -> SkillToolKit
 
 ```python
 async def register_skills(
-    self,
     skill_path: str,
     agent: "BaseAgent",
     session_id: str = None,
@@ -61,37 +59,37 @@ async def register_skills(
 
 注册指定目录下的技能，并为 Agent 挂载所有技能相关内置工具。
 
-#### 参数
+**参数：**
 
-- skill_path(str)：技能根目录路径。内部会 `Path(skill_path)` 后传给 `SkillManager.register(...)`。
-- agent(BaseAgent)：要挂载工具的 Agent 实例。
-- session_id(str, 可选)：执行文件系统操作时使用的会话 id。默认值：None。
+* **skill_path(str)**：技能根目录路径。内部会 `Path(skill_path)` 后传给 `SkillManager.register(...)`。
+* **agent(BaseAgent)**：要挂载工具的 Agent 实例。
+* **session_id(str, 可选)**：执行文件系统操作时使用的会话 id。默认值：None。
 
 #### 行为
 
 1. 调用 `SkillToolKit.add_skill_tools(agent)`，为 Agent 挂载内置工具：`view_file`、`execute_python_code`、`run_command`。
 2. 调用 `SkillManager.register(Path(skill_path), session_id)` 扫描并注册技能元数据。
 
-#### 返回
+**返回：**
 
 - None：当前实现**未显式 return**（尽管函数签名标注为 `-> bool`），因此运行时返回值为 `None`。
 
 ### has_skill
 
 ```python
-def has_skill(self) -> bool
+def has_skill() -> bool
 ```
 
 判断当前是否已经注册了至少一个技能。
 
-#### 返回
+**返回：**
 
 - bool：当 `SkillManager.count() > 0` 时返回 True，否则返回 False。
 
 ### get_skill_prompt
 
 ```python
-def get_skill_prompt(self) -> str
+def get_skill_prompt() -> str
 ```
 
 生成包含**所有已注册技能信息**的提示词片段，用于拼接到 Agent 的系统提示词中。
@@ -103,54 +101,34 @@ def get_skill_prompt(self) -> str
   - `"{index}.Skill name: {skill.name}; Skill description: {skill.description}; Skill file path: {skill.directory}"`。
 - 使用 `PromptTemplate` 将技能信息插入 `SKILL_PROMPT_CONTENT` 模板，并与 `system_prompt` 拼接返回。
 
-#### 返回
+**返回：**
 
 - str：系统提示词 + 技能清单提示词（模板渲染结果）。
-
-### 典型用法示例
-
-```python
-from openjiuwen.core.skills import SkillUtil
-from openjiuwen.core.single_agent import BaseAgent
-
-async def setup_agent_with_skills(agent: BaseAgent):
-    skill_util = SkillUtil(sys_operation_id="default_sys_op")
-    await skill_util.register_skills(
-        skill_path="/path/to/skills_root",
-        agent=agent,
-        session_id="session_001",
-    )
-    skill_prompt = skill_util.get_skill_prompt()
-    print(skill_prompt)
-```
-
-
-# openjiuwen.core.skills.skill_tool_kit
 
 ## class openjiuwen.core.skills.skill_tool_kit.SkillToolKit
 
 ```python
-class openjiuwen.core.skills.skill_tool_kit.SkillToolKit
+class openjiuwen.core.skills.skill_tool_kit.SkillToolKit(...)
 ```
 
 `SkillToolKit` 负责基于 `SysOperation` 创建一组与技能相关的内置工具，并将这些工具注册到 `Runner.resource_mgr` 中，同时挂载到 Agent 的 `ability_manager` 上，方便在推理过程中调用。
 
 ### 参数
 
-- sys_operation_id(str)：用于从 `Runner.resource_mgr.get_sys_operation(sys_operation_id)` 获取 `SysOperation` 实例的 id。
+* **sys_operation_id**(str)：用于从 `Runner.resource_mgr.get_sys_operation(sys_operation_id)` 获取 `SysOperation` 实例的 id。
 
 ### property sys_operation_id
 
 ```python
 @property
-def sys_operation_id(self) -> str
+def sys_operation_id() -> str
 ```
 
 读取当前使用的 `sys_operation_id`。
 
 ```python
 @sys_operation_id.setter
-def sys_operation_id(self, sys_operation_id: str)
+def sys_operation_id(sys_operation_id: str)
 ```
 
 更新内部使用的 `sys_operation_id`。当上层切换到新的 `SysOperation` 实例时，需要同步更新该字段。
@@ -158,7 +136,7 @@ def sys_operation_id(self, sys_operation_id: str)
 ### set_runner
 
 ```python
-def set_runner(self, runner) -> None
+def set_runner(runner) -> None
 ```
 
 预留的 Runner 注入接口。当前实现仅保存引用，方便未来在创建工具时访问 Runner 上下文。
@@ -166,7 +144,7 @@ def set_runner(self, runner) -> None
 ### create_view_file_tool
 
 ```python
-def create_view_file_tool(self) -> LocalFunction
+def create_view_file_tool() -> LocalFunction
 ```
 
 创建一个用于**查看文本文件**的本地工具，返回 `LocalFunction` 实例。
@@ -188,18 +166,18 @@ def create_view_file_tool(self) -> LocalFunction
 ### create_execute_python_code_tool
 
 ```python
-def create_execute_python_code_tool(self) -> LocalFunction
+def create_execute_python_code_tool() -> LocalFunction
 ```
 
 创建一个用于**执行 Python 代码块**的本地工具。
 
 #### 工具卡片定义
 
-- id：`_internal_execute_python_code`
-- name：`execute_python_code`
-- description：`Execute Python code`
-- input_params：
-  - code_block(str)：要执行的 Python 代码。
+* **id**：`_internal_execute_python_code`
+* **name**：`execute_python_code`
+* **description**：`Execute Python code`
+* **input_params**：
+  * **code_block(str)**：要执行的 Python 代码。
 
 #### 工具函数行为
 
@@ -210,18 +188,18 @@ def create_execute_python_code_tool(self) -> LocalFunction
 ### create_execute_command_tool
 
 ```python
-def create_execute_command_tool(self) -> LocalFunction
+def create_execute_command_tool() -> LocalFunction
 ```
 
 创建一个用于**执行 Shell 命令**的本地工具。
 
 #### 工具卡片定义
 
-- id：`_internal_run_command`
-- name：`run_command`
-- description：`Execute bash commands in a Linux terminal`
-- input_params：
-  - bash_command(str)：要执行的一条或多条命令字符串。
+* **id**：`_internal_run_command`
+* **name**：`run_command`
+* **description**：`Execute bash commands in a Linux terminal`
+* **input_params**：
+  * **bash_command(str)**：要执行的一条或多条命令字符串。
 
 #### 工具函数行为
 
@@ -232,7 +210,7 @@ def create_execute_command_tool(self) -> LocalFunction
 ### add_skill_tools
 
 ```python
-def add_skill_tools(self, agent)
+def add_skill_tools(agent)
 ```
 
 为指定的 Agent 创建并注册所有技能相关的内置工具，并挂载到 Agent 上。
@@ -247,9 +225,6 @@ def add_skill_tools(self, agent)
 3. 将每个工具的 `card` 添加到 `agent.ability_manager`，使 Agent 可在推理过程中调用这些能力。
 
 > 通常不直接调用 `SkillToolKit`，而是通过 `SkillUtil.register_skills(...)` 一次性完成“注册技能 + 挂载工具”的流程。
-
-
-# openjiuwen.core.skills.skill_manager
 
 ## class openjiuwen.core.skills.skill_manager.Skill
 
@@ -272,32 +247,31 @@ class openjiuwen.core.skills.skill_manager.Skill(BaseModel)
 ## class openjiuwen.core.skills.skill_manager.SkillManager
 
 ```python
-class openjiuwen.core.skills.skill_manager.SkillManager
+class openjiuwen.core.skills.skill_manager.SkillManager(...)
 ```
 
 负责技能元数据的注册、查询与管理。
 
 ### 参数
 
-- sys_operation_id(str)：用于从 `Runner.resource_mgr.get_sys_operation(sys_operation_id)` 获取 `SysOperation` 实例的 id。后续所有文件系统操作都基于该 `SysOperation` 执行。
+* **sys_operation_id**(str)：用于从 `Runner.resource_mgr.get_sys_operation(sys_operation_id)` 获取 `SysOperation` 实例的 id。后续所有文件系统操作都基于该 `SysOperation` 执行。
 
 ### set_sys_operation_id
 
 ```python
-def set_sys_operation_id(self, sys_operation_id: str) -> None
+def set_sys_operation_id(sys_operation_id: str) -> None
 ```
 
 更新内部使用的 `sys_operation_id`，后续文件系统操作都会基于新的 `SysOperation` 实例执行。
 
-#### 参数
+**参数：**
 
-- sys_operation_id(str)：新的 SysOperation id。
+* **sys_operation_id**(str)：新的 SysOperation id。
 
 ### async invoke register
 
 ```python
 async def register(
-    self,
     skill_path: Union[Path, List[Path]],
     session_id: str = None,
     overwrite: bool = False
@@ -306,7 +280,7 @@ async def register(
 
 注册一个或多个技能目录（或单个 `Skill.md` 文件路径）。
 
-#### 参数
+**参数：**
 
 - skill_path(pathlib.Path | List[pathlib.Path])：技能根目录路径或路径列表。
   - 当为目录时：遍历其**一层子目录**，并在子目录内查找名为 `Skill.md`（大小写不敏感）的文件。
@@ -323,89 +297,82 @@ async def register(
 - 在 `Skill.md` 中解析 YAML front matter（以 `---` 开头时，按 `text.split("---", 2)` 拆分）。
 - 从 YAML 中读取 `description` 字段，构造 `Skill(name=目录名, description=..., directory=目录路径)`，写入内部注册表。
 
-#### 返回
+**返回：**
 
 - None：注册完成后不返回技能列表或数量（可用 `count()/get_all()` 查询）。
-
-#### 异常
-
-- FileNotFoundError：读取 `Skill.md` 失败或内容为空时抛出。
-- NotADirectoryError：`list_directories` 调用失败（例如传入路径不可作为目录列举）时抛出。
-- KeyError：`Skill.md` 的 YAML front matter 不存在或缺少 `description` 字段时抛出。
-- ValueError：当 `overwrite=False` 且同名技能已存在时抛出（`Skill already exists: <name>`）。
 
 ### unregister
 
 ```python
-def unregister(self, name: str) -> None
+def unregister(name: str) -> None
 ```
 
 按照技能名称注销一个技能（若名称不存在则忽略）。
 
-#### 参数
+**参数：**
 
 - name(str)：要注销的技能名称。
 
 ### get
 
 ```python
-def get(self, name: str) -> Optional[Skill]
+def get(name: str) -> Optional[Skill]
 ```
 
 按名称获取技能元数据。
 
-#### 参数
+**参数：**
 
 - name(str)：技能名称。
 
-#### 返回
+**返回：**
 
 - Skill | None：存在则返回 `Skill`，否则返回 None。
 
 ### get_all
 
 ```python
-def get_all(self) -> List[Skill]
+def get_all() -> List[Skill]
 ```
 
 返回当前注册的所有技能列表。
 
-#### 返回
+**返回：**
 
 - List[Skill]：所有已注册技能。
 
 ### get_names
 
 ```python
-def get_names(self) -> List[str]
+def get_names() -> List[str]
 ```
 
 返回当前注册的所有技能名称列表。
 
-#### 返回
+**返回：**
 
 - List[str]：所有已注册技能名。
 
 ### has
 
 ```python
-def has(self, name: str) -> bool
+def has(name: str) -> bool
 ```
 
 判断指定名称的技能是否存在于注册表中。
 
-#### 参数
+**参数：**
 
 - name(str)：技能名称。
 
-#### 返回
+**返回：**
 
 - bool：存在返回 True，否则返回 False。
 
 ### clear
 
 ```python
-def clear(self) -> None
+def clear() -> None
 ```
 
 清空所有已注册技能。
@@ -413,11 +380,11 @@ def clear(self) -> None
 ### count
 
 ```python
-def count(self) -> int
+def count() -> int
 ```
 
 返回当前注册技能的数量。
 
-#### 返回
+**返回：**
 
 - int：技能数量。
