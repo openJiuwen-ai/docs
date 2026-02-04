@@ -82,8 +82,6 @@
         - [流式输出](4.开发指南/agent-core开发指南/高阶用法/Session/流式输出.md)
         - [状态管理](4.开发指南/agent-core开发指南/高阶用法/Session/状态管理.md)
         - [调测能力](4.开发指南/agent-core开发指南/高阶用法/Session/调测能力.md)
-        - [资源管理](4.开发指南/agent-core开发指南/高阶用法/Session/资源管理.md)
-        - [配置管理](4.开发指南/agent-core开发指南/高阶用法/Session/配置管理.md)
       - [开发自定义组件](4.开发指南/agent-core开发指南/高阶用法/开发自定义组件.md)
       - [上下文引擎](4.开发指南/agent-core开发指南/高阶用法/上下文引擎.md)
       - [记忆引擎](4.开发指南/agent-core开发指南/高阶用法/记忆引擎.md)
