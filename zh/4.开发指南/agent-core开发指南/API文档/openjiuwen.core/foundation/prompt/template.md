@@ -10,9 +10,9 @@ class openjiuwen.core.foundation.prompt.template.PromptTemplate(BaseModel)
 
 **参数**：
 
-- **content**(str | List[[BaseMessage](../../../openjiuwen.core/foundation/llm/llm.md#basemessage--usermessage--systemmessage--assistantmessage--toolmessage)])：模板内容，可为一段文本或消息列表；默认 `""`。支持以下两种类型：
+- **content**(str | List[[BaseMessage](../../../openjiuwen.core/foundation/llm/llm.md#class-openjiuwencorefoundationllmschemamessagebasemessage)])：模板内容，可为一段文本或消息列表；默认 `""`。支持以下两种类型：
   - str：例如`你是一个{{role}}助手`。
-  - List[[BaseMessage](../../../openjiuwen.core/foundation/llm/llm.md#basemessage--usermessage--systemmessage--assistantmessage--toolmessage)]：支持`BaseMessage`的列表，例如：`[SystemMessage(content="你是一个{{role}}助手")]`。
+  - List[[BaseMessage](../../../openjiuwen.core/foundation/llm/llm.md#class-openjiuwencorefoundationllmschemamessagebasemessage)]：支持`BaseMessage`的列表，例如：`[SystemMessage(content="你是一个{{role}}助手")]`。
 - **name**(str, 可选)：模板名称，默认值：`""`。
 - **placeholder_prefix**(str)：占位符左边界，默认值：`"{{"`。
 - **placeholder_suffix**(str)：占位符右边界，默认值：`"}}"`。
@@ -108,7 +108,7 @@ to_messages(self) -> List[BaseMessage]
 
 **返回**：
 
-**List[[BaseMessage](../../../openjiuwen.core/foundation/llm/llm.md#basemessage--usermessage--systemmessage--assistantmessage--toolmessage)]**，消息列表；若 content 为空则返回空列表。
+**List[[BaseMessage](../../../openjiuwen.core/foundation/llm/llm.md#class-openjiuwencorefoundationllmschemamessagebasemessage)]**，消息列表；若 content 为空则返回空列表。
 
 **异常**：
 

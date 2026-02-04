@@ -43,7 +43,7 @@ async create_context(
 - **context_id** (str, 可选)：上下文ID，会话内当前上下文的唯一标识。用于区分同一会话内的多个上下文。默认值：`default_context_id`。
 - **session** (Session, 可选)：会话ID。若传入，会从 `session.get_session_id()` 读取会话ID，用于隔离不同会话。为 `None` 时使用 `"default_session_id"`。默认值：`None`。
 - **processors** (List[Tuple[str, BaseModel], 可选)：处理器配置列表，每项为 `(processor_type, config)`，如 `[("MessageOffloader", MessageOffloaderConfig(...))]`。默认值：`None`。
-- **history_messages** (List[[BaseMessage](../../openjiuwen.core/foundation/llm/llm.md#basemessage--usermessage--systemmessage--assistantmessage--toolmessage)], 可选)：上下文的初始消息列表。默认值：`None`。
+- **history_messages** (List[[BaseMessage](../../openjiuwen.core/foundation/llm/llm.md#class-openjiuwencorefoundationllmschemamessagebasemessage)], 可选)：上下文的初始消息列表。默认值：`None`。
 - **token_counter** (TokenCounter, 可选)：Token 统计策略，用于在构造窗口时统计消息与工具的 Token 消耗。为 `None` 时使用 TiktokenCounter。默认值：`None`。
 
 **返回**：

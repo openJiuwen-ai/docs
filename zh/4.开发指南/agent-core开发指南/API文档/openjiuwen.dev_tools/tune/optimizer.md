@@ -9,8 +9,8 @@ openjiuwen.dev_tools.tune.optimizer.instruction_optimizer.InstructionOptimizer(m
 `InstructionOptimizer`类为Agent提示词指令优化器，通过分析Agent输入输出的错误用例生成的反馈，修正内部提示词模板，优化Agent在错误用例上的准确率。
 **参数**：
 
-* **model_config**([ModelRequestConfig](../../openjiuwen.core/foundation/llm/llm.md#modelrequestconfig))：用于执行优化的大模型请求配置。
-* **model_client_config**([ModelClientConfig](../../openjiuwen.core/foundation/llm/llm.md#modelclientconfig))：用于执行优化的大模型服务配置。
+* **model_config**([ModelRequestConfig](../../openjiuwen.core/foundation/llm/llm.md#class-openjiuwencorefoundationllmschemaconfigmodelrequestconfig))：用于执行优化的大模型请求配置。
+* **model_client_config**([ModelClientConfig](../../openjiuwen.core/foundation/llm/llm.md#class-openjiuwencorefoundationllmschemaconfigmodelclientconfig))：用于执行优化的大模型服务配置。
 * **parameters**(Dict[str, [LLMCall](../../openjiuwen.core/operator/llm_call/base.md#openjiuwencoreoperatorllm_callbase)], 可选)：Agent的提示词优化参数列表，可以为空。如果为空，需要在后续优化时通过bind_parameter接口绑定参数。默认值：`None`。参数可以通过get_llm_calls接口获取（当前仅ChatAgent支持）。
 
 **样例**：
@@ -120,8 +120,8 @@ openjiuwen.dev_tools.tune.optimizer.example_optimizer.ExampleOptimizer(model_con
 `ExampleOptimizer`类为Agent提示词示例优化器，通过归纳分析错误用例，添加最具代表性的示例到提示词中，优化Agent在错误实例上的表现。
 **参数**：
 
-* **model_config**([ModelRequestConfig](../../openjiuwen.core/foundation/llm/llm.md#modelrequestconfig))：用于执行优化的大模型请求配置。
-* **model_client_config**([ModelClientConfig](../../openjiuwen.core/foundation/llm/llm.md#modelclientconfig))：用于执行优化的大模型服务配置。
+* **model_config**([ModelRequestConfig](../../openjiuwen.core/foundation/llm/llm.md#class-openjiuwencorefoundationllmschemaconfigmodelrequestconfig))：用于执行优化的大模型请求配置。
+* **model_client_config**([ModelClientConfig](../../openjiuwen.core/foundation/llm/llm.md#class-openjiuwencorefoundationllmschemaconfigmodelclientconfig))：用于执行优化的大模型服务配置。
 * **parameters**(Optional[Dict[str, [LLMCall](../../openjiuwen.core/operator/llm_call/base.md#openjiuwencoreoperatorllm_callbase)]], 可选)：Agent的提示词优化参数列表。可以为空，后续优化时通过bind_parameter接口绑定参数。默认值为`None`。
 * **num_examples**(int, 可选)：在提示词中允许添加的示例数量，取值范围[0, 20]，默认值：`1`。
 
@@ -212,7 +212,7 @@ backward(evaluated_cases: List[EvaluatedCase])
 ```python
 update()
 ```
-更新Agent中的提示词内容。该接口需要在调用backward之后执行。
+更新Agent中的提示词内容。该接口需要在调用backward之后执行。 
 
 **样例**：
 
@@ -230,8 +230,8 @@ openjiuwen.dev_tools.tune.optimizer.joint_optimizer.JointOptimizer(model_config:
 `JointOptimizer`类为Agent提示词指令和示例联合优化器，通过同时优化提示词内容和筛选有效示例，提升Agent的表现。
 **参数**：
 
-* **model_config**([ModelRequestConfig](../../openjiuwen.core/foundation/llm/llm.md#modelrequestconfig))：用于执行优化的大模型请求配置。
-* **model_client_config**([ModelClientConfig](../../openjiuwen.core/foundation/llm/llm.md#modelclientconfig))：用于执行优化的大模型服务配置。
+* **model_config**([ModelRequestConfig](../../openjiuwen.core/foundation/llm/llm.md#class-openjiuwencorefoundationllmschemaconfigmodelrequestconfig))：用于执行优化的大模型请求配置。
+* **model_client_config**([ModelClientConfig](../../openjiuwen.core/foundation/llm/llm.md#class-openjiuwencorefoundationllmschemaconfigmodelclientconfig))：用于执行优化的大模型服务配置。
 * **parameters**(Optional[Dict[str, [LLMCall](../../openjiuwen.core/operator/llm_call/base.md#openjiuwencoreoperatorllm_callbase)]], 可选)：Agent的提示词优化参数列表。可以为空，后续优化时通过bind_parameter接口绑定参数。默认值为`None`。
 * **num_examples**(int, 可选)：在提示词中允许添加的示例数量，取值范围[0, 20]，默认值：`1`。
 

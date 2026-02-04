@@ -9,8 +9,8 @@ openjiuwen.dev_tools.tune.evaluator.evaluator.DefaultEvaluator(model_config: Mod
 `DefaultEvaluator`是默认的评估器类，可基于给定评价规则，利用大模型对Case的标签和Agent实际输出进行比对评估，输出评分以及评分依据。
 **参数**：
 
-* **model_config**([ModelRequestConfig](../../openjiuwen.core/foundation/llm/llm.md#modelrequestconfig))：用于执行评估的大模型请求配置。
-* **model_client_config**([ModelClientConfig](../../openjiuwen.core/foundation/llm/llm.md#modelclientconfig))：用于执行评估的大模型服务配置。
+* **model_config**([ModelRequestConfig](../../openjiuwen.core/foundation/llm/llm.md#class-openjiuwencorefoundationllmschemaconfigmodelrequestconfig))：用于执行评估的大模型请求配置。
+* **model_client_config**([ModelClientConfig](../../openjiuwen.core/foundation/llm/llm.md#class-openjiuwencorefoundationllmschemaconfigmodelclientconfig))：用于执行评估的大模型服务配置。
 * **metric**(str, 可选)：用户基于自己的场景，自定义评价标准的描述文本，例如："回答不得超过10个字，否则一律给0分"。默认值：`""`。metric字段为空时会基于标签和实际输出的语义相似性给出评分，相同或相似得1分；不同得0分。
 
 ### evaluate

@@ -11,7 +11,7 @@ openjiuwen.dev_tools.tune.base.Case(inputs: Dict[str, Any], label: Dict[str, Any
 
 - **inputs**(Dict[str, Any])：用例的输入参数。
 - **label**(Dict[str, Any])：期望的输出或标签信息，用于验证结果正确性。
-- **tools**(List[[ToolInfo](../../openjiuwen.core/foundation/llm/llm.md#toolcall)]，可选)：表示该用例可调用的工具列表（如API、插件等），用于多工具协作场景, 默认值：`None`。
+- **tools**(List[[ToolInfo](../../openjiuwen.core/foundation/llm/llm.md#class-openjiuwencorefoundationllmschematool_calltoolcall)]，可选)：表示该用例可调用的工具列表（如API、插件等），用于多工具协作场景, 默认值：`None`。
 
 **样例**：
 
