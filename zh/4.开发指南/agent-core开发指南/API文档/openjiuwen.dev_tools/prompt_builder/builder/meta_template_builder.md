@@ -30,7 +30,7 @@ MetaTemplateBuilder(model_config: ModelRequestConfig, model_client_config: Model
 ## register_meta_template
 
 ```python
-register_meta_template(self, name: str, meta_template: str | PromptTemplate)
+register_meta_template(name: str, meta_template: str | Template)
 ```
 
 注册自定义 meta-template。
@@ -42,35 +42,52 @@ register_meta_template(self, name: str, meta_template: str | PromptTemplate)
 - **name** (str)：模板名（不含前缀）。
   - 内部会自动加上固定前缀 `META_TEMPLATE_`。
   - 建议用稳定且可读的命名（例如 `my_team_general_v1`）。
-- **meta_template** (str | PromptTemplate)：模板内容。
-  - 传 `str` 时会自动包装为 `PromptTemplate(content=...)`。
-  - 传 `PromptTemplate` 时会 deepcopy 一份，避免外部引用被意外修改。
-  - 只支持 `str` 或 `PromptTemplate`；其他类型会抛出异常。
+- **meta_template** (str | Template)：模板内容。
+  - 传 `str` 时会自动包装为 `Template(content=...)`。
+  - 传 `Template` 时会 deepcopy 一份，避免外部引用被意外修改。
+  - 只支持 `str` 或 `Template`；其他类型会抛出异常。
 
 **异常**：
 
 - 当 `meta_template` 类型不合法时会抛出 `build_error(StatusCode.TOOLCHAIN_META_TEMPLATE_EXECUTION_ERROR, ...)`。
 
+**样例**：
+
+```python
+>>> # 1. 自定义元模板提示词
+>>> template = "this is a string meta template"
+>>>
+>>> # 2. 创建模型配置
+>>> Modelclientconfig = ModelClientConfig(
+...     api_key=API_KEY,
+...     api_base=API_BASE,
+...     client_id="demo",
+...     verify_ssl=False,
+...     client_provider="xxxx"
+... )
+>>> Modelrequestconfig = ModelRequestConfig(model=MODEL_NAME)
+>>>
+>>> # 3. 创建MetaTemplateBuilder对象
+>>> meta_template_builder = MetaTemplateBuilder(Modelrequestconfig, Modelclientconfig)
+>>> 
+>>> # 4. 注册元模板提示词
+>>> meta_template_builder.register_meta_template("custom_template", template)
+```
+
 ## build
 
 ```python
-await build(
-    self,
-    prompt: str | PromptTemplate,
-    tools: Optional[List[ToolInfo]] = None,
-    template_type: Literal["general", "plan", "other"] = "general",
-    custom_template_name: Optional[str] = None
-) -> Optional[str]
+async build(prompt: str | Template, tools: Optional[List[ToolInfo]] = None, template_type: Literal["general", "plan", "other"] = "general", custom_template_name: Optional[str] = None) -> Optional[str]
 ```
 
 生成/优化提示词文本（非流式）。
 
 **参数**：
 
-- **prompt** (str | PromptTemplate)：原始提示词/任务说明。
-  - 允许传 `PromptTemplate`，会先转成纯字符串内容再处理。
+- **prompt** (str | [Template](../../../openjiuwen.core/foundation/prompt/template.md#class-prompttemplate)))：原始提示词/任务说明。
+  - 允许传 `Template`，会先转成纯字符串内容再处理。
   - 不能为空且不能是空白字符串，否则会抛出异常。
-- **tools** (List[ToolInfo] | None)：可用工具列表。
+- **tools** (List[[ToolInfo](../../../openjiuwen.core/foundation/tool/tool.md#class-openjiuwencorefoundationtoolschematoolinfo)]] | None)：可用工具列表。
   - 传入后会被写入 meta-template 的 `tools` 字段，帮助模型生成“可正确调用工具”的提示词。
   - 要求每个元素必须是 `ToolInfo`，否则会抛出异常。
 - **template_type**：模板策略。
@@ -86,14 +103,101 @@ await build(
 - **Optional[str]**：生成后的提示词文本。
   - 当底层模型返回为空时，可能返回 `None`。
 
+**异常**：
+
+- 当 `meta_template` 类型不合法时会抛出 `build_error(StatusCode.TOOLCHAIN_META_TEMPLATE_EXECUTION_ERROR, ...)`。
+
+**样例**：
+
+```python
+>>> # 1. 创建模型配置
+>>> Modelclientconfig = ModelClientConfig(
+...     api_key=API_KEY,
+...     api_base=API_BASE,
+...     client_id="demo",
+...     verify_ssl=False,
+...     client_provider="xxxx"
+... )
+>>> Modelrequestconfig = ModelRequestConfig(model=MODEL_NAME)
+>>>
+>>> # 2. 创建MetaTemplateBuilder对象
+>>> builder = MetaTemplateBuilder(Modelrequestconfig, Modelclientconfig)
+>>>
+>>> # 3. 执行提示词生成
+>>> async def main():
+>>>     response = await builder.build(prompt=pront, language="en-US", template_type="general")
+>>>     print(response)
+>>> asyncio.run(main())
+## 人设
+旅行助手
+定义你将扮演的角色或身份：一位经验丰富的旅行规划师，熟悉全球各地的旅游景点和文化特色。
+列举角色的专业技能或特长：擅长制定个性化的旅行计划，提供交通、住宿、餐饮和活动建议，能够根据用户的预算和兴趣定制行程。
+（省略更多内容）
+```
+
 ## stream_build
 
 ```python
-async for chunk in stream_build(...):
-    ...
+async stream_build(prompt: str | Template, tools: Optional[List[ToolInfo]] = None, template_type: Literal["general", "plan", "other"] = "general", custom_template_name: Optional[str] = None) -> AsyncGenerator
 ```
 
-流式生成提示词文本。
+基于用户提供的原始提示词及所选定的元模板，流式生成内容更加丰富、结构更加完整、逻辑更加严谨的提示词。
 
-参数语义与 `build` 一致，区别在于返回值为异步生成器，逐段产出 `chunk.content`。
+**参数**：
+
+- **prompt** (str | [Template](../../../openjiuwen.core/foundation/prompt/template.md#class-prompttemplate)))：原始提示词/任务说明。
+  - 允许传 `Template`，会先转成纯字符串内容再处理。
+  - 不能为空且不能是空白字符串，否则会抛出异常。
+- **tools** (List[[ToolInfo](../../../openjiuwen.core/foundation/tool/tool.md#class-openjiuwencorefoundationtoolschematoolinfo)]] | None)：可用工具列表。
+  - 传入后会被写入 meta-template 的 `tools` 字段，帮助模型生成“可正确调用工具”的提示词。
+  - 要求每个元素必须是 `ToolInfo`，否则会抛出异常。
+- **template_type**：模板策略。
+  - `"general"`：通用生成策略（默认）。
+  - `"plan"`：偏规划/分步的生成策略。
+  - `"other"`：使用自定义模板（必须同时提供 `custom_template_name`）。
+- **custom_template_name**：自定义模板名。
+  - 仅当 `template_type="other"` 时使用。
+  - 必须先通过 `register_meta_template` 注册同名模板，否则会抛出异常。
+
+**返回**：
+
+* **AsyncGenerator**，流式生成提示词内容，迭代器。
+
+**异常**：
+
+- 当 `meta_template` 类型不合法时会抛出 `build_error(StatusCode.TOOLCHAIN_META_TEMPLATE_EXECUTION_ERROR, ...)`。
+
+**样例**：
+
+```python
+>>> # 1. 创建模型配置
+>>> Modelclientconfig = ModelClientConfig(
+...     api_key=API_KEY,
+...     api_base=API_BASE,
+...     client_id="demo",
+...     verify_ssl=False,
+...     client_provider="xxxx"
+... )
+>>> Modelrequestconfig = ModelRequestConfig(model=MODEL_NAME)
+>>>
+>>> # 2. 创建MetaTemplateBuilder对象
+>>> builder = MetaTemplateBuilder(Modelrequestconfig, Modelclientconfig)
+>>>
+>>> # 3. 执行提示词生成
+>>> async def main():
+>>>     async for chunk in builder.stream_build(prompt="you are a calendar assistant", template_type="plan", language="en-US"):
+...         print(chunk)
+>>> asyncio.run(main())
+##
+人
+设
+定义
+你
+将
+扮演
+的角色
+或
+身份
+（省略更多内容）
+```
 
