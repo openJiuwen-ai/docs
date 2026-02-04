@@ -4,8 +4,8 @@
 
 **Classes**：
 
-| CLASS | DESCRIPTION |
-|-------|-------------|
-| [WorkflowAgent](./workflow_agent/workflow_controller.md) | WorkflowAgent类。 |
-| [WorkflowController](./workflow_agent/workflow_controller.md) | Workflow控制器类。 |
+| CLASS                                                          | DESCRIPTION |
+|----------------------------------------------------------------|-------------|
+| [WorkflowAgent](./workflow_agent/workflow_agent.md)            | WorkflowAgent类。 |
+| [WorkflowController](./workflow_agent/workflow_controller.md)  | Workflow控制器类。 |
 | [WorkflowAgentConfig](./workflow_agent/workflow_controller.md) | WorkflowAgent配置类（来自legacy模块）。 |

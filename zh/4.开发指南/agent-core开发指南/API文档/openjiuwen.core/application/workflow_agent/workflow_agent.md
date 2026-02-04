@@ -2,74 +2,34 @@
 
 ## class openjiuwen.core.application.workflow_agent.workflow_agent.WorkflowAgent
 
-```python
-class WorkflowAgent(ControllerAgent):
-    ...
+```
+class openjiuwen.core.application.workflow_agent.workflow_agent.WorkflowAgent(agent_config: WorkflowAgentConfig)
 ```
 
-`WorkflowAgent` 面向“预定义工作流”场景，继承 `ControllerAgent`，内部持有 `WorkflowController`，将意图识别、工作流选择/恢复与执行全权交给控制器。适合需要稳定、可重复编排的流程式任务。
+基于多工作流控制器的 Agent，实现预定义工作流的执行，继承 `ControllerAgent`。
 
-- 基于消息队列模型处理输入/输出；
-- 支持多工作流选择、工作流中断恢复（由 `WorkflowController` 负责）；
-- 代码极简，仅做参数校验与调用委托。
+### async invoke(inputs: Dict, session: Session = None) -> Dict
 
-源码位置：`openjiuwen.core.application.workflow_agent.workflow_agent.WorkflowAgent`。
+同步（非流式）执行入口：直接调用 `ControllerAgent.invoke`，由内部的 `WorkflowController` 执行工作流并返回结果。
 
----
+**参数：**
 
-### 初始化
+* **inputs**(Dict)：输入数据，通常包含 `query`、`conversation_id` 等。
+* **session**(Session, 可选)：会话上下文；不传则自动创建。
 
-```python
-def __init__(self, agent_config: WorkflowAgentConfig):
-    ...
-```
+**返回：**
 
-**参数与约束：**
-- `agent_config`：`WorkflowAgentConfig`，要求 `controller_type == ControllerType.WorkflowController`，否则抛出 `NotImplementedError`。
+* **Dict**：工作流执行结果。
 
-**内部注入：**
-- 创建 `WorkflowController()`，交给父类 `ControllerAgent` 进行后续注入（上下文、会话、配置等在 `setup_from_agent` 时完成）。
+### async stream(inputs: Dict, session: Session = None) -> AsyncIterator[Any]
 
----
+流式执行入口：委托 `ControllerAgent.stream`，由 `WorkflowController` 执行并逐块产出流式输出。
 
-### invoke
+**参数：**
 
-```python
-async def invoke(self, inputs: Dict, session: Session | None = None) -> Dict:
-    ...
-```
+* **inputs**(Dict)：输入数据。
+* **session**(Session, 可选)：会话上下文；不传则自动创建。
 
-**用途：** 非流式调用。完全委托 `ControllerAgent.invoke`（底层走 `WorkflowController.invoke`），常用于一次性拿到完整执行结果或中断信息。
+**返回：**
 
-**典型输入字段：**
-- `query`：用户请求（可选，若工作流需要纯结构化入参可自定义）。
-- `conversation_id`：会话标识；未提供时由控制器默认生成。
-
-返回值由控制器决定，通常为包含最终输出或中断描述的字典。
-
----
-
-### stream
-
-```python
-async def stream(self, inputs: Dict, session: Session | None = None) -> AsyncIterator[Any]:
-    ...
-```
-
-**用途：** 流式执行，逐块产出执行过程（`OutputSchema` 或自定义字典块）。内部完全沿用 `ControllerAgent.stream` 的逻辑：创建/复用 Session，委托 `WorkflowController` 写入会话流，再逐块向调用方 `yield`。
-
-适合长耗时或需中途交互的工作流（如表单补全、人工确认等）。
-
-**示例：**
-```python
-inputs = {"conversation_id": "wf-001", "query": "启动文档审阅流程"}
-async for chunk in agent.stream(inputs):
-    print(chunk)
-```
-
----
-
-### 适用场景与注意事项
-- 预先在 `WorkflowAgentConfig.workflows` 中注册 `WorkflowSchema`；未配置工作流时控制器会抛出错误。
-- 多工作流场景的选择、中断恢复、默认回复等行为由 `WorkflowController` 处理（详见对应文档）。
-- 若需工具/插件执行，请在工作流节点中配置；`WorkflowAgent` 本身不直接管理工具列表。 
+* **AsyncIterator[Any]**：流式输出迭代器。

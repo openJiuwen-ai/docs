@@ -569,27 +569,25 @@ class openjiuwen.core.controller.modules.TaskScheduler(config: ControllerConfig,
 
 * `AGENT_CONTROLLER_TASK_EXECUTION_ERROR`:任务不存在或执行器缺失。
 
-### async pause_task(task_id: str, session: Optional[Session]=None) -> bool
+### async pause_task(task_id: str) -> bool
 
 若任务运行中则调用执行器`can_pause`/`pause`并取消对应`asyncio.Task`，状态更新为`PAUSED`。
 
 **参数：**
 
 * **task_id**(str)：任务ID。
-* **session**(Session,可选)：会话对象，未提供则按任务内session_id查找。
 
 **返回：**
 
 **bool**，是否暂停成功。
 
-### async cancel_task(task_id: str, session: Optional[Session]=None) -> bool
+### async cancel_task(task_id: str) -> bool
 
 与`pause_task`类似，调用执行器`can_cancel`/`cancel`后取消协程并将状态置为`CANCELED`。
 
 **参数：**
 
 * **task_id**(str)：任务ID。
-* **session**(Session,可选)：会话对象，未提供则按任务内session_id查找。
 
 **返回：**
 
