@@ -35,30 +35,27 @@ start_node(self, node_id: str) -> Self
 ```python
 >>> import random
 >>> 
->>> from openjiuwen.core.workflow import WorkflowComponent
->>> from openjiuwen.core.context_engine.base import Context
+>>> from openjiuwen.core.context_engine import ModelContext
+>>> from openjiuwen.core.session.node import Session
+>>> from openjiuwen.core.workflow import Input, Output, WorkflowComponent
 >>> from openjiuwen.core.graph.base import Graph
->>> from openjiuwen.core.graph.executable import Input, Output, Executable
->>> from openjiuwen.core.session.base import ComponentExecutable
->>> from openjiuwen.core.workflow import Session
 >>> 
->>> 
->>> class DemoCmpWithRandomStart(WorkflowComponent, ComponentExecutable):
+>>> class DemoCmpWithRandomStart(WorkflowComponent):
 ...     def __init__(self, start_ids):
 ...         super().__init__()
 ...         self.start_ids:list[str] = start_ids
-...  
-...     def add_component(self, graph: Graph, node_id: str, wait_for_all: bool = False) -> None:
+... 
+...     def  add_component(self, graph: Graph, node_id: str, wait_for_all: bool = False) -> None:
 ...         choose_idx = random.randint(0, len(self.start_ids))
 ...         graph.start_node(self.start_ids[choose_idx])
 ...         graph.add_node(node_id, self.to_executable(), wait_for_all=wait_for_all)
 ... 
-...     async def invoke(self, inputs: Input, session: Session, context: Context) -> Output:
+...     async def invoke(self, inputs: Input, session: Session, context: ModelContext) -> Output:
 ...         return inputs
 ... 
 ...     def to_executable(self) -> Executable:
 ...         return self
-...
+... 
 ```
 
 ### end_node
@@ -141,36 +138,33 @@ add_node(self, node_id: str, node: Executable, *, wait_for_all: bool=False) -> S
 自定义节点`DemoCmpWithNode`，并自定义实现`add_component`，将`inner_node`作为本节点的后置节点。
 
 ```python
->>> from openjiuwen.core.workflow import WorkflowComponent
->>> from openjiuwen.core.context_engine.base import Context
+>>> from openjiuwen.core.context_engine import ModelContext
+>>> from openjiuwen.core.workflow import ComponentComposable, ComponentExecutable, WorkflowComponent
 >>> from openjiuwen.core.graph.base import Graph
 >>> from openjiuwen.core.graph.executable import Input, Output, Executable
->>> from openjiuwen.core.session.base import ComponentExecutable
 >>> from openjiuwen.core.workflow import Session
 >>> 
 >>> 
->>> class DemoCmpWithNode(WorkflowComponent, ComponentExecutable):
+>>> class DemoCmpWithNode(ComponentComposable):
 ...     def __init__(self):
 ...         super().__init__()
 ...         self.inner_node = InnerNode()
 ... 
 ...     def add_component(self, graph: Graph, node_id: str, wait_for_all: bool = False) -> None:
 ...         graph.add_node(node_id, self.to_executable(), wait_for_all=wait_for_all)
-...         graph.add_node("inner", self.inner_node(), wait_for_all=True)
+...         graph.add_node("inner", self.inner_node, wait_for_all=True)
 ...         graph.add_edge(node_id, "inner")
 ... 
-...     async def invoke(self, inputs: Input, session: Session, context: Context) -> Output:
-...         return inputs
-... 
 ...     def to_executable(self) -> Executable:
-...         return self
+...         return self.inner_node
 ... 
 >>> class InnerNode(ComponentExecutable):
 ...     def __init__(self):
 ...         super().__init__()
-... 
-...     async def invoke(self, inputs: Input, session: Session, context: Context) -> Output:
+...         
+...     async def invoke(self, inputs: Input, session: Session, context: ModelContext) -> Output:
 ...         return inputs
+... 
 ```
 
 ### add_edge
@@ -199,36 +193,34 @@ add_edge(self, source_node_id: Union[str, list[str]], target_node_id: str) -> Se
 自定义节点`DemoCmpWithNode`，并自定义实现`add_component`，将`inner_node`作为本节点的后置节点，并连接边。
 
 ```python
->>> from openjiuwen.core.workflow import WorkflowComponent
->>> from openjiuwen.core.context_engine.base import Context
+>>> from openjiuwen.core.context_engine import ModelContext
+>>> from openjiuwen.core.workflow import ComponentComposable, ComponentExecutable
 >>> from openjiuwen.core.graph.base import Graph
 >>> from openjiuwen.core.graph.executable import Input, Output, Executable
->>> from openjiuwen.core.session.base import ComponentExecutable
 >>> from openjiuwen.core.workflow import Session
 >>> 
 >>> 
->>> class DemoCmpWithNode(WorkflowComponent, ComponentExecutable):
+>>> class DemoCmpWithNode(ComponentComposable):
 ...     def __init__(self):
 ...         super().__init__()
 ...         self.inner_node = InnerNode()
 ... 
 ...     def add_component(self, graph: Graph, node_id: str, wait_for_all: bool = False) -> None:
 ...         graph.add_node(node_id, self.to_executable(), wait_for_all=wait_for_all)
-...         graph.add_node("inner", self.inner_node(), wait_for_all=True)
+...         graph.add_node("inner", self.inner_node, wait_for_all=True)
 ...         graph.add_edge(node_id, "inner")
 ... 
-...     async def invoke(self, inputs: Input, session: Session, context: Context) -> Output:
-...         return inputs
-... 
 ...     def to_executable(self) -> Executable:
-...         return self
+...         return self.inner_node
 ... 
+>>> 
 >>> class InnerNode(ComponentExecutable):
 ...     def __init__(self):
 ...         super().__init__()
 ... 
-...     async def invoke(self, inputs: Input, session: Session, context: Context) -> Output:
+...     async def invoke(self, inputs: Input, session: Session, context: ModelContext) -> Output:
 ...         return inputs
+...
 ```
 
 ### add_conditional_edges
@@ -259,16 +251,15 @@ add_conditional_edges(self, source_node_id: str, router: Router) -> Self
 >>> 
 >>> from openjiuwen.core.workflow import WorkflowComponent
 >>> from openjiuwen.core.workflow import BranchRouter
->>> from openjiuwen.core.context_engine.base import Context
+>>> from openjiuwen.core.context_engine.base import ModelContext
 >>> from openjiuwen.core.graph.base import Graph
 >>> from openjiuwen.core.graph.executable import Input, Output
->>> from openjiuwen.core.session.base import ComponentExecutable
 >>> from openjiuwen.core.workflow import Session
->>> from openjiuwen.core.workflow.base import Workflow
+>>> from openjiuwen.core.workflow import Workflow
 >>> 
 >>> 
 >>> # 直接使用内置的Router的实现BranchRouter 作为条件边的router
->>> class CustomIntentComponent(WorkflowComponent, ComponentExecutable):
+>>> class CustomIntentComponent(WorkflowComponent):
 ...     def __init__(self, default_intents):
 ...         super().__init__()
 ...         self._intents = default_intents
@@ -281,10 +272,10 @@ add_conditional_edges(self, source_node_id: str, router: Router) -> Self
 ...     def add_branch(self, condition: str, target: list[str], branch_id:str):
 ...         self._router.add_branch(condition=condition, target=target, branch_id=branch_id)
 ... 
-...     async def invoke(self, inputs: Input, session: Session, context: Context) -> Output:
+...     async def invoke(self, inputs: Input, session: Session, context: ModelContext) -> Output:
 ...         self._router.set_session(session)
 ...         return {'result': self._intents[random.randint(0, len(self._intents) - 1)]}
-...
+... 
 >>> # 创建组件时，将condition传入
 >>> intent_component = CustomIntentComponent(["出行", "餐饮"])
 >>> intent_component.add_branch(condition="${intent.result} == '出行'", target=['travel'], branch_id='1')
@@ -292,12 +283,16 @@ add_conditional_edges(self, source_node_id: str, router: Router) -> Self
 >>> 
 >>> flow = Workflow()
 >>> flow.add_workflow_comp("intent", intent_component, inputs_schema={"query": "${start.query}"})
+... 
 ```
 
 ## type alias Router
 
 ```python
-openjiuwen.core.graph.base.Router: Union[Callable[..., Union[Hashable, list[Hashable]]], Callable[..., Awaitable[Union[Hashable, list[Hashable]]]],  Runnable[Any, Union[Hashable, list[Hashable]]] ]
+openjiuwen.core.graph.base.Router: Union[
+    Callable[..., Union[Hashable, list[Hashable]]],
+    Callable[..., Awaitable[Union[Hashable, list[Hashable]]]],
+]
 ```
 
 `Router`为图或工作流的条件边的路由，用来决定条件边的目标节点或者目标节点列表。
