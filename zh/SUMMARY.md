@@ -72,7 +72,6 @@
       - [概述](4.开发指南/agent-core开发指南/智能体/概述.md)
       - [构建ReActAgent](4.开发指南/agent-core开发指南/智能体/构建ReActAgent.md)
       - [构建WorkflowAgent](4.开发指南/agent-core开发指南/智能体/构建WorkflowAgent.md)
-      - [构建与执行WorkflowAgent](4.开发指南/agent-core开发指南/智能体/构建与执行WorkflowAgent.md)
       - [构建自定义智能体](4.开发指南/agent-core开发指南/智能体/构建自定义智能体.md)
       - [构建自定义组件](4.开发指南/agent-core开发指南/智能体/构建自定义组件.md)
     - [高阶用法](4.开发指南/agent-core开发指南/高阶用法/README.md)
