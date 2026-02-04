@@ -1,4 +1,4 @@
-# openjiuwen.core.runtime.resources_manager.resource_manager
+# openjiuwen.core.runner.resources_manager.resource_manager
 
 ## class ResourceMgr
 
