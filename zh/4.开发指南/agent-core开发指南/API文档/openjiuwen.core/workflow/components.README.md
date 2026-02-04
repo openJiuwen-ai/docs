@@ -1,4 +1,4 @@
-# workflow.components
+# openjiuwen.core.workflow
 
 `openjiuwen.core.workflow.components` 提供工作流预置组件，与 [workflow](../workflow.README.md) 基类配合使用。组件类通过 `openjiuwen.core.workflow` 导出，建议使用 `from openjiuwen.core.workflow import ...` 导入。
 

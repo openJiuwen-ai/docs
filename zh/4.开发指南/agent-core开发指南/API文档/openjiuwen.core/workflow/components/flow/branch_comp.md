@@ -1,30 +1,18 @@
-# openjiuwen.core.workflow.components.flow.branch_comp
+# openjiuwen.core.workflow
 
-`openjiuwen.core.workflow.components.flow.branch_comp` 模块提供工作流分支组件，用于在工作流中根据条件将执行路由到不同下游节点。分支组件内部使用 [BranchRouter](branch_router.md#class-branchrouter) 管理多条分支，每条分支由条件与目标节点列表组成。条件支持字符串表达式、可调用对象或 [Condition](../condition/condition.md) 子类，详见 [ExpressionCondition](../condition/expression.md) 等。
+`openjiuwen.core.workflow.components.flow.branch_comp` 模块提供工作流分支组件，用于在工作流中根据条件将执行路由到不同下游节点。分支组件内部使用 [BranchRouter](branch_router.md#class-openjiuwencoreworkflowcomponentsflowbranch_routerbranchrouter) 管理多条分支，每条分支由条件与目标节点列表组成。条件支持字符串表达式、可调用对象或 [Condition](../condition/condition.md) 子类，详见 [ExpressionCondition](../condition/expression.md) 等。
 
 组件通过 `openjiuwen.core.workflow` 导出，建议使用 `from openjiuwen.core.workflow import BranchComponent` 导入。更多组件说明见 [components](../../components.README.md)。
 
-## class BranchComponent
+## class openjiuwen.core.workflow.components.flow.BranchComponent
 
 ```python
-class openjiuwen.core.workflow.components.flow.branch_comp.BranchComponent(WorkflowComponent)
+class openjiuwen.core.workflow.components.flow.branch_comp.BranchComponent()
 ```
 
-工作流分支组件，继承自 [WorkflowComponent](../components.md#class-workflowcomponent)。将当前节点加入图时，会为该节点添加条件边；运行时由 [BranchRouter](../flow/branch_router.md#class-branchrouter) 根据当前会话状态依次求值各分支条件，并返回首个满足条件的分支对应的目标节点列表。
+工作流分支组件，继承自 [WorkflowComponent](../components.md#class-workflowcomponent)。将当前节点加入图时，会为该节点添加条件边；运行时由 [BranchRouter](../flow/branch_router.md#class-openjiuwencoreworkflowcomponentsflowbranch_routerbranchrouter) 根据当前会话状态依次求值各分支条件，并返回首个满足条件的分支对应的目标节点列表。
 
-### \_\_init\_\_
-
-```python
-def __init__(self) -> None
-```
-
-构造分支组件。内部会创建一个 `report_trace=True` 的 [BranchRouter](branch_router.md#class-branchrouter)，用于在执行时上报分支信息。
-
-### add_branch
-
-```python
-def add_branch(self, condition: Union[str, Callable[[], bool], Condition], target: Union[str, list[str]], branch_id: str = None) -> None
-```
+### add_branch(condition: Union[str, Callable[[], bool], Condition], target: Union[str, list[str]], branch_id: str = None)
 
 添加一条分支：当 `condition` 求值为真时，路由到 `target` 所指定的节点（或节点列表）。
 
@@ -36,7 +24,7 @@ def add_branch(self, condition: Union[str, Callable[[], bool], Condition], targe
 
 **异常**：
 
-- **JiuWenBaseException**：当 `condition`、`target` 或其元素为 `None` 或空时，错误码参见 [StatusCode](../../../common/exception/status_code.md) 中的组件分支参数相关项。
+- **BaseError**：当 `condition`、`target` 或其元素为 `None` 或空时，错误码参见 [StatusCode](../../../common/exception/status_code.md) 中的组件分支参数相关项。
 
 **样例**：
 
@@ -48,25 +36,17 @@ def add_branch(self, condition: Union[str, Callable[[], bool], Condition], targe
 >>> comp.add_branch(condition="${intent.result} == '餐饮'", target=["eat"], branch_id="2")
 ```
 
-### router
+### router() -> Callable[..., Union[Hashable, list[Hashable]]]
 
-```python
-def router(self) -> Callable[..., Union[Hashable, list[Hashable]]]
-```
-
-返回内部使用的 [BranchRouter](branch_router.md#class-branchrouter) 实例，供图在添加条件边时使用。该可调用对象在执行时根据当前会话返回满足条件的分支目标节点 id 列表。
+返回内部使用的 [BranchRouter](branch_router.md#class-openjiuwencoreworkflowcomponentsflowbranch_routerbranchrouter) 实例，供图在添加条件边时使用。该可调用对象在执行时根据当前会话返回满足条件的分支目标节点 id 列表。
 
 **返回**：
 
 - **Callable**：即内部的 `BranchRouter` 实例，调用时返回 `list[str]`（目标节点 id 列表）。
 
-### add_component
+### add_component(graph: Graph, node_id: str, wait_for_all: bool = False)
 
-```python
-def add_component(self, graph: Graph, node_id: str, wait_for_all: bool = False) -> None
-```
-
-将当前分支组件作为节点加入给定的 [Graph](../../../graph/graph.md#class-graph)，并为该节点添加条件边，由 [router](branch_comp.md#router) 返回的路由器决定下一跳。
+将当前分支组件作为节点加入给定的 [Graph](../../../graph/graph.md#class-graph)，并为该节点添加条件边，由 [router](branch_comp.md#router---callable-unionhashable-listhashable) 返回的路由器决定下一跳。
 
 **参数**：
 
@@ -74,13 +54,9 @@ def add_component(self, graph: Graph, node_id: str, wait_for_all: bool = False) 
 - **node_id**（str）：本组件在图中的唯一节点 id。
 - **wait_for_all**（bool）：是否等待所有前驱节点执行完成再执行本节点，默认 `False`。
 
-### invoke
+### async invoke(inputs: Input, session: Session, context: ModelContext) -> Output
 
-```python
-async def invoke(self, inputs: Input, session: Session, context: ModelContext) -> Output
-```
-
-分支组件本身不产生业务输出，仅将当前 `session` 设置到内部 [BranchRouter](branch_router.md#class-branchrouter)，由路由器在条件边求值时使用会话状态。返回空字典 `{}`。
+分支组件本身不产生业务输出，仅将当前 `session` 设置到内部 [BranchRouter](branch_router.md#class-openjiuwencoreworkflowcomponentsflowbranch_routerbranchrouter)，由路由器在条件边求值时使用会话状态。返回空字典 `{}`。
 
 **参数**：
 
@@ -92,13 +68,9 @@ async def invoke(self, inputs: Input, session: Session, context: ModelContext) -
 
 - **Output**：`{}`。
 
-### skip_trace
+### skip_trace() -> bool
 
-```python
-def skip_trace(self) -> bool
-```
-
-是否跳过该组件的 trace 记录。分支组件返回 `True`，由 [BranchRouter](branch_router.md#class-branchrouter) 负责上报分支相关信息。
+是否跳过该组件的 trace 记录。分支组件返回 `True`，由 [BranchRouter](branch_router.md#class-openjiuwencoreworkflowcomponentsflowbranch_routerbranchrouter) 负责上报分支相关信息。
 
 **返回**：
 

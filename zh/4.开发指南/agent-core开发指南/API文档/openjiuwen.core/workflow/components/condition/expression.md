@@ -1,4 +1,4 @@
-# openjiuwen.core.workflow.components.condition.expression
+# openjiuwen.core.workflow
 
 ## class openjiuwen.core.workflow.components.condition.expression.ExpressionCondition
 
@@ -29,7 +29,7 @@ class openjiuwen.core.workflow.components.condition.expression.ExpressionConditi
 
 **异常**：
 
-* **JiuWenBaseException**：openJiuwen异常基类，具体详细信息和解决方法，参见[StatusCode](../../../common/exception/status_code.md)。
+* **BaseError**：具体详细信息和解决方法，参见[StatusCode](../../../common/exception/status_code.md)。
 
 **样例**：
 

@@ -1,17 +1,12 @@
-# openjiuwen.core.workflow.components
-## class ComponentExecutable
+# openjiuwen.core.workflow
 
-## class ComponentComposable
+## class openjiuwen.core.workflow.components.component.WorkflowComponent
 
 > **注意**：组件类通过 `openjiuwen.core.workflow` 模块导出。建议使用 `from openjiuwen.core.workflow import ComponentComposable` 导入。
 
 `ComponentComposable`是自定义工作流组件的抽象基类。所有自定义组件需继承该类，并实现将自身加入图以及转换为可执行单元（`ComponentExecutable`）的逻辑。
 
-### add_component
-
-```python
-def add_component(self, graph: Graph, node_id: str, wait_for_all: bool = False) -> None:
-```
+### add_component(graph: Graph, node_id: str, wait_for_all: bool = False) -> None:
 
 定义如何将当前组件加入到指定`graph`。
 
@@ -100,11 +95,7 @@ def add_component(self, graph: Graph, node_id: str, wait_for_all: bool = False) 
 {'output': {'eat': '餐饮'}}
 ```
 
-### to_executable
-
-```python
-def to_executable(self) -> Executable
-```
+### to_executable() -> Executable
 
 返回该组件对应的可执行实例，openJiuwen支持用户自定义实现`ComponentExecutable`，作为本接口的返回，用于运行时调度执行。
 

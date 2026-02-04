@@ -1,24 +1,16 @@
-# openjiuwen.core.workflow.components.flow.branch_router
+# openjiuwen.core.workflow
 
-`openjiuwen.core.workflow.components.flow.branch_router` 模块提供分支路由器及其单条分支的抽象，用于在工作流条件边中根据当前会话状态选择下一跳节点。 [BranchComponent](branch_comp.md#class-branchcomponent) 内部使用本模块的 [BranchRouter](branch_router.md#class-branchrouter) 管理多条 [Branch](branch_router.md#class-branch)；条件支持字符串表达式、可调用对象或 [Condition](../condition/condition.md) 子类，表达式语法见 [ExpressionCondition](../condition/expression.md)。
+`openjiuwen.core.workflow.components.flow.branch_router` 模块提供分支路由器及其单条分支的抽象，用于在工作流条件边中根据当前会话状态选择下一跳节点。 [BranchComponent](branch_comp.md#class-openjiuwencoreworkflowcomponentsflowbranchcomponent) 内部使用本模块的 [BranchRouter](branch_router.md#class-openjiuwencoreworkflowcomponentsflowbranch_routerbranchrouter) 管理多条 [Branch](branch_router.md#class-openjiuwencoreworkflowcomponentsflowbranch_routerbranchrouter)；条件支持字符串表达式、可调用对象或 [Condition](../condition/condition.md) 子类，表达式语法见 [ExpressionCondition](../condition/expression.md)。
 
 类通过 `openjiuwen.core.workflow` 导出，建议使用 `from openjiuwen.core.workflow import BranchRouter, Branch` 导入。
 
-## class Branch
+## class openjiuwen.core.workflow.components.flow.branch_router.Branch
 
 ```python
-class openjiuwen.core.workflow.components.flow.branch_router.Branch
+class openjiuwen.core.workflow.components.flow.branch_router.Branch(condition: Union[str, Callable[[], bool], Condition], target: list[str], branch_id: str = None)
 ```
 
-表示单条分支：一个条件与一个目标节点 id 列表。用于在 [BranchRouter](branch_router.md#class-branchrouter) 内按顺序求值并选择首个满足条件的分支。
-
-### \_\_init\_\_
-
-```python
-def __init__(self, condition: Union[str, Callable[[], bool], Condition], target: list[str], branch_id: str = None) -> None
-```
-
-构造一条分支。
+表示单条分支：一个条件与一个目标节点 id 列表。用于在 [BranchRouter](branch_router.md#class-openjiuwencoreworkflowcomponentsflowbranch_routerbranchrouter) 内按顺序求值并选择首个满足条件的分支。
 
 **参数**：
 
@@ -28,13 +20,9 @@ def __init__(self, condition: Union[str, Callable[[], bool], Condition], target:
 
 **异常**：
 
-- **JiuWenBaseException**：当条件类型不符合要求时，错误码参见 [StatusCode](../../../common/exception/status_code.md) 中组件分支相关项。
+- **BaseError**：当条件类型不符合要求时，错误码参见 [StatusCode](../../../common/exception/status_code.md) 中组件分支相关项。
 
-### evaluate
-
-```python
-def evaluate(self, session: BaseSession) -> bool
-```
+### evaluate(session: BaseSession) -> bool
 
 在当前会话下求值本分支条件。
 
@@ -46,11 +34,7 @@ def evaluate(self, session: BaseSession) -> bool
 
 - **bool**：条件是否成立。
 
-### trace_info
-
-```python
-def trace_info(self, session: BaseSession) -> str
-```
+### trace_info(session: BaseSession) -> str
 
 返回当前分支条件的可读描述，用于追踪与调试。
 
@@ -64,33 +48,21 @@ def trace_info(self, session: BaseSession) -> str
 
 ---
 
-## class BranchRouter
+## class openjiuwen.core.workflow.components.flow.branch_router.BranchRouter
 
 ```python
-class openjiuwen.core.workflow.components.flow.branch_router.BranchRouter
+class openjiuwen.core.workflow.components.flow.branch_router.BranchRouter(report_trace: bool = False)
 ```
 
-分支路由器，用于在工作流条件边中根据当前会话状态从多条 [Branch](branch_router.md#class-branch) 中选出首个满足条件的分支，并返回其目标节点 id 列表。可由 [BranchComponent](branch_comp.md#class-branchcomponent) 使用，也可在自定义组件中单独使用。
-
-### \_\_init\_\_
-
-```python
-def __init__(self, report_trace: bool = False) -> None
-```
-
-构造分支路由器。
+分支路由器，用于在工作流条件边中根据当前会话状态从多条 [Branch](branch_router.md#class-openjiuwencoreworkflowcomponentsflowbranch_routerbranch) 中选出首个满足条件的分支，并返回其目标节点 id 列表。可由 [BranchComponent](branch_comp.md#class-openjiuwencoreworkflowcomponentsflowbranchcomponent) 使用，也可在自定义组件中单独使用。
 
 **参数**：
 
 - **report_trace**（bool）：是否在执行时上报分支信息（如分支 id、条件描述等）用于追踪，默认 `False`。
 
-### add_branch
+### add_branch(condition: Union[str, Callable[[], bool], Condition], target: Union[str, list[str]], branch_id: str = None)
 
-```python
-def add_branch(self, condition: Union[str, Callable[[], bool], Condition], target: Union[str, list[str]], branch_id: str = None) -> None
-```
-
-添加一条分支。语义与 [BranchComponent.add_branch](branch_comp.md#add_branch) 一致：`condition` 为真时路由到 `target`。
+添加一条分支。语义与 [BranchComponent.add_branch](branch_comp.md#add_branchcondition-unionstr-callable-bool-condition-target-unionstr-liststr-branch_id-str--none) 一致：`condition` 为真时路由到 `target`。
 
 **参数**：
 
@@ -100,15 +72,11 @@ def add_branch(self, condition: Union[str, Callable[[], bool], Condition], targe
 
 **异常**：
 
-- **JiuWenBaseException**：当 `condition` 或 `target` 为 `None` 时，错误码参见 [StatusCode](../../../common/exception/status_code.md)。
+- **BaseError**：当 `condition` 或 `target` 为 `None` 时，错误码参见 [StatusCode](../../../common/exception/status_code.md)。
 
-### set_session
+### set_session(session: Union[Session, BaseSession])
 
-```python
-def set_session(self, session: Union[Session, BaseSession]) -> None
-```
-
-设置当前会话，供条件边执行时在 [\_\_call\_\_](branch_router.md#__call__) 中求值各分支条件使用。
+设置当前会话，供条件边执行时在 [\_\_call\_\_](branch_router.md#__call__args-kwargs---liststr) 中求值各分支条件使用。
 
 **参数**：
 
@@ -116,15 +84,16 @@ def set_session(self, session: Union[Session, BaseSession]) -> None
 
 **异常**：
 
-- **JiuWenBaseException**：当 `session` 类型不是 `Session` 或 `BaseSession` 时，错误码参见 [StatusCode](../../../common/exception/status_code.md)。
+- **BaseError**：当 `session` 类型不是 `Session` 或 `BaseSession` 时，错误码参见 [StatusCode](../../../common/exception/status_code.md)。
 
-### \_\_call\_\_
-
-```python
-async def __call__(self, *args, **kwargs) -> list[str]
-```
+### \_\_call\_\_(*args, **kwargs) -> list[str]
 
 作为条件边的路由函数被图调用：按添加顺序依次求值各分支条件，返回首个满足条件的分支的 `target` 节点 id 列表。若 `report_trace` 为 `True`，会先上报各分支信息，再在命中时上报对应 `branch_id`。
+
+**参数**：
+
+- **args**：位置参数，当前实现未使用。
+- **kwargs**：额外添加的动态参数，当前实现未使用。
 
 **返回**：
 
@@ -132,13 +101,9 @@ async def __call__(self, *args, **kwargs) -> list[str]
 
 **异常**：
 
-- **JiuWenBaseException**：当没有任何分支条件满足时，错误码参见 [StatusCode](../../../common/exception/status_code.md) 中的分支执行相关项（如“未找到满足条件的分支”）。
+- **BaseError**：当没有任何分支条件满足时，错误码参见 [StatusCode](../../../common/exception/status_code.md) 中的分支执行相关项（如“未找到满足条件的分支”）。
 
-### get_drawable_branch_router
-
-```python
-def get_drawable_branch_router(self)
-```
+### get_drawable_branch_router()
 
 当环境变量 `WORKFLOW_DRAWABLE=true` 时，在构造路由器时会创建用于可视化的分支路由信息。本方法返回该可绘制对象，供工作流可视化使用；未开启绘制时为 `None`。
 
