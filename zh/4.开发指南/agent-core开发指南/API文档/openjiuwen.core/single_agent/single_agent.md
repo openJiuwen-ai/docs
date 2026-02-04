@@ -75,30 +75,6 @@ class openjiuwen.core.single_agent.BaseAgent(card: AgentCard)
 
 **AsyncIterator[Any]**，异步迭代器。
 
-**样例**：
-
-```python
-from openjiuwen.core.single_agent import BaseAgent, AgentCard
-
-class MyAgent(BaseAgent):
-    def __init__(self, card: AgentCard):
-        super().__init__(card)
-        self._config = None
-
-    def configure(self, config) -> 'BaseAgent':
-        self._config = config
-        return self
-
-    async def invoke(self, inputs, session=None):
-        return {"output": f"收到输入：{inputs}"}
-
-    async def stream(self, inputs, session=None, stream_modes=None):
-        yield {"output": f"收到输入：{inputs}"}
-
-card = AgentCard(name="my_agent", description="自定义 Agent")
-agent = MyAgent(card=card)
-result = await agent.invoke("你好")
-```
 
 ---
 
@@ -237,33 +213,6 @@ ReAct（Reasoning + Acting）范式 Agent 实现。
 
 **AsyncIterator[Any]**，流式输出迭代器。
 
-**样例**：
-
-```python
-from openjiuwen.core.single_agent import AgentCard, ReActAgent, ReActAgentConfig, create_agent_session
-
-# 1. 定义 Agent
-card = AgentCard(name="assistant", description="智能助手")
-
-# 2. 创建并配置
-config = (
-    ReActAgentConfig()
-    .configure_model_client(
-        provider="OpenAI",
-        api_key="your-api-key",
-        api_base="https://api.openai.com/v1",
-        model_name="gpt-4"
-    )
-    .configure_prompt_template([{"role": "system", "content": "你是一个智能助手。"}])
-    .configure_max_iterations(5)
-)
-agent = ReActAgent(card=card).configure(config)
-
-# 3. 执行
-session = create_agent_session(card=card)
-result = await agent.invoke({"query": "你好"}, session=session)
-print(result)  # {"output": "...", "result_type": "answer"}
-```
 
 ---
 
