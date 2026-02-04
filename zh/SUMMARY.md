@@ -133,7 +133,7 @@
           - [base](4.开发指南/agent-core开发指南/API文档/openjiuwen.core/graph/graph.md)
         - [memory](4.开发指南/agent-core开发指南/API文档/openjiuwen.core/memory.README.md)
           - [config](4.开发指南/agent-core开发指南/API文档/openjiuwen.core/memory/config.md)
-          - [engine](4.开发指南/agent-core开发指南/API文档/openjiuwen.core/memory/engine.md)
+          - [engine](4.开发指南/agent-core开发指南/API文档/openjiuwen.core/memory/long_term_memory.md)
           - [store](4.开发指南/agent-core开发指南/API文档/openjiuwen.core/memory/store.md)
         - [controller](4.开发指南/agent-core开发指南/API文档/openjiuwen.core/controller.README.md)
         - [skills](4.开发指南/agent-core开发指南/API文档/openjiuwen.core/skills.README.md)
