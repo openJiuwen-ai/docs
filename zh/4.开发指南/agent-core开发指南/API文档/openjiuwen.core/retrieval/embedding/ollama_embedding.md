@@ -7,7 +7,7 @@ Ollama嵌入模型实现。
 ### __init__
 
 ```python
-__init__(config: EmbeddingConfig, hf_tokenizer_name: Optional[str] = None, timeout: int = 60, max_retries: int = 3, extra_headers: Optional[dict] = None)
+__init__(config: EmbeddingConfig, hf_tokenizer_name: Optional[str] = None, timeout: int = 60, max_retries: int = 3, extra_headers: Optional[dict] = None, max_batch_size: int = 8, dimension: Optional[int] = None)
 ```
 
 初始化Ollama嵌入模型。
@@ -19,6 +19,8 @@ __init__(config: EmbeddingConfig, hf_tokenizer_name: Optional[str] = None, timeo
 * **timeout**(int)：请求超时时间（秒）。默认值：60。
 * **max_retries**(int)：最大重试次数。默认值：3。
 * **extra_headers**(dict, 可选)：额外的请求头。默认值：None。
+* **max_batch_size**(int)：最大批处理大小。默认值：8。
+* **dimension**(int, 可选)：嵌入输出维度。默认值：None。
 
 **异常**：
 

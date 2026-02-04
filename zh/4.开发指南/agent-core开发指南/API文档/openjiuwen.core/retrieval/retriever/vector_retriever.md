@@ -80,6 +80,25 @@ batch_retrieve(queries: List[str], top_k: int = 5, **kwargs: Any) -> List[List[R
 
 **List[List[RetrievalResult]]**，返回每个查询对应的检索结果列表。
 
+### async retrieve_search_results
+
+```python
+retrieve_search_results(query: str, top_k: int = 5, mode: Literal["vector", "sparse", "hybrid"] = "vector", **kwargs: Any) -> List[SearchResult]
+```
+
+检索文档。
+
+**参数**：
+
+* **query**(str)：查询字符串。默认值：无。
+* **top_k**(int)：返回结果数量。默认值：5。
+* **mode**(Literal["vector", "sparse", "hybrid"])：检索模式，vector=向量检索，sparse=稀疏检索/BM25，hybrid=混合检索。默认值："vector"。
+* **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。
+
+**返回**：
+
+**List[SearchResult]**，返回搜索结果列表。
+
 ### async close
 
 ```python

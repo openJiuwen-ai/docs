@@ -22,6 +22,23 @@ __init__(chunk_retriever: Optional[Retriever] = None, triple_retriever: Optional
 * **triple_collection**(str, 可选)：三元组集合名称（用于动态创建检索器）。默认值：None。
 * **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。
 
+### get_retriever_for_mode
+
+```python
+get_retriever_for_mode(mode: Literal["vector", "sparse", "hybrid"], is_chunk: bool = True) -> Retriever
+```
+
+返回指定模式对应的文档块检索器或三元组检索器。
+
+**参数**：
+
+* **mode**(Literal["vector", "sparse", "hybrid"])：目标检索模式。
+* **is_chunk**(bool)：是否返回文档块检索器（`True`）或三元组检索器（`False`）。默认值：True。
+
+**返回**：
+
+**Retriever**，可用于指定模式检索的检索器实例。
+
 ### async retrieve
 
 ```python
@@ -75,7 +92,7 @@ Retrieved 5 results with graph expansion
 ### async graph_expansion
 
 ```python
-graph_expansion(query: str, chunks: List[RetrievalResult], topk: Optional[int] = None, topk_triples: Optional[int] = None, mode: Literal["vector", "sparse", "hybrid"] = "hybrid", score_threshold: Optional[float] = None, **kwargs: Any) -> List[RetrievalResult]
+graph_expansion(query: str, chunks: List[RetrievalResult], triples: Optional[List[RetrievalResult]] = None, topk: Optional[int] = None, mode: Literal["vector", "sparse", "hybrid"] = "hybrid", **kwargs: Any) -> List[RetrievalResult]
 ```
 
 图扩展：基于初始文档块检索结果，通过三元组进行扩展检索。
@@ -84,10 +101,9 @@ graph_expansion(query: str, chunks: List[RetrievalResult], topk: Optional[int] =
 
 * **query**(str)：查询字符串。默认值：无。
 * **chunks**(List[RetrievalResult])：初始文档块检索结果。默认值：无。
+* **triples**(List[RetrievalResult], 可选)：预先获取的三元组结果（可选）。默认值：None。
 * **topk**(int, 可选)：最终返回数量。默认值：None。
-* **topk_triples**(int, 可选)：三元组检索数量。默认值：None。
 * **mode**(Literal["vector", "sparse", "hybrid"])：检索模式。默认值："hybrid"。
-* **score_threshold**(float, 可选)：得分阈值。默认值：None。
 * **kwargs**(Any)：可变参数，用于传递其他额外的配置参数。
 
 **返回**：

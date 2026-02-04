@@ -22,6 +22,23 @@ Initialize graph retriever.
 * **triple_collection**(str, optional): Triple collection name (for dynamically creating retrievers). Default: None.
 * **kwargs**(Any): Variable arguments for passing additional configuration parameters.
 
+### get_retriever_for_mode
+
+```python
+get_retriever_for_mode(mode: Literal["vector", "sparse", "hybrid"], is_chunk: bool = True) -> Retriever
+```
+
+Return either the chunk retriever or triple retriever.
+
+**Parameters**:
+
+* **mode**(Literal["vector", "sparse", "hybrid"]): Target retrieval mode.
+* **is_chunk**(bool): Whether to resolve the chunk retriever (`True`) or the triple retriever (`False`). Default: True.
+
+**Returns**:
+
+**Retriever**, retriever instance ready to execute queries under the requested mode.
+
 ### async retrieve
 
 ```python
@@ -75,7 +92,7 @@ Retrieved 5 results with graph expansion
 ### async graph_expansion
 
 ```python
-graph_expansion(query: str, chunks: List[RetrievalResult], topk: Optional[int] = None, topk_triples: Optional[int] = None, mode: Literal["vector", "sparse", "hybrid"] = "hybrid", score_threshold: Optional[float] = None, **kwargs: Any) -> List[RetrievalResult]
+graph_expansion(query: str, chunks: List[RetrievalResult], triples: Optional[List[RetrievalResult]] = None, topk: Optional[int] = None, mode: Literal["vector", "sparse", "hybrid"] = "hybrid", **kwargs: Any) -> List[RetrievalResult]
 ```
 
 Graph expansion: Based on initial document chunk retrieval results, expand retrieval through triples.
@@ -84,10 +101,9 @@ Graph expansion: Based on initial document chunk retrieval results, expand retri
 
 * **query**(str): Query string. Default: None.
 * **chunks**(List[RetrievalResult]): Initial document chunk retrieval results. Default: None.
+* **triples**(List[RetrievalResult], optional): Optional pre-fetched triples. Default: None.
 * **topk**(int, optional): Final number of results to return. Default: None.
-* **topk_triples**(int, optional): Number of triple retrievals. Default: None.
 * **mode**(Literal["vector", "sparse", "hybrid"]): Retrieval mode. Default: "hybrid".
-* **score_threshold**(float, optional): Score threshold. Default: None.
 * **kwargs**(Any): Variable arguments for passing additional configuration parameters.
 
 **Returns**:
