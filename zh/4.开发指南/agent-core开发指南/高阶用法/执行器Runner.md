@@ -1,9 +1,8 @@
-Runner是openJiuwen执行所有核心组件（包括Workflow，Agent，AgentGroup和Tool）的统一入口和控制中心。它将复杂的执行逻辑抽象化，为开发者提供了一个简洁、一致且强大的编程接口。
+Runner是openJiuwen执行所有核心组件（包括Workflow，Agent，AgentGroup）的统一入口和控制中心。它将复杂的执行逻辑抽象化，为开发者提供了一个简洁、一致且强大的编程接口。
 Runner的主要功能包括：
 
 - 提供Agent标准的异步调用（invoke）和异步流式调用（stream）两种执行入口。
 - 提供Workflow标准的异步调用（invoke）和异步流式调用（stream）两种执行入口。
-- 提供Tool标准的异步调用（invoke）和异步流式调用（stream）两种执行入口。
 - 提供AgentGroup标准的异步调用（invoke）和异步流式调用（stream）两种执行入口。
 
 ## Agent执行
@@ -113,38 +112,6 @@ result = {'output': {'result': 'query workflow'}}
 state = < WorkflowExecutionState.COMPLETED: 'COMPLETED' >
 ```
 
-## Tool执行
-
-在 0.1.4 版本中，`Runner` 不再直接提供 `run_tool` 之类的接口，Tool 更推荐作为 Agent/Workflow
-的一部分被调用。对于简单的本地工具，也可以直接调用工具本身。
-
-下面构建一个用于加法计算的 `LocalFunction` 工具为例，演示**直接调用工具本身**的方式。
-
-首先，创建一个 Tool：
-
-```python
-from openjiuwen.core.foundation.tool.function.function import LocalFunction, Param
-
-# 创建本地工具
-add_plugin = LocalFunction(
-    name="add",
-    description="加法",
-    params=[
-        Param(name="a", description="加数", type="number", required=True),
-        Param(name="b", description="被加数", type="number", required=True),
-    ],
-    func=lambda a, b: a + b
-)
-```
-
-然后，直接调用工具本身即可完成一次执行：
-
-```python
-result = add_plugin(a=1, b=2)
-print(result)  # 3
-```
-
-在实际业务中，通常会把 Tool 注册到资源管理器中，由 Agent 或 Workflow 在推理/执行过程中间接调用；此处示例仅演示“工具本体”的最简使用方式。
 
 ## AgentGroup执行
 
