@@ -3,10 +3,10 @@
 ## class Start
 
 ```python
-class openjiuwen.core.workflow.start_comp.Start()
+class Start()
 ```
 
-`Start`用于定义工作流入口节点。该节点不执行业务逻辑，仅将上游传入的输入原样向下游传递。组件通过 openjiuwen.core.workflow 导出，建议使用 from openjiuwen.core.workflow import Start 导入。
+`Start`为openJiuwen内置的工作流开始组件，该组件定义了工作流的入口，用于接收用户的输入。
 
 
 **样例**：

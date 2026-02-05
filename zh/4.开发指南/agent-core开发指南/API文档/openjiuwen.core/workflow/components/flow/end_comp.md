@@ -3,19 +3,19 @@
 ## class End
 
 ```python
-class openjiuwen.core.workflow.end_comp.End(conf: Union[EndConfig, dict] = None)
+class End(conf: Union[EndConfig, dict] = None)
 ```
 
 `End`组件是openJiuwen内置的工作流结束组件，该组件定义了工作流的输出，支持按照预定义的模板格式输出数据和按照输入定义输出两个方式。`End`组件实现了基类组件`ComponentExecutable`的四个能力 `invoke`，`stream`，`transform`和`collect`，实现的原理是对不同的输入进行相应的格式化输出。
 
 **参数**：
 
-- **conf**(Union[[EndConfig], dict], 可选)：输出格式配置信息。当为dict类型时，需键为"response_template"，值为str。默认值：`None`，表示不需要格式化输出。
+- **conf**(Union[[EndConfig]), dict], 可选)：输出格式配置信息。当为dict类型时，需键为"response_template"，值为str。默认值：`None`，表示不需要格式化输出。
 
 > **说明**
 >
 > - `conf`当前仅支持`response_template`配置。
-> - `response_template`表示渲染模板，非空时按模版输出；为`None`和""都表示不使用模板。默认值：`None`。例如`End`组件执行时输入为`{"user_var": "你好"}`，`conf`配置为`{"response_template": "输出:{{user_var}}"}`，则`End`组件输出为`"输出:你好"`；若`conf`为空或`responseTemplate`为空，则`End`组件输出为`{"user_var": "你好"}`。
+> - `response_template`表示渲染模板，非空时按模版输出；为`None`和""都表示不使用模板。默认值：`None`。例如`End`组件执行时输入为`{"user_var": "你好"}`，`conf`配置为`{"response_template": "输出:{{user_var}}"}`，则`End`组件输出为`"输出:你好"`；若`conf`为空或`response_template`为空，则`End`组件输出为`{"user_var": "你好"}`。
 
 
 **样例**：
@@ -73,7 +73,7 @@ result={'output': {'param1': '你好', 'param2': '杭州'}} state=<WorkflowExecu
 ...                             })
 ... 
 ...     conf = {
-...         "responseTemplate": "渲染结果:{{param1}},{{param2}}"
+...         "response_template": "渲染结果:{{param1}},{{param2}}"
 ...     }
 ...     workflow.set_end_comp("end", End(conf),
 ...                           inputs_schema={"param1": "${start.query}", "param2": "${start.content}"})
