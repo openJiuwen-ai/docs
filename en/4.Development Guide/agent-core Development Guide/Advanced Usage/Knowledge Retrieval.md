@@ -9,11 +9,13 @@ Using Knowledge Retrieval typically involves the following two steps:
 1. Create a knowledge base instance: Use ```SimpleKnowledgeBase``` as an example to create a knowledge base instance, where you configure the vector store, embedding model, document parser, and chunker used by the knowledge base.
 2. Use the knowledge base instance: Supports main operations such as adding documents, building indexes, and retrieving documents, helping agents better utilize knowledge content.
 
+> **Reference Implementation**: An example project based on `SimpleKnowledgeBase`. This project implements a continuously updated PEP (Python Enhancement Proposals) knowledge base for providing professional style and specification recommendations in code review and fixing. See [TomatoReviewer](https://gitcode.com/SushiNinja/TomatoReviewer) for details.
+
 # Create Knowledge Base Instance
 
-To create a knowledge base instance through ```SimpleKnowledgeBase```, you need to pass in the  configuration parameters. The configuration includes knowledge base ID, index type (vector/bm25/hybrid), etc. In addition, data storage in the knowledge base involves vector storage, embedding models, index managers, etc., which also need to be configured during initialization. Default implementations are available under `openjiuwen.core.retrieval`.retrieval, and each component can be replaced with a custom implementation.
+To create a knowledge base instance through ```SimpleKnowledgeBase```, you need to pass in the configuration parameters. The configuration includes knowledge base ID, index type (vector/bm25/hybrid), etc. In addition, data storage in the knowledge base involves vector storage, embedding models, index managers, etc., which also need to be configured during initialization. Default implementations are available under `openjiuwen.core.retrieval`, and each component can be replaced with a custom implementation.
 
-The following example uses the default ```MilvusVectorStore```, ```APIEmbedding```, and ```MilvusIndexer``` to illustrate how to create a knowledge base instance.
+The following example uses the default ```MilvusVectorStore```, ```OpenAIEmbedding```, and ```MilvusIndexer``` to illustrate how to create a knowledge base instance.
 
 ```python
 import asyncio
@@ -24,7 +26,7 @@ from openjiuwen.core.retrieval.common.config import (
     RetrievalConfig,
     VectorStoreConfig,
 )
-from openjiuwen.core.retrieval.embedding.api_embedding import APIEmbedding
+from openjiuwen.core.retrieval.embedding.openai_embedding import OpenAIEmbedding
 from openjiuwen.core.retrieval.indexing.indexer.milvus_indexer import MilvusIndexer
 from openjiuwen.core.retrieval.indexing.processor.chunker.chunking import TextChunker
 from openjiuwen.core.retrieval.indexing.processor.parser.auto_file_parser import AutoFileParser
@@ -64,10 +66,13 @@ async def create_kb() -> None:
         api_key="sk-xxxxx",
         base_url="http://xxxxx",
     )
-    embed_model = APIEmbedding(config=embedding_config, max_retries=3, timeout=60)
 
-    # Create index manager
+    # You can specify embedding dimension or leave it at default
+    embed_model = OpenAIEmbedding(config=embedding_config, max_retries=3, timeout=60, dimension=128)
+
+    # Create index manager (shares VectorStoreConfig with vector store)
     indexer = MilvusIndexer(
+        config=vector_store_config,
         milvus_uri=milvus_uri,
         milvus_token=milvus_token,
     )
@@ -161,6 +166,36 @@ async def delete_document_id(knowledge_base: SimpleKnowledgeBase) -> None:
     print(f"Delete result: {success}")
 ```
 
+## Multi-Knowledge Base Retrieval
+
+`openjiuwen.core.retrieval.simple_knowledge_base` also provides helper functions for multi-knowledge base retrieval, suitable for querying multiple `KnowledgeBase` instances in a single request:
+
+- `retrieve_multi_kb(kbs: list[KnowledgeBase], query: str, config: RetrievalConfig | None = None, top_k: int | None = None) -> list[str]`
+- `retrieve_multi_kb_with_source(kbs: list[KnowledgeBase], query: str, config: RetrievalConfig | None = None, top_k: int | None = None) -> list[dict]`
+
+Example:
+
+```python
+from openjiuwen.core.retrieval.simple_knowledge_base import (
+    retrieve_multi_kb,
+    retrieve_multi_kb_with_source,
+)
+
+
+async def search_across_kbs(kbs: list[SimpleKnowledgeBase]) -> None:
+    query = "What is vector retrieval?"
+
+    # Return only deduplicated text results
+    texts = await retrieve_multi_kb(kbs, query, config=RetrievalConfig(top_k=5))
+    for i, t in enumerate(texts, 1):
+        print(f"{i}. {t}")
+
+    # Return results with source information
+    results = await retrieve_multi_kb_with_source(kbs, query, config=RetrievalConfig(top_k=5))
+    for item in results:
+        print(f"text={item['text']}, score={item['score']}, kb_ids={list(item['kb_ids'])}")
+```
+
 ## Get Statistics
 
 The ```get_statistics``` method returns basic metadata about the knowledge base and its index state.
@@ -185,7 +220,7 @@ from openjiuwen.core.retrieval.common.config import (
     RetrievalConfig,
     VectorStoreConfig,
 )
-from openjiuwen.core.retrieval.embedding.api_embedding import APIEmbedding
+from openjiuwen.core.retrieval.embedding.openai_embedding import OpenAIEmbedding
 from openjiuwen.core.retrieval.indexing.indexer.milvus_indexer import MilvusIndexer
 from openjiuwen.core.retrieval.indexing.processor.chunker.chunking import TextChunker
 from openjiuwen.core.retrieval.indexing.processor.parser.auto_file_parser import AutoFileParser
@@ -225,10 +260,13 @@ async def create_kb() -> None:
         api_key="sk-xxxxx",
         base_url="http://xxxxx",
     )
-    embed_model = APIEmbedding(config=embedding_config, max_retries=3, timeout=60)
 
-    # Create index manager
+    # You can specify embedding dimension or leave it at default
+    embed_model = OpenAIEmbedding(config=embedding_config, max_retries=3, timeout=60, dimension=128)
+
+    # Create index manager (shares VectorStoreConfig with vector store)
     indexer = MilvusIndexer(
+        config=vector_store_config,
         milvus_uri=milvus_uri,
         milvus_token=milvus_token,
     )
