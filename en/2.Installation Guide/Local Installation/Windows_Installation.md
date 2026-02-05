@@ -299,9 +299,7 @@ Older Windows versions do not support the full automation of this one-click comm
 **1.2 Install Docker Desktop**
 
 * Download: Go to the <a href="https://www.docker.com/products/docker-desktop/" target="_blank" rel="nofollow noopener noreferrer">Docker website</a> to download the Windows installer (for x86 machines, choose the AMD64 version);
-* Run the installer: **Check the “Use WSL 2 instead of Hyper-V” option** and follow the wizard to complete installation:
-
-  <img src="../images/Docker_on_Hyper-V.png" width="600"/>
+* Run the installer: Select only the “Use WSL 2 instead of Hyper-V” and “Add shortcut to desktop” options, then click “OK” to complete installation;
 * Restart your computer after installation;
 * After restarting, open Docker Desktop and wait for it to finish loading (the first launch may take 5–10 minutes);
 * Once Docker Desktop starts, for a trial you can click “Continue without signing in” on the welcome screen; for long-term use, refer to the <a href="https://docs.docker.com/desktop/setup/sign-in" target="_blank" rel="nofollow noopener noreferrer">official guide</a>.
@@ -314,11 +312,13 @@ Older Windows versions do not support the full automation of this one-click comm
 
 * Create a local Milvus directory (it’s recommended to place it on D:, e.g., *D:\Milvus*).
 
-* Open Docker Desktop. As shown in the screenshot, enter your *Milvus local path* at step 4 (e.g., *D:\Milvus*).
+* Open Docker Desktop and click the ⚙️ icon in the upper-right corner to open settings. 
+ 	 
+* In the left-hand sidebar, select “Resources“ to enter the Resources configuration page. 
+ 	 
+* Click “File sharing“, type the *Milvus installation directory* (e.g., `D:\Milvus*`) into the text box, and then click the “➕“ button to add it.
 
 * Click Apply & restart to restart Docker Desktop.
-
-  <img src="../images/docker-milvus.png" width="600"/>
 
 * Open PowerShell as Administrator, switch to the Milvus directory, and save the “standalone.bat” script:
 

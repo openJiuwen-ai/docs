@@ -415,9 +415,7 @@ Windows 上运行 Docker Desktop 推荐使用 WSL 2（Windows Subsystem for Linu
 **1.2 安装 Docker Desktop**
 
 * 下载：前往 <a href="https://www.docker.com/products/docker-desktop/" target="_blank" rel="nofollow noopener noreferrer"> Docker 官网</a> 下载 Windows 版本安装包（X86 机器请选择 AMD64 版本）；
-* 运行安装包：​**勾选​「Use WSL 2 instead of Hyper-V」选项**，跟随向导完成安装：
-
-  <img src="../images/docker_desktop_on_wsl.png" width="600"/>
+* 运行安装包：​**仅勾选​「Use WSL 2 instead of Hyper-V」、​「Add shortcut to desktop」选项**，点击​「OK」开始安装；
 * 安装完成后，请重启电脑；
 * 重启后，打开 Docker Desktop，等待加载完成（首次启动可能需要 5 ~ 10 分钟）；
 * Docker Desktop 启动后，若临时试用，可点击欢迎界面的 `Continue without signing in` 直接进入；长期使用请参考 <a href="https://docs.docker.com/desktop/setup/sign-in" target="_blank" rel="nofollow noopener noreferrer"> 官方指导</a>。
@@ -430,11 +428,13 @@ Windows 上运行 Docker Desktop 推荐使用 WSL 2（Windows Subsystem for Linu
 
 * 新建 Milvus 本地安装目录（建议存放至 D 盘，示例路径：*D:\Milvus*）；
 
-* 打开 Docker Desktop，按照图示步骤，在序号 4 处输入 *Milvus 安装目录*（例如：*D:\Milvus*）；
+* 打开 Docker Desktop，单击右上方 ⚙ 进入设置界面；
+ 	 
+* 单击左侧竖列导航栏​「Resources」，进入 Resources 配置界面；
+ 	 
+* 单击​「File sharing」，并在输入框中填写 *Milvus 的安装目录*（例如：*D:\Milvus*），最后单击右侧 ➕ 进行添加；
 
 * 点击 “Apply & restart” 重启 Docker Desktop。
-
-  <img src="../images/docker-milvus.png" width="600"/>
 
 * 以管理员身份打开 PowerShell，先切换至 Milvus 本地安装目录，再执行以下命令保存 “standalone.bat” 脚本：
 
