@@ -17,21 +17,30 @@ Runner支持所有Agent的单次输出执行和流式输出执行，包括ReActA
 from openjiuwen.core.common.constants.enums import ControllerType
 from openjiuwen.core.single_agent.legacy import WorkflowSchema
 from openjiuwen.core.application.workflow_agent import WorkflowAgentConfig, WorkflowAgent
-from openjiuwen.core.workflow import End, Start, Workflow, WorkflowCard
+from openjiuwen.core.workflow import End, Start, Workflow, WorkflowCard, generate_workflow_key
 from openjiuwen.core.workflow.workflow_config import WorkflowConfig
-from openjiuwen.core.runner.runner import resource_mgr
+from openjiuwen.core.runner.runner import Runner
+from openjiuwen.core.common import BaseCard
 
 
-def create_agent():
-    # 创建工作流 flow，将 flow 注册到资源管理器
-    flow = Workflow(workflow_config=WorkflowConfig(
-        card=WorkflowCard(id="workflow_id", name="简单工作流", version="1",
-                          description="this_is_a_demo")))
+def create_agent(runner):
+    # 创建工作流 flow
+    card = WorkflowCard(id="workflow_id", name="简单工作流", version="1",
+                        description="this_is_a_demo")
+    flow = Workflow(workflow_config=WorkflowConfig(card=card))
     flow.set_start_comp("start", Start(), inputs_schema={"query": "${query}"})
     flow.set_end_comp("end", End(), inputs_schema={"result": "${start.query}"})
     flow.add_connection("start", "end")
 
-    resource_mgr.workflow().add_workflow("workflow_id_1", flow)
+    # 将 flow 注册到资源管理器（使用 generate_workflow_key 生成正确的 key）
+    # 注意：注册时需要使用 id_version 格式的 key
+    register_card = WorkflowCard(
+        id=generate_workflow_key(card.id, card.version),
+        name=card.name,
+        version=card.version,
+        description=card.description
+    )
+    runner.resource_mgr.add_workflow(register_card, lambda: flow)
 
     # 创建Agent
     workflow_agent_config = WorkflowAgentConfig(id="agent_id", version="1", description="this_is_a_demo",
@@ -48,17 +57,17 @@ def create_agent():
     return agent
 
 
-agent = create_agent()
+# 使用全局 Runner 实例
+runner = Runner
+agent = create_agent(runner)
 ```
 
-然后，创建一个 `Runner` 实例并调用 `run_agent` 接口直接运行 WorkflowAgent：
+然后，调用 `run_agent` 接口直接运行 WorkflowAgent：
 
 ```python
 import asyncio
-from openjiuwen.core.runner.runner import Runner
 
-runner = Runner()
-print(asyncio.run(runner.run_agent(agent=agent, inputs={"conversion_id": "id1", "query": "哈哈"})))
+print(asyncio.run(runner.run_agent(agent=agent, inputs={"conversation_id": "id1", "query": "哈哈"})))
 ```
 
 执行结果：
@@ -100,7 +109,7 @@ workflow = build_workflow("test_workflow", "test_workflow", "1")
 import asyncio
 from openjiuwen.core.runner.runner import Runner
 
-runner = Runner()
+runner = Runner
 result = asyncio.run(runner.run_workflow(workflow=workflow, inputs={"query": "query workflow"}))
 print(result)
 ```
@@ -112,6 +121,48 @@ result = {'output': {'result': 'query workflow'}}
 state = < WorkflowExecutionState.COMPLETED: 'COMPLETED' >
 ```
 
+## Tool执行
+
+在 0.1.4 版本中，`Runner` 不再直接提供 `run_tool` 之类的接口，Tool 更推荐作为 Agent/Workflow
+的一部分被调用。对于简单的本地工具，也可以直接调用工具本身。
+
+下面构建一个用于加法计算的 `LocalFunction` 工具为例，演示**直接调用工具本身**的方式。
+
+首先，创建一个 Tool：
+
+```python
+from openjiuwen.core.foundation.tool.function.function import LocalFunction
+from openjiuwen.core.foundation.tool.base import ToolCard
+
+# 创建本地工具
+add_plugin = LocalFunction(
+    card=ToolCard(
+        id="add_tool",
+        name="add",
+        description="加法",
+        input_params={
+            "type": "object",
+            "properties": {
+                "a": {"description": "加数", "type": "number"},
+                "b": {"description": "被加数", "type": "number"},
+            },
+            "required": ["a", "b"],
+        },
+    ),
+    func=lambda a, b: a + b
+)
+```
+
+然后，直接调用工具本身即可完成一次执行：
+
+```python
+import asyncio
+
+result = asyncio.run(add_plugin.invoke(inputs={"a": 1, "b": 2}))
+print(result)  # 3
+```
+
+在实际业务中，通常会把 Tool 注册到资源管理器中，由 Agent 或 Workflow 在推理/执行过程中间接调用；此处示例仅演示“工具本体”的最简使用方式。
 
 ## AgentGroup执行
 
@@ -132,7 +183,7 @@ from openjiuwen.core.workflow import (
 )
 from openjiuwen.core.workflow.workflow_config import WorkflowConfig
 from openjiuwen.core.foundation.llm import ModelConfig, BaseModelInfo
-from openjiuwen.core.multi_agent import BaseGroup, GroupCard
+from openjiuwen.core.multi_agent import BaseGroup, GroupCard, GroupConfig
 
 API_BASE = os.getenv("API_BASE", "your api base")
 API_KEY = os.getenv("API_KEY", "your api key")
@@ -301,22 +352,58 @@ invest_agent = _create_workflow_agent(
     workflow=invest_workflow
 )
 
-# 创建一个简单的AgentGroup实现
+# 创建自定义 AgentGroup 子类
+from typing import Any, AsyncIterator
+
+class FinancialServiceGroup(BaseGroup):
+    """金融服务智能体组 - 根据用户意图路由到对应的服务Agent"""
+
+    async def invoke(self, message: Any, session=None) -> Any:
+        """
+        简单路由逻辑：根据关键词选择对应的Agent执行
+        实际场景中可使用LLM进行意图识别
+        """
+        content = message.get("content", "") if isinstance(message, dict) else str(message)
+
+        # 简单的关键词路由
+        if "转账" in content:
+            agent = self.get_agent("transfer_agent")
+        elif "余额" in content or "查询" in content:
+            agent = self.get_agent("balance_agent")
+        elif "理财" in content or "投资" in content:
+            agent = self.get_agent("invest_agent")
+        else:
+            # 默认使用转账服务
+            agent = self.get_agent("transfer_agent")
+
+        if agent:
+            return await Runner.run_agent(agent, message)
+        return {"error": "No suitable agent found"}
+
+    async def stream(self, message: Any, session=None) -> AsyncIterator[Any]:
+        """流式执行 - 委托给invoke"""
+        result = await self.invoke(message, session)
+        yield result
+
 
 # 创建 GroupCard
 group_card = GroupCard(
     name="financial_group",
     description="金融服务智能体组",
+    topic="financial_services",
     version="1.0"
 )
 
-# 创建 BaseGroup 实例
-hierarchical_group = BaseGroup(card=group_card)
+# 创建 GroupConfig（可选）
+group_config = GroupConfig()
 
-# 添加所有 agent 到 group
-hierarchical_group.add_agent(transfer_agent, agent_id="transfer_agent")
-hierarchical_group.add_agent(balance_agent, agent_id="balance_agent")
-hierarchical_group.add_agent(invest_agent, agent_id="invest_agent")
+# 创建 FinancialServiceGroup 实例
+financial_group = FinancialServiceGroup(card=group_card, config=group_config)
+
+# 添加所有 agent 到 group（支持链式调用）
+financial_group.add_agent(transfer_agent, agent_id="transfer_agent") \
+               .add_agent(balance_agent, agent_id="balance_agent") \
+               .add_agent(invest_agent, agent_id="invest_agent")
 ```
 
 然后，启动 Runner，并执行 AgentGroup：
@@ -325,7 +412,7 @@ hierarchical_group.add_agent(invest_agent, agent_id="invest_agent")
 import asyncio
 from openjiuwen.core.runner.runner import Runner
 
-runner = Runner()
+runner = Runner
 asyncio.run(runner.start())
 
 # 准备输入数据
@@ -335,8 +422,8 @@ inputs = {
 }
 
 # 执行 AgentGroup
-result1 = asyncio.run(runner.run_agent_group(hierarchical_group, inputs))
-print(result1)
+result = asyncio.run(runner.run_agent_group(financial_group, inputs))
+print(result)
 
 asyncio.run(runner.stop())
 ```
