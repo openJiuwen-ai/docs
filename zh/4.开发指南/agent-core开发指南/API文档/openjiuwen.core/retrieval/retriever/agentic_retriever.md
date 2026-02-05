@@ -2,14 +2,14 @@
 
 ## class openjiuwen.core.retrieval.retriever.agentic_retriever.AgenticRetriever
 
-智能检索器，在图检索的基础上增加LLM查询重写和多轮融合能力，通过多轮检索和查询优化提升检索效果。
+Agentic 检索器，在图检索的基础上增加LLM查询重写和多轮融合能力，通过多轮检索和查询优化提升检索效果。
 
 
 ```python
 __init__(graph_retriever: GraphRetriever, llm_client: Any, llm_model_name: Optional[str] = None, max_iter: int = 2, agent_topk: int = 15)
 ```
 
-初始化智能检索器。
+初始化Agentic 检索器。
 
 **参数**：
 
@@ -52,7 +52,7 @@ retrieve(query: str, top_k: int = 5, score_threshold: Optional[float] = None, mo
 ...     graph_retriever = GraphRetriever(...)
 ...     # 创建LLM客户端
 ...     llm_client = BaseModelClient(...)
-...     # 创建智能检索器
+...     # 创建Agentic 检索器
 ...     retriever = AgenticRetriever(
 ...         graph_retriever=graph_retriever,
 ...         llm_client=llm_client,
