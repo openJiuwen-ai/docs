@@ -1,58 +1,70 @@
+# Connect to LLM
+
 Different models have their own strengths in reasoning ability, conversational fluency, and multi-turn interaction. Users can flexibly choose the most suitable model based on specific application scenarios—for example, selecting a model with stronger reasoning for complex logical tasks, or a model with more natural interaction for a smoother conversational experience.
-openJiuwen provides the following three model integration methods:
 
-- Vendor-series model integration: Fully supports SiliconFlow vendor models and models that follow the OpenAI interface. Users can flexibly choose models suited to their business scenarios based on model characteristics (e.g., reasoning ability, conversational fluency). A unified calling interface for large models is provided via `ModelFactory`.
-- OpenAI-format model integration: Provides a wrapped interface `OpenAIChatModel` so that users can initialize and use it in the same way as the `OpenAI` interface. The model service must be wrapped and implemented in standard `OpenAI` format.
-- Custom model integration: By implementing the extension interfaces provided by `ModelFactory`, users can seamlessly integrate their own or third-party models to enhance system flexibility and adaptability. Custom model integration will be introduced in the Advanced Usage section.
+openJiuwen provides a unified **model client + configuration** system through `openjiuwen.core.foundation.llm`. The recommended integration approach is:
 
-# Using the ModelFactory to Call Models
+- Use `ModelClientConfig` to describe "how to connect to the model service" (client_provider/api_base/api_key/SSL, etc.);
+- Use `ModelRequestConfig` to describe "which model to use for this call + call parameters" (model/temperature/top_p, etc.);
+- Use the unified entry class `Model`, and call via `invoke/stream`. The framework will automatically select the corresponding model client implementation based on `client_provider`.
 
-## Initialize the Model
+## Using Model to Call Models
 
-Use the ModelFactory().get_model() method to obtain a model instance. Users only need to specify the following required parameters in the configuration:
+### Initialize the Model
 
-- Model provider identifier `model_provider` (currently supports two providers: siliconflow and OpenAI);
-- Model request URL `api_base`;
-- Model authentication token `api_key`.
-
-Additionally, you can optionally set the maximum number of retries on failure `max_retries` and the per-call timeout `timeout`.
-
-Example of obtaining a model instance using siliconflow:
+Taking SiliconFlow vendor's model integration as an example:
 
 ```python
-from openjiuwen.core.utils.llm.model_utils.model_factory import ModelFactory
+from openjiuwen.core.foundation.llm import (
+    Model,
+    ModelClientConfig,
+    ModelRequestConfig,
+)
 
-model = ModelFactory().get_model(
-    model_provider="siliconflow",
-    api_base="your path to the model service",
-    api_key="sk-****************************",
-    max_retries=3,
-    timeout=60
+# 1. Configure client connection information (client_provider/api_base/api_key, etc.)
+model_client_config = ModelClientConfig(
+    client_provider="SiliconFlow",              # Model provider identifier, framework automatically selects client implementation based on this value
+    api_base="https://api.siliconflow.cn/v1",   # Model service URL
+    api_key="sk-****************************",  # Authentication Token
+    verify_ssl=False                            # SSL verification disabled in example, recommended to enable in production
+)
+
+# 2. Configure the model and parameters for this request
+model_request_config = ModelRequestConfig(
+    model="Qwen/Qwen3-32B",     # Specific model name, determined by the list of models supported by the server
+    temperature=0.7,
+    top_p=0.9,
+)
+
+# 3. Create unified model entry
+model = Model(
+    model_client_config=model_client_config,
+    model_config=model_request_config,
 )
 ```
 
 > **Note**
-> Users need to register accounts on SiliconFlow or OpenAI websites to obtain an available model `api_key` and the model invocation URL `api_base` from the model marketplace.
+> - Users need to register accounts on SiliconFlow or OpenAI vendor websites to obtain available model `api_key` and model invocation URL address `api_base`.
+> - `client_provider` currently has built-in support for `OpenAI` and `SiliconFlow`. The framework will automatically select the corresponding model client implementation based on this configuration.
 
-## Prepare Model Input
+### Prepare Model Input
 
-The large model supports the following three main input parameters. If only `messages` is configured, the model will generate a reply directly based on the context; if both `messages` and `tools` are configured, the model will decide whether to call a tool by combining context and tool definitions to fulfill the user’s request.
+Large models support the following main input parameters. When only `messages` is configured, the model will generate a reply directly based on context; when both `messages` and `tools` are configured, the model will combine context information with tool definitions to determine whether to call tools to fulfill user requests.
 
-- ​**model_name**​: Identifies the model name for the current request to specify the exact model to call. This is a required parameter.
-- ​**messages**​: A list of messages arranged in conversational order. Each message includes the sender’s role (`role`) and the message content (`content`). This is a required parameter. Inputs support two common formats (List[BaseMessage], List[Dict]):
+- **messages**: A list of messages arranged in conversational order. Each message object contains the sender's role (`role`) and message content (`content`). This is a **required** parameter. Input supports two common formats (`List[BaseMessage]`, `List[Dict]`):
 
-1. When the message type is List[BaseMessage], sample code:
+**Method 1: Using BaseMessage type**
 
 ```python
-from openjiuwen.core.utils.llm.messages import SystemMessage, HumanMessage
+from openjiuwen.core.foundation.llm import SystemMessage, UserMessage
 
 messages = [
-    SystemMessage(content='You are an AI assistant'),
-    HumanMessage(content='Hello')
+    SystemMessage(content="You are an AI assistant"),
+    UserMessage(content="Hello")
 ]
 ```
 
-2. When the message type is List[Dict], sample code:
+**Method 2: Using dictionary type**
 
 ```python
 messages = [
@@ -61,84 +73,105 @@ messages = [
 ]
 ```
 
-- ​**tools**​: A list of tools available to the model, each defined using JSON Schema to describe required parameters, parameter types, and whether they are mandatory. This is optional and only used when a tool call is needed. Example:
+- **tools**: A list of tools available to the large model. Each tool is defined using JSON Schema format, detailing required parameters, parameter types, and whether they are mandatory. This is an **optional** parameter, only used when tool calls need to be executed. Example code:
 
 ```python
 # Tool definition
 tools = [{
-     "type": "function",
-     "function": {
-         "name": "get_weather",
-         "description": "Get current weather for a location",
-         "parameters": {
-             "type": "object",
-             "properties": {
-                 "location": {
-                     "type": "string",
-                     "description": "City and country e.g. Paris, France"
-                 },
-                 "units": {
-                     "type": "string",
-                     "enum": ["metric", "imperial"],
-                     "description": "Temperature unit"
-                 }
-             },
-             "required": ["location"]
-         }
-     }
- }]
+    "type": "function",
+    "function": {
+        "name": "get_weather",
+        "description": "Get current weather for a location",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "location": {
+                    "type": "string",
+                    "description": "City and country e.g. Paris, France"
+                },
+                "units": {
+                    "type": "string",
+                    "enum": ["metric", "imperial"],
+                    "description": "Temperature unit"
+                }
+            },
+            "required": ["location"]
+        }
+    }
+}]
 ```
 
-messages is a multi-turn dialog context array built for LLM APIs, following the fixed role order `system → user → assistant → tool`. It carries system instructions, user input, model replies, and tool results, providing a complete, structured semantic context for each inference:
+### Call the Model
 
-- `system`: Represents system or developer instructions used to set the model’s behavior, background knowledge, or global rules. The corresponding BaseMessage is `SystemMessage`.
-- `user`: Represents the end user’s input, i.e., questions, commands, or conversation content. The corresponding BaseMessage is `HumanMessage`.
-- `assistant`: Represents the LLM’s response generated from the user input and context. The corresponding BaseMessage is `AIMessage`.
-- `tool`: Represents the results returned by external tools or functions, typically used in Function Calling scenarios. The corresponding BaseMessage is `ToolMessage`.
+Large model invocation supports two methods: non-streaming `invoke` and streaming `stream`, both are **async methods**:
 
-Additionally, you can optionally specify:
+| Method | Description | Use Cases |
+|--------|-------------|-----------|
+| `invoke` | Async non-streaming call, returns complete result at once | Scenarios requiring complete result at once, not sensitive to real-time requirements |
+| `stream` | Async streaming call, returns response content block by block | Scenarios requiring high-concurrency real-time pushing, async non-blocking output, or displaying while generating |
 
-- temperature: A generative model hyperparameter that controls randomness and creativity in text generation. It adjusts the probability distribution in the model’s softmax output layer. Lower values yield more deterministic output; higher values increase randomness and creativity.
-- top_p: A sampling strategy parameter used during decoding to dynamically truncate the probability distribution, thereby controlling randomness and diversity. Smaller values produce more focused results; larger values increase randomness and diversity.
+#### async invoke method
 
-## Call the Model
+Asynchronously calls the large model, obtaining complete response result at once.
 
-Model invocation supports four types: synchronous non-streaming `invoke`, asynchronous non-streaming `ainvoke`, synchronous streaming `stream`, and asynchronous streaming `astream`:
+**Parameters**:
 
-- Synchronous non-streaming `invoke`: Suitable for scenarios not sensitive to latency, where you need the complete result at once and the invocation chain is already synchronous and blocking.
-- Asynchronous non-streaming `ainvoke`: Suitable when you need the complete result before further processing and real-time requirements are low.
-- Synchronous streaming `stream`: Suitable for real-time, continuous one-way data pushing, where the entire processing pipeline must run in the same thread in order, with low latency.
-- Asynchronous streaming `astream`: Suitable for high-concurrency real-time pushing with non-blocking output, or for generating and displaying results incrementally.
+- **messages** (Union[str, List[BaseMessage], List[dict]]): Input messages for calling the large model. Required.
+- **tools** (Union[List[ToolInfo], List[dict], None], optional): Specify the list of tools that can be called by the model. Default value: None.
+- **temperature** (float, optional): Controls randomness of model output. Value range: [0, 1]. Overrides configuration in ModelRequestConfig. Default value: None (uses configured value).
+- **top_p** (float, optional): Controls diversity of model output. Value range: [0, 1]. Overrides configuration in ModelRequestConfig. Default value: None (uses configured value).
+- **model** (str, optional): Specify model name. Overrides configuration in ModelRequestConfig. Default value: None (uses configured value).
+- **max_tokens** (int, optional): Maximum number of tokens to generate. Default value: None.
+- **stop** (str, optional): Stop sequence. Default value: None.
+- **output_parser** (BaseOutputParser, optional): Output parser for parsing model response content. Default value: None.
+- **timeout** (float, optional): Timeout for this request. Overrides configuration in ModelClientConfig. Default value: None (uses configured value).
 
-Using synchronous non-streaming invoke and asynchronous streaming astream as examples, we illustrate how to call the model and show the results. For other methods, see the API docs `openjiuwen.core.utils.llm`.
+**Returns**:
 
-### Synchronous Non-Streaming `invoke`
+**AssistantMessage**, the message object returned by the large model, containing the following main fields:
+- `role`: Role, fixed as `assistant`.
+- `content`: Response content text.
+- `tool_calls`: Tool call list (if any).
+- `usage_metadata`: Usage statistics.
+- `finish_reason`: Completion reason, `stop` indicates normal end, `tool_calls` indicates tool call needed.
 
-Use `model.invoke` to obtain the model’s response in a single batch. Define a system prompt and user input to ask a weather-related question; a tool call is expected. Example:
+**Example**:
 
 ```python
-import os
-from openjiuwen.core.utils.llm.model_utils.model_factory import ModelFactory
-from openjiuwen.core.utils.llm.messages import SystemMessage, HumanMessage
+import asyncio
+from openjiuwen.core.foundation.llm import (
+    Model,
+    ModelClientConfig,
+    ModelRequestConfig,
+    SystemMessage,
+    UserMessage,
+)
 
-os.environ["LLM_SSL_VERIFY"] = "false"
 
-def invoke():
-    # Get the ModelFactory instance
-    factory = ModelFactory()
-
-    # Get the model
-    model = factory.get_model(
-        model_provider="siliconflow",
-        api_base="your path to the model service",
-        api_key="sk-****************************"
+async def invoke_example():
+    # Configure model client
+    model_client_config = ModelClientConfig(
+        client_provider="SiliconFlow",
+        api_base="https://api.siliconflow.cn/v1",
+        api_key="sk-****************************",
+        verify_ssl=False,
+    )
+    model_request_config = ModelRequestConfig(
+        model="Qwen/Qwen3-32B",
+        temperature=0.7,
+        top_p=0.95,
+    )
+    model = Model(
+        model_client_config=model_client_config,
+        model_config=model_request_config,
     )
 
-    # Prepare input: define a system prompt and user input, ask a weather-related question; expect a tool call
+    # Prepare model input data
     messages = [
-        SystemMessage(content="You are an AI assistant").model_dump(exclude_none=True),
-        HumanMessage(content="Hangzhou weather").model_dump(exclude_none=True)
+        SystemMessage(content="You are an AI assistant"),
+        UserMessage(content="Hangzhou weather")
     ]
+
     # Weather tool schema definition
     tools = [{
         "type": "function",
@@ -164,141 +197,89 @@ def invoke():
     }]
 
     # Call the model
-    response = model.invoke(model_name="your_model", messages=messages, tools=tools, temperature=0.7, top_p=0.95)
+    response = await model.invoke(messages=messages, tools=tools)
     print(response)
 
 
 if __name__ == "__main__":
-    invoke()
+    asyncio.run(invoke_example())
 ```
 
-Output:
+**Output result**:
 
-```python
-role='assistant' content='' name=None tool_calls=[ToolCall(id='019afe192ceee268d980f8acd98ccbc1', type='function', name='get_weather', arguments='{"location": "Hangzhou, China"}')] usage_metadata=UsageMetadata(code=0, errmsg='', prompt='', task_id='', model_name='Qwen/Qwen3-32B', finish_reason='tool_calls', total_latency=224.0, model_stats={}, first_token_time='', request_start_time='') raw_content=None reason_content=None
+```
+AssistantMessage(role='assistant', content='', tool_calls=[ToolCall(id='019afe192ceee268d980f8acd98ccbc1', type='function', name='get_weather', arguments='{"location": "Hangzhou, China"}')], usage_metadata=UsageMetadata(model_name='Qwen/Qwen3-32B', input_tokens=156, output_tokens=23, total_tokens=179), finish_reason='tool_calls')
 ```
 
-### Asynchronous Streaming `astream`
+#### async stream method
 
-Use `model.astream` for streaming output of the model’s responses via asynchronous execution without blocking the current thread. Example:
+Asynchronously streams calls to the large model, returning response content block by block.
+
+**Parameters**:
+
+Parameters are the same as the `invoke` method.
+
+**Returns**:
+
+**AsyncIterator[AssistantMessageChunk]**, async iterator, each iteration returns a response chunk, containing the following main fields:
+- `content`: Content increment of current chunk.
+- `reasoning_content`: Reasoning content (if model supports).
+- `tool_calls`: Tool call increment (if any).
+- `usage_metadata`: Usage statistics (usually only included in the last chunk).
+- `finish_reason`: Completion reason.
+
+**Example**:
 
 ```python
-import os
 import asyncio
-from openjiuwen.core.utils.llm.model_utils.model_factory import ModelFactory
-from openjiuwen.core.utils.llm.messages import SystemMessage, HumanMessage
-
-os.environ["LLM_SSL_VERIFY"] = "false"
-
-async def astream():
-    try:
-        # Get the ModelFactory instance
-        factory = ModelFactory()
-
-        # Get the model
-        model = factory.get_model(
-            model_provider="siliconflow",
-            api_base="your path to the model service",
-            api_key="sk-****************************"
-        )
-
-        # Prepare input: define a system prompt and user input; ask a question unrelated to weather; expect no tool call
-        messages = [
-            SystemMessage(content="You are an AI assistant").model_dump(exclude_none=True),
-            HumanMessage(content="Hello").model_dump(exclude_none=True)
-        ]
-
-        # Weather tool schema definition
-        tools = [{
-            "type": "function",
-            "function": {
-                "name": "get_weather",
-                "description": "Get current weather for a location",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "location": {
-                            "type": "string",
-                            "description": "City and country e.g. Paris, France"
-                        },
-                        "units": {
-                            "type": "string",
-                            "enum": ["metric", "imperial"],
-                            "description": "Temperature unit"
-                        }
-                    },
-                    "required": ["location"]
-                }
-            }
-        }]
-
-        # Iterate over the async iterator using async for
-        async for chunk in model.astream(model_name="your_model", messages=messages, tools=tools, temperature=0.7, top_p=0.95):
-            print(chunk)
-
-    except Exception as e:
-        print(f"Error in async test: {str(e)}")
-        raise
-    finally:
-        if model:
-            await model.close()
+from openjiuwen.core.foundation.llm import (
+    Model,
+    ModelClientConfig,
+    ModelRequestConfig,
+    SystemMessage,
+    UserMessage,
+)
 
 
-# Define an async main function
-async def main():
-    # Call the async function and await completion
-    await astream()
+async def stream_example():
+    # Configure model client
+    model_client_config = ModelClientConfig(
+        client_provider="SiliconFlow",
+        api_base="https://api.siliconflow.cn/v1",
+        api_key="sk-****************************",
+        verify_ssl=False,
+    )
+    model_request_config = ModelRequestConfig(
+        model="Qwen/Qwen3-32B",
+        temperature=0.7,
+        top_p=0.95,
+    )
+    model = Model(
+        model_client_config=model_client_config,
+        model_config=model_request_config,
+    )
+
+    # Prepare model input data
+    messages = [ 
+        SystemMessage(content="You are an AI assistant"),
+        UserMessage(content="Hello")
+    ]
+
+    # Use async for to iterate over async iterator
+    async for chunk in model.stream(messages=messages):
+        print(chunk.content, end="", flush=True)
+    print()  # Newline
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio.run(stream_example())
 ```
 
-Output:
+**Output result**:
 
-```python
-role='assistant' content='Hello' name=None tool_calls=[] usage_metadata=UsageMetadata(code=0, errmsg='', prompt='', task_id='', model_name='', finish_reason='', total_latency=0.0, model_stats={}, first_token_time='', request_start_time='') raw_content=None reason_content=''
-role='assistant' content='!' name=None tool_calls=[] usage_metadata=UsageMetadata(code=0, errmsg='', prompt='', task_id='', model_name='', finish_reason='', total_latency=0.0, model_stats={}, first_token_time='', request_start_time='') raw_content=None reason_content=''
-role='assistant' content='Is there anything' name=None tool_calls=[] usage_metadata=UsageMetadata(code=0, errmsg='', prompt='', task_id='', model_name='', finish_reason='', total_latency=0.0, model_stats={}, first_token_time='', request_start_time='') raw_content=None reason_content=''
-role='assistant' content='I can' name=None tool_calls=[] usage_metadata=UsageMetadata(code=0, errmsg='', prompt='', task_id='', model_name='', finish_reason='', total_latency=0.0, model_stats={}, first_token_time='', request_start_time='') raw_content=None reason_content=''
-role='assistant' content='help' name=None tool_calls=[] usage_metadata=UsageMetadata(code=0, errmsg='', prompt='', task_id='', model_name='', finish_reason='', total_latency=0.0, model_stats={}, first_token_time='', request_start_time='') raw_content=None reason_content=''
-role='assistant' content='you' name=None tool_calls=[] usage_metadata=UsageMetadata(code=0, errmsg='', prompt='', task_id='', model_name='', finish_reason='', total_latency=0.0, model_stats={}, first_token_time='', request_start_time='') raw_content=None reason_content=''
-role='assistant' content='with' name=None tool_calls=[] usage_metadata=UsageMetadata(code=0, errmsg='', prompt='', task_id='', model_name='', finish_reason='', total_latency=0.0, model_stats={}, first_token_time='', request_start_time='') raw_content=None reason_content=''
-role='assistant' content='?' name=None tool_calls=[] usage_metadata=UsageMetadata(code=0, errmsg='', prompt='', task_id='', model_name='', finish_reason='', total_latency=0.0, model_stats={}, first_token_time='', request_start_time='') raw_content=None reason_content=''
-role='assistant' content='' name=None tool_calls=[] usage_metadata=UsageMetadata(code=0, errmsg='', prompt='', task_id='', model_name='', finish_reason='stop', total_latency=0.0, model_stats={}, first_token_time='', request_start_time='') raw_content=None reason_content=''
 ```
-
-# Integrate Models with OpenAIChatModel
-
-## Initialize the Model
-
-When integrating a model using OpenAIChatModel, configure the following parameters:
-- Required parameters: Configure the two parameters below to successfully create a model instance.
-  - **`api_key`**: Authentication token for identity verification.
-  - **`api_base`**: URL endpoint for model requests.
-
-- Optional parameters: Configure as needed during initialization.
-  - **`max_retries`**: Maximum number of retries upon failure to improve robustness.
-  - **`timeout`**: Timeout for a single model request to avoid long waits.
-
-```python
-from openjiuwen.core.utils.llm.model_utils.default_model import OpenAIChatModel
-
-chat_model = OpenAIChatModel(
-    api_key="your_api_key_here",  # Replace with your actual API key
-    api_base="**********",  # API endpoint
-    max_retries=3,
-    timeout=60
-)
+Hello
+! What can I
+help you with
+?
 ```
-
-> **Note**
-> Users need to register with a model service provider compatible with the OpenAI format to obtain the api_key and the model invocation URL api_base.
-
-## Prepare Model Input
-
-For preparing model inputs, see this chapter’s section [Using the ModelFactory to Call Models - Prepare Model Input](#prepare-model-input).
-
-## Call the Model
-
-For calling the model, see this chapter’s section [Using the ModelFactory to Call Models - Call the Model](#call-the-model). The configured `model_name` should be a model name supported by the `api_base` service address.

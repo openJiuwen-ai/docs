@@ -40,7 +40,7 @@ class openjiuwen.core.workflow.components.condition.number.NumberConditionInSess
 ```
 
 内部实现类 `NumberConditionInSession` 与 `NumberCondition` 类似，适用于循环次数在配置或会话中已确定的场景。若 `limit` 为 `None`，会在 `invoke` 时抛出 `NUMBER_CONDITION_ERROR`。循环次数还受会话环境变量中的最大循环次数限制（如 `LOOP_NUMBER_MAX_LIMIT_KEY`），超过时由 [LoopComponent]等上层抛出异常。
-n
+
 **参数**：
 
 - **limit**（int）：循环次数上限，为整数，不依赖输入解析。

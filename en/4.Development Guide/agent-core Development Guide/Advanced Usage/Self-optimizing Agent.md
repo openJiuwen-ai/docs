@@ -21,13 +21,11 @@ Suppose the task is to extract full names of people from a piece of text. First,
 
 ```python
 import os
-from openjiuwen.agent.chat_agent import create_chat_agent_config, create_chat_agent
-from openjiuwen.agent.config.base import LLMCallConfig
-from openjiuwen.core.component.common.configs.model_config import ModelConfig
-from openjiuwen.core.utils.llm.base import BaseModelInfo
+from openjiuwen.dev_tools.tune import create_chat_agent_config, create_chat_agent
+from openjiuwen.core.single_agent.legacy import LLMCallConfig
+from openjiuwen.core.foundation.llm import ModelRequestConfig, ModelClientConfig
 
 # LLM configuration
-os.environ['LLM_SSL_VERIFY'] = 'false'
 API_BASE = os.getenv("API_BASE", "your api base")
 API_KEY = os.getenv("API_KEY", "your api key")
 MODEL_NAME = os.getenv("MODEL_NAME", "")
@@ -40,26 +38,25 @@ Output format should be a list: [Name1, Name2, ...]. Do not output anything else
 """
 
 # Agent model configuration
-model_config = ModelConfig(
-    model_provider=MODEL_PROVIDER,
-    model_info=BaseModelInfo(
-        api_base=API_BASE,
-        api_key=API_KEY,
-        model=MODEL_NAME
-    )
+model_config = ModelRequestConfig(model=MODEL_NAME)
+model_client_config = ModelClientConfig(
+    client_provider=MODEL_PROVIDER,
+    api_base=API_BASE,
+    api_key=API_KEY,
 )
 
 # ChatAgent configuration
 config = create_chat_agent_config(
     agent_id='name_extractor',
     agent_version='1.0.0',
-    description = "",
+    description="",
     model=LLMCallConfig(
         model=model_config,
+        model_client=model_client_config,
         system_prompt=[{"role": "system", "content": INFORMATION_EXTRACTION_TEMPLATE}],
     )
 )
-agent = create_chat_agent(config)
+agent = create_chat_agent(config, None)
 ```
 
 The Agent’s input and output can be defined according to the generic ChatAgent types:
@@ -73,7 +70,7 @@ First, you need to prepare the Cases used for tuning. The concept is similar to 
 Below are sample cases for the information extraction scenario.
 
 ```python
-from openjiuwen.agent_builder.tune.base import Case
+from openjiuwen.dev_tools.tune import Case
 
 INFORMATION_EXTRACTION_CASES=[
     Case(
@@ -104,26 +101,23 @@ Once the dataset and Agent are ready, you can first evaluate the current perform
 ```python
 import asyncio
 
-from openjiuwen.core.utils.llm.model_utils.model_factory import ModelFactory
-from openjiuwen.core.component.common.configs.model_config import ModelConfig
-from openjiuwen.agent_builder.tune.evaluator.evaluator import DefaultEvaluator
-from openjiuwen.agent.chat_agent import create_chat_agent_config, create_chat_agent
-from openjiuwen.agent.config.base import LLMCallConfig
-from openjiuwen.core.utils.llm.base import BaseModelInfo
+from openjiuwen.core.foundation.llm import ModelRequestConfig, ModelClientConfig
+from openjiuwen.dev_tools.tune import DefaultEvaluator
+from openjiuwen.dev_tools.tune import create_chat_agent_config, create_chat_agent
+from openjiuwen.core.single_agent.legacy import LLMCallConfig
 
-# Model configuration for the evaluator
-model_config = ModelConfig(
-    model_provider=MODEL_PROVIDER,
-    model_info=BaseModelInfo(
-        api_base=API_BASE,
-        api_key=API_KEY,
-        model=MODEL_NAME
-    )
+# Create model configuration for the evaluator
+model_config = ModelRequestConfig(model=MODEL_NAME)
+model_client_config = ModelClientConfig(
+    client_provider=MODEL_PROVIDER,
+    api_base=API_BASE,
+    api_key=API_KEY,
 )
 
 # Create the evaluator
 evaluator = DefaultEvaluator(
     model_config,
+    model_client_config,
     metric="The two answers must match, including counts and names. Note: quotation mark formatting can be ignored."
 )
 # Run the Agent to get results
@@ -169,31 +163,29 @@ Here we use the joint optimizer to optimize the Agent. Creating and running the 
    - Call the update interface to update the Agent's prompt accordingly.
 
 ```python
-from openjiuwen.agent_builder.tune.optimizer.joint_optimizer import JointOptimizer
+from openjiuwen.dev_tools.tune.optimizer.joint_optimizer import JointOptimizer
 
-# Model configuration used by the optimizer
-model_config = ModelConfig(
-    model_provider=MODEL_PROVIDER,
-    model_info=BaseModelInfo(
-        api_base=API_BASE,
-        api_key=API_KEY,
-        model=MODEL_NAME
-    )
+# Create model configuration used by the optimizer
+model_config = ModelRequestConfig(model=MODEL_NAME)
+model_client_config = ModelClientConfig(
+    client_provider=MODEL_PROVIDER,
+    api_base=API_BASE,
+    api_key=API_KEY,
 )
 # Create the optimizer, bind Agent parameters, and optimize the Agent
-with JointOptimizer(
+optimizer = JointOptimizer(
     model_config,
+    model_client_config,
     parameters=agent.get_llm_calls(),
     num_examples=1
-) as optimizer:
-    # Execute and evaluate the Agent within the with block;
-    # the optimizer collects necessary information during execution
-    predicts = asyncio.run(forward(agent, INFORMATION_EXTRACTION_CASES))
-    results = evaluator.batch_evaluate(INFORMATION_EXTRACTION_CASES, predicts)
-    # Analyze the Agent optimization based on evaluated data
-    optimizer.backward(results)
-    # Update the optimized prompt in the Agent
-    optimizer.update()
+)
+# Execute and evaluate the Agent; the optimizer collects necessary information during execution
+predicts = asyncio.run(forward(agent, INFORMATION_EXTRACTION_CASES))
+results = evaluator.batch_evaluate(INFORMATION_EXTRACTION_CASES, predicts)
+# Analyze the Agent optimization based on evaluated data
+optimizer.backward(results)
+# Update the optimized prompt in the Agent
+optimizer.update()
 ```
 
 From the logs, you can see the prompt has been modified:
@@ -250,7 +242,7 @@ As with the self-optimization workflow above, you first need to build the Agent 
 Based on that, to unify data access, load the data into the CaseLoader.
 
 ```python
-from openjiuwen.agent_builder.tune.dataset.case_loader import CaseLoader
+from openjiuwen.dev_tools.tune import CaseLoader
 
 # Add the dataset to the loader
 case_loader = CaseLoader(cases=INFORMATION_EXTRACTION_CASES)
@@ -267,18 +259,20 @@ Steps to create the Trainer:
 3. Create the Trainer, binding the optimizer and evaluator, and optionally configure the level of parallelism and early stopping parameters.
 
 ```python
-from openjiuwen.agent_builder.tune.evaluator.evaluator import DefaultEvaluator
-from openjiuwen.agent_builder.tune.optimizer.joint_optimizer import JointOptimizer
-from openjiuwen.agent_builder.tune.trainer.trainer import Trainer
+from openjiuwen.dev_tools.tune.evaluator.evaluator import DefaultEvaluator
+from openjiuwen.dev_tools.tune.optimizer.joint_optimizer import JointOptimizer
+from openjiuwen.dev_tools.tune.trainer.trainer import Trainer
 
 # Create the optimizer
 optimizer = JointOptimizer(
     model_config,
+    model_client_config,
     num_examples=1
 )
 # Create the evaluator
 evaluator = DefaultEvaluator(
     model_config,
+    model_client_config,
     metric="The two answers must match, including counts and names. Note: quotation mark formatting can be ignored."
 )
 # Create the Trainer
@@ -337,10 +331,10 @@ Batch evaluation
 
 ```python
 case_loader = CaseLoader(cases=INFORMATION_EXTRACTION_CASES)
-avg_score, predicts = trainer.evaluate(agent, case_loader)
+avg_score, evaluated_cases = trainer.evaluate(agent, case_loader)
 
 # Print evaluation details
-for eval_result in predicts:
+for eval_result in evaluated_cases:
     print(f"score: {eval_result.score}, reason: {eval_result.reason}, "
           f"answer: {eval_result.answer}, label: {eval_result.case.label}")
 ```

@@ -20,7 +20,6 @@ add_workflow_comp(comp_id: str, workflow_comp: ComponentComposable, *,  wait_for
 - **stream_inputs_schema**(dict | Transformer, 可选)：组件流式输入参数的结构 schema。用于定义流式输入数据的格式规范。默认值：`None`。
 - **outputs_schema**(dict | Transformer, 可选)：组件常规输出结果的结构 schema。用于定义输出数据的格式规范，便于后续组件解析；未配置时输出格式由组件自身决定。默认值：`None`。
 - **wait_for_all**(bool, 可选)：是否等待所有前置依赖组件执行完成后再执行此组件。`True`表示需要等待所有前置依赖组件执行完成，`False`表示不需要。默认值：`None`，表示由系统根据组件能力自动决定（流式组件默认为`True`，其他组件默认为`False`）。
-hema**(dict, 可选)：组件常规输出结果的结构 schema。用于定义输出数据的格式规范，便于后续组件解析；未配置时输出格式由组件自身决定。默认值：`None`。
 - **stream_outputs_schema**(dict | Transformer, 可选)：组件流式输出结果的结构 schema。用于定义流式输出数据的格式规范。默认值：`None`。
 - **kwargs**：预留参数，配置不生效。
 

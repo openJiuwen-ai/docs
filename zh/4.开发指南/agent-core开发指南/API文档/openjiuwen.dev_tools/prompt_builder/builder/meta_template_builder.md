@@ -125,7 +125,7 @@ async build(prompt: str | PromptTemplate, tools: Optional[List[ToolInfo]] = None
 >>>
 >>> # 3. 执行提示词生成
 >>> async def main():
->>>     response = await builder.build(prompt=pront, language="en-US", template_type="general")
+>>>     response = await builder.build(prompt="你是一个旅行助手", template_type="general")
 >>>     print(response)
 >>> asyncio.run(main())
 ## 人设

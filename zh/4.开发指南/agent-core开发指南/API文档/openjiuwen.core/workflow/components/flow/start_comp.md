@@ -19,7 +19,6 @@ class Start()
 >>> async def demo_start_component():
 ...     # 1. 创建工作流实例
 ...     workflow = Workflow()
-.
 ...     
 ...     # 3. 创建并设置开始组件
 ...     start_comp = Start()

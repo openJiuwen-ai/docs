@@ -173,10 +173,8 @@ class openjiuwen.core.foundation.store.in_memory_kv_store.InMemoryKVStore(BaseKV
 
 对应源码：`openjiuwen.core.foundation.store.in_memory_kv_store.InMemoryKVStore`。
 
-### __init__
-
 ```python
-def __init__(self)
+InMemoryKVStore()
 ```
 
 无参构造；内部使用字典与 `asyncio.Lock` 保证并发安全。
@@ -199,10 +197,8 @@ class openjiuwen.core.foundation.store.db_based_kv_store.DbBasedKVStore(BaseKVSt
 
 对应源码：`openjiuwen.core.foundation.store.db_based_kv_store.DbBasedKVStore`。
 
-### __init__
-
 ```python
-def __init__(self, engine: AsyncEngine)
+DbBasedKVStore(engine: AsyncEngine)
 ```
 
 **参数**：
@@ -227,10 +223,8 @@ class openjiuwen.core.foundation.store.default_db_store.DefaultDbStore(BaseDbSto
 
 对应源码：`openjiuwen.core.foundation.store.default_db_store.DefaultDbStore`。
 
-### __init__
-
 ```python
-def __init__(self, async_conn: AsyncEngine)
+DefaultDbStore(async_conn: AsyncEngine)
 ```
 
 **参数**：

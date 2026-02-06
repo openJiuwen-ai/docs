@@ -1,14 +1,14 @@
 # memory
 
-`openjiuwen.core.memory` is the memory engine of the openJiuwen framework. It provides capabilities for memory storage, access, and processing during Agent execution.
+`openjiuwen.core.memory` is the **long-term memory management module** of the openJiuwen framework, providing capabilities for memory storage, access, and processing during Agent execution.
 
-**Classes**:
+**Classes**：
 
-| Class | Description                                             |
-|---------------------------------------|---------------------------------------------------------|
-| [SysMemConfig](./memory/config.md) | System-level configuration class for the memory engine. |
-| [MemoryConfig](./memory/config.md) | Group-level configuration class for the memory engine.  |
-| [MemoryEngine](./memory/engine.md) | Memory engine class.                                    |
-| [BaseKVStore](./memory/store.md) | Abstract base class for key-value store.                |
-| [BaseSemanticStore](./memory/store.md) | Abstract base class for semantic store.                 |
-| [BaseDbStore](./memory/store.md) | Abstract base class for SQL store.                      |
+| CLASS                                 | DESCRIPTION |
+|---------------------------------------|-------------|
+| [LongTermMemory](./memory/long_term_memory.md)  | Long-term memory engine class (singleton), responsible for message persistence, memory generation and retrieval. |
+| [MemoryEngineConfig](./memory/config.md) | Global engine configuration class (default model, encryption key, etc.). |
+| [MemoryScopeConfig](./memory/config.md) | Scope-level configuration class (configure independent model/vector parameters for different scopes). |
+| [AgentMemoryConfig](./memory/config.md) | Agent-level memory strategy configuration class (defines variable memories to extract and whether to enable long-term memory). |
+| [BaseKVStore](./memory/store.md)      | KV storage abstract base class. |
+| [BaseDbStore](./memory/store.md)      | Relational database storage abstract base class. |

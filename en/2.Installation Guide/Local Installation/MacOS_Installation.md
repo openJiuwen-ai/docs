@@ -1,4 +1,7 @@
-This guide describes how to install openJiuwen locally on macOS.
+This guide describes how to install openJiuwen locally on macOS. Local installation provides two methods:
+
+* **Method 1: Using One-Click Installation Script**: Automatically completes most installation and configuration work, simplifying the installation process and suitable for rapid deployment.
+* **Method 2: Manual Installation of All Dependencies**: Requires manual installation and configuration of all dependency services, suitable for developers who need flexible configuration adjustments.
 
 ## I. Environment Preparation
 
@@ -107,9 +110,10 @@ Before proceeding with the main installation, you must first install the require
   * Chroma requires no additional installation and boasts a simple configuration. All you need to do is obtain the vector model, making it ideal for quick experimentation and suitable for development and testing environments. For obtaining the vector model, refer to [How to Obtain the Vector Model](#macos-embed-model).
   * Milvus has more comprehensive functions and can meet the needs of complex scenarios, so it is more recommended for use in practical engineering and production environments.
 
-## III. openJiuwen Installation
+#### 2. Install openJiuwen
 
-### 1. Obtain the Source Code
+##### 2.1. Get the Source Code
+
 
 * Please make sure you have access to the <a href="https://gitcode.com/org/openJiuwen" target="_blank" rel="nofollow noopener noreferrer">openJiuwen repository</a>, If you do not have access, apply for it in advance. 
 
@@ -135,7 +139,7 @@ Before proceeding with the main installation, you must first install the require
   cd agent-studio
   ```
 
-### 2. Generate an AES Key (Optional) 
+##### 2.2. Generate an AES Key (Optional) 
 
 * If you do not need to encrypt sensitive fields, you can skip this step.
 * Run the following commands to generate the key: 
@@ -154,7 +158,7 @@ Before proceeding with the main installation, you must first install the require
 
 * **Note**: The AES key must remain consistent. Changing the key midway will cause previously encrypted data to become undecryptable.
 
-### 3. Start openJiuwen
+##### 2.3. Start openJiuwen
 
 * Open "Terminal" in the root directory of the source code.
 
@@ -178,7 +182,7 @@ Before proceeding with the main installation, you must first install the require
    # Vector index type configuration (example, optional values: chroma, milvus, default: chroma)
    INDEX_MANAGER_TYPE=chroma
   
-   # Memory data storage path (example, default value: memory_data, can be modified according to actual situation)
+   # Memory data storage path (example, default value: memory-data, can be modified according to actual situation)
    MEMORY_DATA_PATH=memory-data
 
    # Milvus configuration (Example) 
@@ -269,17 +273,17 @@ Before proceeding with the main installation, you must first install the require
 
 * After a successful startup, the following information will be displayed:
 
-  Local: *local access address*
+  Local: *local access URL*
 
-  Network: *network access address*
+  Network: *network access URL*
 
-### 4. Access the System
+##### 2.4. Access the System
 
-  * To access locally, Control + click the *local access address*, then click Open Link to view the openJiuwen interface in your local browser. Alternatively, copy the *local access address* into the browser's address bar and press Enter.
+  * To access locally, Control + click the *local access URL*, then click Open Link to view the openJiuwen interface in your local browser. Alternatively, copy the *local access URL* into the browser's address bar and press Enter.
   
-  * To access on another machine, copy the *network access address* into the browser's address bar and press Enter to view the openJiuwen interface.
+  * To access on another machine, copy the *network access URL* into the browser's address bar and press Enter to view the openJiuwen interface.
 
-## IV. Frequently Asked Questions (FAQ) 
+## III. Frequently Asked Questions (FAQ) 
 
 ### <a id="macos-memory"></a> Question 1: How to Enable the Memory and Knowledge Base Features
 
@@ -322,7 +326,7 @@ The memory and knowledge base function supports two vector databases: Chroma and
   docker pull swr.cn-north-4.myhuaweicloud.com/openjiuwen/milvusdb/milvus-arm64:v2.6.2
   ```
 
-* Edut the "standalone_embed.sh" file and replace the official Milvus image name inside the script (e.g. `milvusdb/milvus:v2.6.7`) with the corresponding image name (e.g. for ARM machines: `swr.cn-north-4.myhuaweicloud.com/openjiuwen/milvusdb/milvus-arm64:v2.6.2`). 
+* Edit the "standalone_embed.sh" file and replace the official Milvus image name inside the script (e.g. `milvusdb/milvus:v2.6.7`) with the corresponding image name (e.g. for ARM machines: `swr.cn-north-4.myhuaweicloud.com/openjiuwen/milvusdb/milvus-arm64:v2.6.2`). 
   
 * After making the change, run the following command in Terminal to start Milvus as a Docker container: 
 

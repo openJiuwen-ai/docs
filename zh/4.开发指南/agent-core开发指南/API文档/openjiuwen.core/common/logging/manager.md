@@ -92,7 +92,7 @@ classmethod register_logger(cls, log_type: str, logger: LoggerProtocol) -> None
 ### get_logger
 
 ```python
-classmethod get_logger(cls, log_type: str) - > LoggerProtocol
+classmethod get_logger(cls, log_type: str) -> LoggerProtocol
 ```
 
 获取日志器。

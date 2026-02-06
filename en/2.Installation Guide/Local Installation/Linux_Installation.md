@@ -1,4 +1,7 @@
-This guide explains how to install openJiuwen locally on a Linux system
+This guide explains how to install openJiuwen locally on a Linux system. Local installation provides two methods:
+
+* **Method 1: Using One-Click Installation Script**: Automatically completes most installation and configuration work, including frontend, backend, and all dependency services, simplifying the installation process and suitable for rapid deployment.
+* **Method 2: Manual Installation** (Not Recommended): Requires manual installation and configuration of all dependency services, suitable for developers who need flexible configuration adjustments.
 
 ## I. Environment Preparation
 
@@ -22,9 +25,77 @@ Please ensure the machine meets the following requirements:
   - MySQL 8.0 or newer
   - Milvus 2.6.2 or newer
 
-## II. Installing Dependencies (Ubuntu 22.04 as an example)
+## II. Installation Methods
 
-Before the formal installation, complete the dependency installation, then proceed with source retrieval and installation steps.
+### Method 1: Using One-Click Installation Script
+
+The one-click installation script can automatically complete steps such as basic tool checking, code pulling, environment configuration, and service startup, greatly simplifying the installation process.
+
+#### 1. Get the Installation Script
+
+* Download the <a href="https://openjiuwen-ci.obs.cn-north-4.myhuaweicloud.com/agentstudio/setup_scripts/setup_scripts_linux_v2.zip" target="_blank" rel="nofollow noopener noreferrer">installation script package</a>. The package contains the following files:
+  * `setup.sh`: Main installation script that orchestrates the entire installation process
+  * `check_curl.sh`: Checks and installs curl
+  * `check_git.sh`: Checks and installs Git
+  * `check_nodejs.sh`: Checks and installs Node.js (via NVM)
+  * `check_python.sh`: Checks and installs Python 3.11
+  * `fetch_codes.sh`: Clones the agent-studio code repository
+
+#### 2. Run the Installation Script
+
+* Enter the script directory:
+
+  ```bash
+  cd setup_scripts_linux
+  ```
+
+* Run the main installation script (the script will automatically check and fix execution permissions):
+
+  ```bash
+  # Default uses MySQL database
+  ./setup.sh
+
+  # Or specify using SQLite database
+  ./setup.sh --db_type=sqlite
+  ```
+
+  > **Note**: If you encounter permission issues, you can manually grant execution permissions: `chmod +x *.sh`, or use `bash setup.sh` to execute.
+
+* The script will automatically execute the following steps:
+  1. Check and install basic tools (curl, git, nodejs, python)
+  2. Pull the agent-studio code repository
+  3. Generate AES key
+  4. Configure .env file (set database type according to --db_type parameter)
+  5. Deploy backend service (create virtual environment, install dependencies, start service)
+  6. Deploy frontend service (install dependencies, start service)
+
+* After the script execution is complete, it will output the PID of the backend and frontend services, log file paths, and frontend page access URL. Access the output page address in your browser to enter the openJiuwen interface.
+
+ ![image](../images/一键安装运行完成截图linux.png)
+
+#### 3. Common Script Parameters
+
+  ```bash
+  # View backend and frontend service status and access URLes
+  ./setup.sh --status
+  
+  # Stop backend and frontend services
+  ./setup.sh --stop
+
+  # Restart backend and frontend services
+  ./setup.sh --restart
+
+  # View all supported parameters
+  ./setup.sh --help
+  ```
+
+### Method 2: Manual Installation (Not Recommended)
+
+> **Note**: This method requires manual installation of all dependency services, with complex steps, and is not recommended. It is recommended to use Method 1 or Method 2.
+
+Before proceeding with the formal installation, complete the dependency installation first, then proceed with source code retrieval and installation steps.
+
+#### 1. Install Dependencies (Ubuntu 22.04 as an example)
 
 ### 1. Install Git
 
@@ -120,7 +191,7 @@ Before the formal installation, complete the dependency installation, then proce
   * Milvus has more comprehensive functions and can meet the needs of complex scenarios, so it is more recommended for use in practical engineering and production environments.
 
 
-## III. Installing openJiuwen
+## III. Installing openJiuwen (Method 2 Continued)
 
 ### 1. Get the Source Code
 

@@ -1,474 +1,1007 @@
-# openjiuwen.core.memory.store
+# openjiuwen.core.foundation.store
 
-## class openjiuwen.core.memory.store.BaseKVStore
+`openjiuwen.core.foundation.store` is the unified **storage abstraction layer module** in openJiuwen, responsible for:
 
-Abstract base class for a key-value store, including the following interfaces.
+- Defining `BaseKVStore` key-value store abstract base class;
+- Defining `VectorStore` vector store abstract base class;
+- Defining `BaseDbStore` database store abstract base class;
+- Providing various storage implementations (such as Redis, Chroma, Milvus, etc.).
+
+
+## class openjiuwen.core.foundation.store.BaseKVStore
+
+```
+class openjiuwen.core.foundation.store.BaseKVStore
+```
+
+Abstract base class for key-value storage, defining the basic interface for key-value pair storage.
 
 ### abstractmethod async set
 
-```python
-set(key: str, value: str)
+```
+async def set(self, key: str, value: str) -> None
 ```
 
-The set function is used to set a key-value pair.
+Set a key-value pair.
 
 **Parameters**:
-- **key** (str): The key to set. Default: None.
-- **value** (str): The value to set. Default: None.
+
+* **key** (str): The key name to set.
+* **value** (str): The value to set.
+
+**Exceptions**:
+
+* **JiuWenBaseException**: Raised when storage operation fails.
+
+**Example**:
+
+```python
+>>> from openjiuwen.core.foundation.store import BaseKVStore
+>>> 
+>>> # Set key-value pair
+>>> await kv_store.set("user:123:name", "John")
+>>> await kv_store.set("user:123:age", "25")
+```
+
 
 ### abstractmethod async exclusive_set
 
-```python
-exclusive_set(key: str, value: str, expiry: int | None = None) -> bool
+```
+async def exclusive_set(self, key: str, value: str, expiry: int | None = None) -> bool
 ```
 
-Atomically set a key-value pair only if the key does not already exist.
+Atomically set a key-value pair, only if the key does not exist.
 
 **Parameters**:
-- **key** (str): The key to set. Default: None.
-- **value** (str): The value to set. Default: None.
-- **expiry** (int | None): Expiration time for the key-value pair; after expiry, the value can be overwritten; optional. Default: None.
+
+* **key** (str): The key name to set.
+* **value** (str): The value to set.
+* **expiry** (int | None, optional): Expiration time for the key-value pair (in seconds), after which the value can be overwritten. Default: `None`.
 
 **Returns**:
-- **bool**: True if the pair was set successfully; False if the key already exists and has not expired.
+
+* **bool**: Returns `True` if the key-value pair was set successfully, `False` if the key already exists and has not expired.
+
+**Exceptions**:
+
+* **JiuWenBaseException**: Raised when storage operation fails.
+
+**Example**:
+
+```python
+>>> from openjiuwen.core.foundation.store import BaseKVStore
+>>> 
+>>> # Atomically set key-value pair, only succeeds if key doesn't exist
+>>> success = await kv_store.exclusive_set("lock:resource:123", "locked", expiry=60)
+>>> if success:
+>>>     print("Lock acquired successfully")
+>>> else:
+>>>     print("Lock is already held by another process")
+```
+
 
 ### abstractmethod async get
 
-```python
-get(key: str) -> str | None
+```
+async def get(self, key: str) -> str | None
 ```
 
-Retrieve the value for the specified key from the database. Returns None if it does not exist.
+Get the value corresponding to the specified key from the database, returns `None` if not found.
 
 **Parameters**:
-- **key** (str): The key to retrieve. Default: None.
+
+* **key** (str): The key name to retrieve.
 
 **Returns**:
-- **str** | None: The value for the key, or None if the key does not exist.
+
+* **str | None**: Returns the value corresponding to the key, or `None` if the key does not exist.
+
+**Exceptions**:
+
+* **JiuWenBaseException**: Raised when storage operation fails.
+
+**Example**:
+
+```python
+>>> from openjiuwen.core.foundation.store import BaseKVStore
+>>> 
+>>> # Get key value
+>>> name = await kv_store.get("user:123:name")
+>>> if name:
+>>>     print(f"Username: {name}")
+>>> else:
+>>>     print("User does not exist")
+```
+
 
 ### abstractmethod async exists
 
-```python
-exists(key: str) -> bool
+```
+async def exists(self, key: str) -> bool
 ```
 
-Check whether a key exists in the database.
+Check if a key exists in the database.
 
 **Parameters**:
-- **key** (str): The key. Default: None.
+
+* **key** (str): The key name.
 
 **Returns**:
-- **bool**: True if it exists; otherwise False.
+
+* **bool**: Returns `True` if it exists, otherwise `False`.
+
+**Exceptions**:
+
+* **JiuWenBaseException**: Raised when storage operation fails.
+
+**Example**:
+
+```python
+>>> from openjiuwen.core.foundation.store import BaseKVStore
+>>> 
+>>> # Check if key exists
+>>> if await kv_store.exists("user:123"):
+>>>     print("User exists")
+>>> else:
+>>>     print("User does not exist")
+```
+
 
 ### abstractmethod async delete
 
-```python
-delete(key: str) -> bool
+```
+async def delete(self, key: str) -> bool
 ```
 
 Delete the specified key from the database.
 
 **Parameters**:
-- **key** (str): The key. Default: None.
+
+* **key** (str): The key name.
 
 **Returns**:
-- **bool**: True if the key existed and was deleted successfully; otherwise False.
+
+* **bool**: Returns `True` if the value existed and was deleted successfully, otherwise `False`.
+
+**Exceptions**:
+
+* **JiuWenBaseException**: Raised when storage operation fails.
+
+**Example**:
+
+```python
+>>> from openjiuwen.core.foundation.store import BaseKVStore
+>>> 
+>>> # Delete key-value pair
+>>> success = await kv_store.delete("user:123")
+>>> if success:
+>>>     print("Delete successful")
+>>> else:
+>>>     print("User does not exist or delete failed")
+```
+
 
 ### abstractmethod async get_by_prefix
 
-```python
-get_by_prefix(prefix: str) -> dict[str, str]
+```
+async def get_by_prefix(self, prefix: str) -> dict[str, str]
 ```
 
-Retrieve key-value pairs from the database that match the specified prefix.
+Get key-value pairs from the database that match the specified prefix string.
 
 **Parameters**:
-- **prefix** (str): The prefix to match. Default: None.
+
+* **prefix** (str): The prefix to match key names.
 
 **Returns**:
-- **dict[str, str]**: The key-value pairs matching the prefix.
+
+* **dict[str, str]**: Returns key-value pairs matching the prefix.
+
+**Exceptions**:
+
+* **JiuWenBaseException**: Raised when storage operation fails.
+
+**Example**:
+
+```python
+>>> from openjiuwen.core.foundation.store import BaseKVStore
+>>> 
+>>> # Get all key-value pairs starting with "user:123:"
+>>> user_data = await kv_store.get_by_prefix("user:123:")
+>>> for key, value in user_data.items():
+>>>     print(f"{key}: {value}")
+```
+
 
 ### abstractmethod async delete_by_prefix
 
-```python
-delete_by_prefix(prefix: str)
+```
+async def delete_by_prefix(self, prefix: str) -> None
 ```
 
-Delete key-value pairs from the database that match the specified prefix.
+Delete key-value pairs from the database that match the specified prefix string.
 
 **Parameters**:
-- **prefix** (str): The prefix to match. Default: None.
 
----
+* **prefix** (str): The prefix to match key names.
+
+**Exceptions**:
+
+* **JiuWenBaseException**: Raised when storage operation fails.
+
+**Example**:
+
+```python
+>>> from openjiuwen.core.foundation.store import BaseKVStore
+>>> 
+>>> # Delete all key-value pairs starting with "temp:"
+>>> await kv_store.delete_by_prefix("temp:")
+>>> print("Temporary data cleanup completed")
+```
+
 
 ### abstractmethod async mget
 
-```python
-mget(keys: List[str]) -> List[str | None]
+```
+async def mget(self, keys: List[str]) -> List[str | None]
 ```
 
-Batch retrieve values for multiple keys. If a key does not exist, the corresponding position in the returned list is None.
+Batch retrieve key-value pairs. If a key does not exist, the corresponding position in the returned list is `None`.
 
 **Parameters**:
-- **keys** (List[str]): The list of keys to retrieve. Default: None.
+
+* **keys** (List[str]): List of key names to retrieve.
 
 **Returns**:
-- **List[str | None]**: The values corresponding to the keys. If a key does not exist, the corresponding position is None.
+
+* **List[str | None]**: Returns a list of values corresponding to the keys. If a key does not exist, the corresponding position in the list is `None`.
+
+**Exceptions**:
+
+* **JiuWenBaseException**: Raised when storage operation fails.
 
 **Example**:
 
 ```python
-import asyncio
-import dbm
-import json
-import re
-import time
-from contextlib import asynccontextmanager
-from typing import List
-
-import portalocker
-
-from openjiuwen.core.common.logging import logger
-from openjiuwen.core.memory.store.base_kv_store import BaseKVStore
-
-
-class DbmKVStore(BaseKVStore):
-    """
-    KV store based on dbm
-    """
-    def __init__(self, filename: str):
-        self.filename = filename
-        self._async_lock = asyncio.Lock()
-        self._lock_file_path = filename + ".lock"
-
-    @asynccontextmanager
-    async def lock(self):
-        await self._async_lock.acquire()
-        try:
-            lock_file = await asyncio.to_thread(open, self._lock_file_path, "w")
-            try:
-                await asyncio.to_thread(portalocker.lock, lock_file, portalocker.LOCK_EX)
-                yield
-            finally:
-                await asyncio.to_thread(portalocker.unlock, lock_file)
-                await asyncio.to_thread(lock_file.close)
-        finally:
-            self._async_lock.release()
-
-    async def set(self, key: str, value: str):
-        with dbm.open(self.filename, "c") as db:
-            db[key.encode()] = value.encode()
-
-    async def exclusive_set(self, key: str, val: str, expiry: int | None = None) -> bool:
-        async with self.lock():
-            def sync_op():
-                try:
-                    with dbm.open(self.filename, "c") as db:
-                        key_b = key.encode()
-                        now = time.time()
-                        existing = db.get(key_b)
-                        if existing:
-                            try:
-                                data = json.loads(existing.decode())
-                                expire_at = data.get("expiry")
-                                if expire_at is None or expire_at > now:
-                                    return False
-                            except json.JSONDecodeError:
-                                return False
-                        expire_at = now + expiry if expiry else None
-                        db[key_b] = json.dumps({"value": val, "expiry": expire_at}).encode()
-                        return True
-                except Exception as e:
-                    logger.error(f"[exclusive_set] DBM error: {e}")
-                    return False
-            return await asyncio.to_thread(sync_op)
-
-    async def get(self, key: str) -> str | None:
-        with dbm.open(self.filename, "c") as db:
-            v = db.get(key)
-            if v is None:
-                return None
-            return v.decode("utf-8")
-
-    async def exists(self, key: str) -> bool:
-        with dbm.open(self.filename, "c") as db:
-            return key.encode() in db
-
-    async def delete(self, key: str):
-        with dbm.open(self.filename, "c") as db:
-            key_b = key.encode()
-            if key_b in db:
-                del db[key_b]
-
-    async def get_by_prefix(self, prefix: str) -> dict[str, str]:
-        regex_str = re.escape(prefix) + ".*"
-        pat = re.compile(regex_str)
-        result = {}
-        with dbm.open(self.filename, "c") as db:
-            for key_b in db.keys():
-                k = key_b.decode()
-                if pat.search(k):
-                    result[k] = db[key_b].decode()
-        return result
-
-    async def delete_by_prefix(self, prefix: str):
-        regex_str = re.escape(prefix) + ".*"
-        pat = re.compile(regex_str)
-        delete_keys = []
-        with dbm.open(self.filename, "c") as db:
-            for key_b in db.keys():
-                k = key_b.decode()
-                if pat.search(k):
-                    delete_keys.append(key_b)
-            if delete_keys:
-                for key_b in delete_keys:
-                    del db[key_b]
-
-    async def mget(self, keys: List[str]) -> List[str | None]:
-        result = []
-        for k in keys:
-            v = await self.get(k)
-            result.append(v if v else None)
-        return result
+>>> from openjiuwen.core.foundation.store import BaseKVStore
+>>> 
+>>> # Batch retrieve multiple key values
+>>> keys = ["user:123:name", "user:123:age", "user:123:email"]
+>>> values = await kv_store.mget(keys)
+>>> 
+>>> for key, value in zip(keys, values):
+>>>     if value is not None:
+>>>         print(f"{key}: {value}")
+>>>     else:
+>>>         print(f"{key}: does not exist")
 ```
 
-## class openjiuwen.core.memory.store.BaseSemanticStore
 
-Abstract base class for a semantic retrieval store (semantic_store), including the following interfaces.
+## class openjiuwen.core.retrieval.VectorStore
 
-### abstractmethod async add_docs
-
-```python
-add_docs(docs: List[Tuple[str, str]], table_name: str) -> bool
+```
+class openjiuwen.core.retrieval.VectorStore
 ```
 
-Add documents to the specified table.
-
-**Parameters**:
-- **docs** (List[Tuple[str, str]]): A list of documents as (id, text).
-- **table_name** (str): The target table name.
-
-**Returns**:
-- **bool**: True if added successfully; otherwise False.
-
-### abstractmethod async delete_docs
-
-```python
-delete_docs(ids: List[str], table_name: str) -> bool
-```
-
-Delete documents from the specified table.
-
-**Parameters**:
-- **ids** (List[str]): The list of document IDs.
-- **table_name** (str): The target table name.
-
-**Returns**:
-- **bool**: True if deleted successfully; otherwise False.
-
-### abstractmethod async search
-
-```python
-search(query: str, table_name: str, top_k: int) -> List[Tuple[str, float]]
-```
-
-Search for the most semantically relevant documents from the specified table.
-
-**Parameters**:
-- **query** (str): The query string.
-- **table_name** (str): The target table name.
-- **top_k** (int): Number of results to return.
-
-**Returns**:
-- **List[Tuple[str, float]]**: A list of results, each containing a document ID and a similarity score. The ID uniquely identifies the document; higher scores indicate greater similarity to the query.
-
----
-
-### abstractmethod async delete_table
-
-```python
-delete_table(table_name: str) -> bool
-```
-
-Delete the specified table.
-
-**Parameters**:
-- **table_name** (str): The table name.
-
-**Returns**:
-- **bool**: True if deleted successfully; otherwise False.
+Abstract base class for vector storage, defining the basic interface for vector storage and retrieval. For specific abstract interface definitions, please refer to `retrieval/vector_store/base.md`.
 
 **Example**:
 
 ```python
-from typing import List, Tuple, Any
-
-import numpy as np
-from pymilvus import MilvusClient, FieldSchema, CollectionSchema, DataType, Collection, connections, utility
-
-from openjiuwen.core.common.logging import logger
-from openjiuwen.core.memory.store.base_semantic_store import BaseSemanticStore
-
-TABLE_NAME_LENGTH = 128
-MEMORY_ID_LENGTH = 36
-
-
-def convert_milvus_result(results) -> List[List[Tuple[str, float]]]:
-    final_results = []
-    for hits_per_query in results:
-        hits = []
-        for hit in hits_per_query:
-            memory_id = hit.entity.get("memory_id")  # Retrieve field
-            distance = hit.distance
-            hits.append((memory_id, distance))
-        final_results.append(hits)
-    return final_results
-
-
-class MilvusSemanticStore(BaseSemanticStore):
-    def __init__(self, milvus_host: str, milvus_port: str, token: str | None,
-                collection_name: str, embed_model: Any, embedding_dims: int):
-        self.embed_model = embed_model
-        self.embedding_dims = embedding_dims
-        uri = f"http://{milvus_host}:{milvus_port}"
-        self.milvus_client = MilvusClient(uri=uri, token=token)
-        self.collection_name = collection_name
-        self.milvus_host = milvus_host
-        self.milvus_port = milvus_port
-        self.collections = {}
-        self._init_collection()
-
-    def _init_collection(self):
-        """
-        create Milvus collection（if not exist
-        """
-        connections.connect(host=self.milvus_host, port=self.milvus_port, alias="default")
-        existing_collections = utility.list_collections()
-        if self.collection_name not in existing_collections:
-            logger.info(f"Collection {self.collection_name} not found, creating...")
-            fields = [
-                FieldSchema(name="memory_id", dtype=DataType.VARCHAR, is_primary=True,
-                            max_length=MEMORY_ID_LENGTH),
-                FieldSchema(name="embedding", dtype=DataType.FLOAT_VECTOR,
-                            dim=self.embedding_dims),
-                FieldSchema(name="table_name", dtype=DataType.VARCHAR,
-                            max_length=TABLE_NAME_LENGTH)
-            ]
-            schema = CollectionSchema(fields, description="embedding collection")
-            collection = Collection(
-                name=self.collection_name,
-                schema=schema,
-                using="default"
-            )
-            index_params = {
-                "index_type": "IVF_FLAT",
-                "metric_type": "IP",
-                "params": {"nlist": 128}
-            }
-            collection.create_index(field_name="embedding", index_params=index_params)
-            logger.info(f"Index created for collection {self.collection_name}")
-        else:
-            self.get_collection(self.collection_name)
-            logger.info(f"Collection {self.collection_name} already exists.")
-
-    def get_collection(self, table_name: str) -> Collection:
-        if table_name in self.collections:
-            return self.collections[table_name]
-        connections.connect(host=self.milvus_host, port=self.milvus_port, alias="default")
-        if not utility.has_collection(table_name):
-            fields = [
-                FieldSchema(name="memory_id", dtype=DataType.VARCHAR, is_primary=True, max_length=36),
-                FieldSchema(name="embedding", dtype=DataType.FLOAT_VECTOR, dim=self.embedding_dims),
-                FieldSchema(name="table_name", dtype=DataType.VARCHAR, max_length=64)
-            ]
-            schema = CollectionSchema(fields, description="embedding collection")
-            collection = Collection(name=table_name, schema=schema, using="default")
-            index_params = {"index_type": "IVF_FLAT", "metric_type": "IP", "params": {"nlist": 128}}
-            collection.create_index("embedding", index_params)
-        else:
-            collection = Collection(name=table_name, using="default")
-        collection.load()
-        self.collections[table_name] = collection
-        return collection
-
-    async def add_docs(self, docs: List[Tuple[str, str]], table_name: str) -> bool:
-        memory_ids, memories = zip(*docs)
-        memory_ids = list(memory_ids)
-        memories = list(memories)
-        embeddings = await self.embed_model.embed_queries(texts=memories)
-        if len(memory_ids) != len(embeddings):
-            raise ValueError(f"memory_ids and embeddings must have same length")
-        collection = self.get_collection(self.collection_name)
-        vectors_arr = np.array(embeddings, dtype=np.float32)
-        collection.insert([
-            memory_ids,
-            vectors_arr.tolist(),
-            [table_name] * len(memory_ids)
-        ])
-        return True
-
-    async def delete_docs(self, ids: List[str], table_name: str) -> bool:
-        if self.collection_name not in self.collections:
-            return True  # collection not exist
-        collection = self.collections[self.collection_name]
-        ids_str = ','.join([f'"{i}"' for i in ids])
-        expr = f'memory_id in [{ids_str}] && table_name == "{table_name}"'
-        collection.delete(expr)
-        return True
-
-    async def search(self, query: str, table_name: str, top_k: int) -> List[Tuple[str, float]]:
-        if self.collection_name not in self.collections:
-            return []
-        collection = self.collections[self.collection_name]
-        query_vector = await self.embed_model.embed_queries(texts=[query])
-        expr = f'table_name == "{table_name}"'
-        results = collection.search(
-            data=query_vector,
-            anns_field="embedding",
-            param={"metric_type": "IP", "params": {"nprobe": 10}},
-            limit=top_k,
-            expr=expr
-        )
-        parsed_results = convert_milvus_result(results)
-        return parsed_results[0] if parsed_results else []
-
-    async def delete_table(self, table_name: str) -> bool:
-        collection_name = self.collection_name
-        if self.collection_name not in self.collections:
-            return True
-        collection = self.collections[collection_name]
-        expr = f'table_name == "{table_name}"'
-        collection.delete(expr)
-        return True
+>>> from openjiuwen.core.retrieval.vector_store.base import VectorStore
+>>> from openjiuwen.core.retrieval.common.retrieval_result import SearchResult
+>>> 
+>>> # Vector store implementation example
+>>> class MyVectorStore(VectorStore):
+>>>     async def add(self, data: dict | List[dict], batch_size: int | None = 128, **kwargs: Any):
+>>>         # Implement vector addition logic
+>>>         pass
+>>>     
+>>>     async def search(self, query_vector: List[float], top_k: int = 5,
+>>>                   filters: Optional[dict] = None, **kwargs: Any) -> List[SearchResult]:
+>>>         # Implement vector search logic
+>>>         pass
+>>>     
+>>>     # Other method implementations...
+>>> 
+>>> # Use vector store
+>>> vector_store = MyVectorStore()
+>>> await vector_store.add([{"id": "doc1", "embedding": [0.1, 0.2, 0.3]}])
+>>> results = await vector_store.search([0.1, 0.2, 0.3], top_k=5)
+>>> for result in results:
+>>>     print(f"ID: {result.id}, Score: {result.score}")
 ```
 
-## class openjiuwen.core.memory.store.BaseDbStore
 
-Abstract base class for db_store, including the following interface.
+## class openjiuwen.core.foundation.store.BaseDbStore
+
+```
+class openjiuwen.core.foundation.store.BaseDbStore
+```
+
+Abstract base class for database storage, defining the basic interface for database operations.
 
 ### abstractmethod async get_async_engine
 
-```python
-get_async_engine(self) -> AsyncEngine
+```
+def get_async_engine(self) -> AsyncEngine
 ```
 
-The get_async_engine function returns the asynchronous DB Engine.
+Get the asynchronous DB Engine object.
 
 **Returns**:
-- **AsyncEngine**: The asynchronous DB Engine.
+
+* **AsyncEngine**: The asynchronous DB Engine object.
 
 **Example**:
 
 ```python
-from sqlalchemy.ext.asyncio import AsyncEngine
+>>> from sqlalchemy.ext.asyncio import AsyncEngine
+>>> from openjiuwen.core.foundation.store import BaseDbStore
+>>> 
+>>> # Database store implementation example
+>>> class MyDbStore(BaseDbStore):
+>>>     def __init__(self, async_conn: AsyncEngine):
+>>>         self.async_conn = async_conn
+>>> 
+>>>     def get_async_engine(self) -> AsyncEngine:
+>>>         return self.async_conn
+>>>     
+>>>     # Other method implementations...
+>>> 
+>>> # Use database store
+>>> db_store = MyDbStore(async_engine)
+>>> engine = db_store.get_async_engine()
+>>> # Use engine for database operations...
+```
 
-from openjiuwen.core.memory.store.base_db_store import BaseDbStore
+
+## class openjiuwen.core.memory.store.impl.memory_chroma_vector_store.MemoryChromaVectorStore
+
+```
+class openjiuwen.core.memory.store.impl.memory_chroma_vector_store.MemoryChromaVectorStore
+```
+
+Chroma vector store implementation class, inheriting from the `VectorStore` abstract class, used for managing and operating vector data in the Chroma vector database.
+
+```
+MemoryChromaVectorStore(persist_directory: str)
+```
+
+Initialize the Chroma vector store client.
+
+**Parameters**:
+
+* **persist_directory** (str): The persistent storage directory path for the Chroma database.
+
+**Example**:
+
+```python
+>>> from openjiuwen.core.memory.store.impl.memory_chroma_vector_store import MemoryChromaVectorStore
+>>> 
+>>> # Create Chroma vector store instance
+>>> vector_store = MemoryChromaVectorStore(persist_directory="./chroma_db")
+```
 
 
-class DefaultDbStore(BaseDbStore):
-    def __init__(self, async_conn: AsyncEngine):
-        self.async_conn = async_conn
+### create_client
 
-    def get_async_engine(self) -> AsyncEngine:
-        return self.async_conn
+```
+def create_client(self, database_name: str, path_or_uri: str, token: str = "", **kwargs) -> Any
+```
+
+Create a client connection (currently not implemented).
+
+**Parameters**:
+
+* **database_name** (str): Database name.
+* **path_or_uri** (str): Database path or URI.
+* **token** (str, optional): Authentication token. Default: `""`.
+* **kwargs** (Any): Additional parameters.
+
+**Returns**:
+
+* **Any**: Client object (currently returns `None`).
+
+**Example**:
+
+```python
+>>> from openjiuwen.core.memory.store.impl.memory_chroma_vector_store import MemoryChromaVectorStore
+>>> 
+>>> # Create client connection (currently not implemented)
+>>> vector_store = MemoryChromaVectorStore(persist_directory="./chroma_db")
+>>> client = vector_store.create_client(
+>>>     database_name="my_db",
+>>>     path_or_uri="./chroma_db",
+>>>     token="my_token"
+>>> )
+>>> print(f"Client: {client}")
+```
+
+
+### async get_collection
+
+```
+async def get_collection(self, table_name: str)
+```
+
+Get or create a Chroma collection with the specified name.
+
+**Parameters**:
+
+* **table_name** (str): Collection name.
+
+**Returns**:
+
+* **Collection**: Chroma collection object.
+
+**Example**:
+
+```python
+>>> from openjiuwen.core.memory.store.impl.memory_chroma_vector_store import MemoryChromaVectorStore
+>>> 
+>>> # Get or create collection
+>>> vector_store = MemoryChromaVectorStore(persist_directory="./chroma_db")
+>>> collection = await vector_store.get_collection("documents")
+>>> print(f"Collection name: {collection.name}")
+>>> print(f"Document count: {collection.count()}")
+```
+
+
+### remove_collection_from_cache
+
+```
+def remove_collection_from_cache(self, table_name: str)
+```
+
+Remove the specified collection from cache.
+
+**Parameters**:
+
+* **table_name** (str): Collection name.
+
+**Example**:
+
+```python
+>>> from openjiuwen.core.memory.store.impl.memory_chroma_vector_store import MemoryChromaVectorStore
+>>> 
+>>> # Remove collection from cache
+>>> vector_store = MemoryChromaVectorStore(persist_directory="./chroma_db")
+>>> vector_store.remove_collection_from_cache("documents")
+>>> print("Collection removed from cache")
+```
+
+
+### check_table_name
+
+```
+def check_table_name(self, table_name: Optional[str] = None, operation: Optional[str] = None)
+```
+
+Check if the collection name is valid.
+
+**Parameters**:
+
+* **table_name** (Optional[str], optional): Collection name. Default: `None`.
+* **operation** (Optional[str], optional): Current operation name, used for error messages. Default: `None`.
+
+**Exceptions**:
+
+* **JiuWenBaseException**: Raises `VALIDATION_INVALID` exception if the collection name is empty or `None`.
+
+**Example**:
+
+```python
+>>> from openjiuwen.core.memory.store.impl.memory_chroma_vector_store import MemoryChromaVectorStore
+>>> 
+>>> # Check collection name
+>>> vector_store = MemoryChromaVectorStore(persist_directory="./chroma_db")
+>>> 
+>>> try:
+>>>     vector_store.check_table_name("", "add")
+>>> except Exception as e:
+>>>     print(f"Error: {e}")
+>>> 
+>>> try:
+>>>     vector_store.check_table_name("documents", "add")
+>>>     print("Collection name is valid")
+>>> except Exception as e:
+>>>     print(f"Error: {e}")
+```
+
+
+### async table_exists
+
+```
+async def table_exists(self, table_name: str) -> bool
+```
+
+Check if a collection with the specified name exists.
+
+**Parameters**:
+
+* **table_name** (str): Collection name.
+
+**Returns**:
+
+* **bool**: Returns `True` if the collection exists, otherwise `False`.
+
+**Example**:
+
+```python
+>>> from openjiuwen.core.memory.store.impl.memory_chroma_vector_store import MemoryChromaVectorStore
+>>> 
+>>> # Check if collection exists
+>>> vector_store = MemoryChromaVectorStore(persist_directory="./chroma_db")
+>>> 
+>>> if await vector_store.table_exists("documents"):
+>>>     print("documents collection exists")
+>>> else:
+>>>     print("documents collection does not exist")
+```
+
+
+### async add
+
+```
+async def add(self, data: dict | List[dict], batch_size: int | None = 128, **kwargs: Any) -> None
+```
+
+Add vector data to the vector store.
+
+**Parameters**:
+
+* **data** (dict | List[dict]): Vector data to add, each dictionary contains "id" and "embedding" fields.
+* **batch_size** (int | None, optional): Batch processing size. Default: 128.
+* **kwargs** (Any): Additional parameters, must include "table_name" to specify the collection name.
+
+**Exceptions**:
+
+* **JiuWenBaseException**: Raised when add operation fails.
+
+**Example**:
+
+```python
+>>> from openjiuwen.core.memory.store.impl.memory_chroma_vector_store import MemoryChromaVectorStore
+>>> 
+>>> # Add vector data
+>>> vector_store = MemoryChromaVectorStore(persist_directory="./chroma_db")
+>>> 
+>>> # Single vector data
+>>> await vector_store.add(
+>>>     data={"id": "doc1", "embedding": [0.1, 0.2, 0.3]},
+>>>     table_name="documents"
+>>> )
+>>> 
+>>> # Batch vector data
+>>> await vector_store.add(
+>>>     data=[
+>>>         {"id": "doc2", "embedding": [0.4, 0.5, 0.6]},
+>>>         {"id": "doc3", "embedding": [0.7, 0.8, 0.9]}
+>>>     ],
+>>>     table_name="documents",
+>>>     batch_size=64
+>>> )
+>>> print("Vector data added")
+```
+
+
+### async search
+
+```
+async def search(self, query_vector: List[float], top_k: int = 5, filters: Optional[dict] = None, **kwargs: Any) -> List[SearchResult]
+```
+
+Search for similar vectors based on the query vector.
+
+**Parameters**:
+
+* **query_vector** (List[float]): Query vector.
+* **top_k** (int, optional): Number of results to return. Default: 5.
+* **filters** (Optional[dict], optional): Filter conditions (currently unused). Default: `None`.
+* **kwargs** (Any): Additional parameters, must include "table_name" to specify the collection name.
+
+**Returns**:
+
+* **List[SearchResult]**: List of search results, each result contains id, text, and score fields.
+
+**Exceptions**:
+
+* **JiuWenBaseException**: Raised when search operation fails.
+
+**Example**:
+
+```python
+>>> from openjiuwen.core.memory.store.impl.memory_chroma_vector_store import MemoryChromaVectorStore
+>>> 
+>>> # Search for similar vectors
+>>> vector_store = MemoryChromaVectorStore(persist_directory="./chroma_db")
+>>> 
+>>> query_vector = [0.1, 0.2, 0.3]
+>>> results = await vector_store.search(
+>>>     query_vector=query_vector,
+>>>     top_k=3,
+>>>     table_name="documents"
+>>> )
+>>> 
+>>> for result in results:
+>>>     print(f"ID: {result.id}, Score: {result.score}, Text: {result.text}")
+```
+
+
+### async delete
+
+```
+async def delete(self, ids: Optional[List[str]] = None, filter_expr: Optional[str] = None, **kwargs: Any) -> bool
+```
+
+Delete vector data.
+
+**Parameters**:
+
+* **ids** (Optional[List[str]], optional): List of vector IDs to delete. Default: `None`.
+* **filter_expr** (Optional[str], optional): Filter expression. Default: `None`.
+* **kwargs** (Any): Additional parameters, must include "table_name" to specify the collection name.
+
+**Returns**:
+
+* **bool**: Returns `True` if deletion is successful, otherwise `False`.
+
+**Exceptions**:
+
+* **JiuWenBaseException**: Raised when delete operation fails.
+
+**Example**:
+
+```python
+>>> from openjiuwen.core.memory.store.impl.memory_chroma_vector_store import MemoryChromaVectorStore
+>>> 
+>>> # Delete vector data
+>>> vector_store = MemoryChromaVectorStore(persist_directory="./chroma_db")
+>>> 
+>>> # Delete by ID
+>>> success = await vector_store.delete(
+>>>     ids=["doc1", "doc2"],
+>>>     table_name="documents"
+>>> )
+>>> print(f"Delete by ID result: {success}")
+>>> 
+>>> # Delete by filter expression
+>>> success = await vector_store.delete(
+>>>     filter_expr="metadata contains 'category'",
+>>>     table_name="documents"
+>>> )
+>>> print(f"Delete by filter expression result: {success}")
+```
+
+
+### async delete_table
+
+```
+async def delete_table(self, table_name: str) -> bool
+```
+
+Delete the entire collection.
+
+**Parameters**:
+
+* **table_name** (str): Collection name.
+
+**Returns**:
+
+* **bool**: Returns `True` if deletion is successful, otherwise `False`.
+
+**Exceptions**:
+
+* **JiuWenBaseException**: Raised when delete operation fails.
+
+**Example**:
+
+```python
+>>> from openjiuwen.core.memory.store.impl.memory_chroma_vector_store import MemoryChromaVectorStore
+>>> 
+>>> # Delete collection
+>>> vector_store = MemoryChromaVectorStore(persist_directory="./chroma_db")
+>>> 
+>>> success = await vector_store.delete_table("documents")
+>>> if success:
+>>>     print("documents collection deleted successfully")
+>>> else:
+>>>     print("documents collection deletion failed")
+```
+
+
+### check_vector_field
+
+```
+def check_vector_field(self) -> None
+```
+
+Check if the vector field configuration is consistent with the actual database.
+
+**Example**:
+
+```python
+>>> from openjiuwen.core.memory.store.impl.memory_chroma_vector_store import MemoryChromaVectorStore
+>>> 
+>>> # Check vector field configuration
+>>> vector_store = MemoryChromaVectorStore(persist_directory="./chroma_db")
+>>> vector_store.check_vector_field()
+>>> print("Vector field configuration check completed")
+```
+
+
+## class openjiuwen.core.memory.store.impl.memory_milvus_vector_store.MemoryMilvusVectorStore
+
+```
+class openjiuwen.core.memory.store.impl.memory_milvus_vector_store.MemoryMilvusVectorStore
+```
+
+Milvus vector store implementation class, inheriting from the `VectorStore` abstract class, used for managing and operating vector data in the Milvus vector database.
+
+```
+MemoryMilvusVectorStore(milvus_host: str, milvus_port: str, token: str | None, embedding_dims: int)
+```
+
+Initialize the Milvus vector store client.
+
+**Parameters**:
+
+* **milvus_host** (str): Milvus server host address.
+* **milvus_port** (str): Milvus server port.
+* **token** (str | None): Authentication token.
+* **embedding_dims** (int): Vector dimensions.
+
+**Example**:
+
+```python
+>>> from openjiuwen.core.memory.store.impl.memory_milvus_vector_store import MemoryMilvusVectorStore
+>>> 
+>>> # Create Milvus vector store instance
+>>> vector_store = MemoryMilvusVectorStore(
+>>>     milvus_host="localhost",
+>>>     milvus_port="19530",
+>>>     token="your_token_here",
+>>>     embedding_dims=768
+>>> )
+```
+
+
+### async add
+
+```
+async def add(self, data: dict | List[dict], batch_size: int | None = 128, **kwargs: Any) -> None
+```
+
+Add vector data to the vector store.
+
+**Parameters**:
+
+* **data** (dict | List[dict]): Vector data to add, each dictionary contains "id" and "embedding" fields.
+* **batch_size** (int | None, optional): Batch processing size. Default: 128.
+* **kwargs** (Any): Additional parameters, must include "table_name" to specify the collection name.
+
+**Exceptions**:
+
+* **JiuWenBaseException**: Raised when add operation fails (`MEMORY_STORE_VALIDATION_INVALID`).
+
+**Example**:
+
+```python
+>>> from openjiuwen.core.memory.store.impl.memory_milvus_vector_store import MemoryMilvusVectorStore
+>>> 
+>>> # Add vector data
+>>> vector_store = MemoryMilvusVectorStore(
+>>>     milvus_host="localhost",
+>>>     milvus_port="19530",
+>>>     token="your_token_here",
+>>>     embedding_dims=768
+>>> )
+>>> 
+>>> # Single vector data
+>>> await vector_store.add(
+>>>     data={"id": "doc1", "embedding": [0.1, 0.2, 0.3] + [0.0]*765},
+>>>     table_name="documents"
+>>> )
+>>> 
+>>> # Batch vector data
+>>> await vector_store.add(
+>>>     data=[
+>>>         {"id": "doc2", "embedding": [0.4, 0.5, 0.6] + [0.0]*765},
+>>>         {"id": "doc3", "embedding": [0.7, 0.8, 0.9] + [0.0]*765}
+>>>     ],
+>>>     table_name="documents",
+>>>     batch_size=64
+>>> )
+>>> print("Vector data added")
+```
+
+
+### async search
+
+```
+async def search(self, query_vector: List[float], top_k: int = 5, filters: Optional[dict] = None, **kwargs: Any) -> List[SearchResult]
+```
+
+Search for similar vectors based on the query vector.
+
+**Parameters**:
+
+* **query_vector** (List[float]): Query vector.
+* **top_k** (int, optional): Number of results to return. Default: 5.
+* **filters** (Optional[dict], optional): Filter conditions (currently unused). Default: `None`.
+* **kwargs** (Any): Additional parameters, must include "table_name" to specify the collection name.
+
+**Returns**:
+
+* **List[SearchResult]**: List of search results, each result contains id, text, and score fields.
+
+**Exceptions**:
+
+* **JiuWenBaseException**: Raised when search operation fails (`MEMORY_STORE_VALIDATION_INVALID`).
+
+**Example**:
+
+```python
+>>> from openjiuwen.core.memory.store.impl.memory_milvus_vector_store import MemoryMilvusVectorStore
+>>> 
+>>> # Search for similar vectors
+>>> vector_store = MemoryMilvusVectorStore(
+>>>     milvus_host="localhost",
+>>>     milvus_port="19530",
+>>>     token="your_token_here",
+>>>     embedding_dims=768
+>>> )
+>>> 
+>>> query_vector = [0.1, 0.2, 0.3] + [0.0]*765
+>>> results = await vector_store.search(
+>>>     query_vector=query_vector,
+>>>     top_k=3,
+>>>     table_name="documents"
+>>> )
+>>> 
+>>> for result in results:
+>>>     print(f"ID: {result.id}, Score: {result.score}, Text: {result.text}")
+```
+
+
+### async delete
+
+```
+async def delete(self, ids: Optional[List[str]] = None, filter_expr: Optional[str] = None, **kwargs: Any) -> bool
+```
+
+Delete vector data.
+
+**Parameters**:
+
+* **ids** (Optional[List[str]], optional): List of vector IDs to delete. Default: `None`.
+* **filter_expr** (Optional[str], optional): Filter expression. Default: `None`.
+* **kwargs** (Any): Additional parameters, must include "table_name" to specify the collection name.
+
+**Returns**:
+
+* **bool**: Returns `True` if deletion is successful, otherwise `False`.
+
+**Exceptions**:
+
+* **JiuWenBaseException**: Raised when delete operation fails (`MEMORY_STORE_VALIDATION_INVALID`).
+
+**Example**:
+
+```python
+>>> from openjiuwen.core.memory.store.impl.memory_milvus_vector_store import MemoryMilvusVectorStore
+>>> 
+>>> # Delete vector data
+>>> vector_store = MemoryMilvusVectorStore(
+>>>     milvus_host="localhost",
+>>>     milvus_port="19530",
+>>>     token="your_token_here",
+>>>     embedding_dims=768
+>>> )
+>>> 
+>>> # Delete by ID
+>>> success = await vector_store.delete(
+>>>     ids=["doc1", "doc2"],
+>>>     table_name="documents"
+>>> )
+>>> print(f"Delete by ID result: {success}")
+```
+
+
+### async delete_table
+
+```
+async def delete_table(self, table_name: str) -> bool
+```
+
+Delete the entire collection.
+
+**Parameters**:
+
+* **table_name** (str): Collection name.
+
+**Returns**:
+
+* **bool**: Returns `True` if deletion is successful, otherwise `False`.
+
+**Example**:
+
+```python
+>>> from openjiuwen.core.memory.store.impl.memory_milvus_vector_store import MemoryMilvusVectorStore
+>>> 
+>>> # Delete collection
+>>> vector_store = MemoryMilvusVectorStore(
+>>>     milvus_host="localhost",
+>>>     milvus_port="19530",
+>>>     token="your_token_here",
+>>>     embedding_dims=768
+>>> )
+>>> 
+>>> success = await vector_store.delete_table("documents")
+>>> if success:
+>>>     print("documents collection deleted successfully")
+>>> else:
+>>>     print("documents collection deletion failed")
+```
+
+
+### async table_exists
+
+```
+async def table_exists(self, table_name: str) -> bool
+```
+
+Check if a collection with the specified name exists.
+
+**Parameters**:
+
+* **table_name** (str): Collection name.
+
+**Returns**:
+
+* **bool**: Returns `True` if the collection exists, otherwise `False`.
+
+**Example**:
+
+```python
+>>> from openjiuwen.core.memory.store.impl.memory_milvus_vector_store import MemoryMilvusVectorStore
+>>> 
+>>> # Check if collection exists
+>>> vector_store = MemoryMilvusVectorStore(
+>>>     milvus_host="localhost",
+>>>     milvus_port="19530",
+>>>     token="your_token_here",
+>>>     embedding_dims=768
+>>> )
+>>> 
+>>> if await vector_store.table_exists("documents"):
+>>>     print("documents collection exists")
+>>> else:
+>>>     print("documents collection does not exist")
+```
+
+
+### check_vector_field
+
+```
+def check_vector_field(self) -> None
+```
+
+Check if the vector field configuration is consistent with the actual database.
+
+**Example**:
+
+```python
+>>> from openjiuwen.core.memory.store.impl.memory_milvus_vector_store import MemoryMilvusVectorStore
+>>> 
+>>> # Check vector field configuration
+>>> vector_store = MemoryMilvusVectorStore(
+>>>     milvus_host="localhost",
+>>>     milvus_port="19530",
+>>>     token="your_token_here",
+>>>     embedding_dims=768
+>>> )
+>>> vector_store.check_vector_field()
+>>> print("Vector field configuration check completed")
 ```

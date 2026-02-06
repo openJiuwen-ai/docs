@@ -1,35 +1,14 @@
 # Start Component
 
-The `Start` component is the built-in start component of the openJiuwen workflow. This component defines the entry point of the workflow and is used to receive user inputs. The `Start` component supports providing input parameter attribute information during creation, and validates and formats user inputs based on this attribute information when receiving them.
+The `Start` component is the built-in start component of the openJiuwen workflow. This component defines the entry point of the workflow and is used to receive user inputs.
 
-When creating a `Start` component, you can define the attribute information of input parameters via the configuration `conf`. A user input parameter attribute contains the following information:
-
-- **id**: The name of the parameter.
-- **required**: Indicates whether the parameter is mandatory. If the user input does not contain this parameter, an error is reported.
-- **default_value**: The default value of the parameter. When a parameter is optional and the user does not provide a value for it, the default value is used instead.
-
-The following configuration indicates that `query` is a required field, and this input field must be provided when adding the `Start` component to the workflow. `infos` and `tokens` are optional fields; `infos` provides a default value of `["c", "d"]` for the optional field, and `tokens` provides a default value of `[]` for the optional field:
+Define the workflow, and add the start component `start` to the workflow via the `set_start_comp` method. The `inputs_schema` is used to clearly specify the source of input parameters for the start component `start`, and needs to follow the key-value configuration rules. The key comes from the parameter id value in "inputs" in `conf`, and the value can use the `${}` method to reference workflow input variable values:
 
 ```python
-from openjiuwen.core.component.start_comp import Start
-
-conf = {
-    "inputs": [
-        {"id": "query", "required": True},
-        {"id": "infos", "default_value": ["c", "d"], "required": False},
-        {"id": "tokens", "default_value": [], "required": False},
-    ]
-}
-start = Start(conf=conf)
-```
-
-Define the workflow and add the start component `start` to the workflow using the `set_start_comp` method. Here, `inputs_schema` is used to explicitly specify the source of the input parameters for the start component `start`. It must follow the key-value configuration rule, where the key comes from the parameter id value in the "inputs" of `conf`, and the value can reference workflow input variable values using the `${}` syntax:
-
-```python
-from openjiuwen.core.workflow.base import Workflow
+from openjiuwen.core.workflow import Workflow, Start
 
 workflow = Workflow()
-workflow.set_start_comp("s", start, 
+workflow.set_start_comp("s", Start(), 
     inputs_schema={"query": "${user_inputs.query}","tokens": "${user_inputs.tokens}"})
 ```
 
@@ -37,22 +16,13 @@ Configure the workflow inputs via `inputs` and run the workflow:
 
 ```python
 import asyncio
-from openjiuwen.core.runtime.workflow import WorkflowRuntime
+from openjiuwen.core.workflow import create_workflow_session
 
-result = asyncio.run(workflow.invoke(inputs={"user_inputs": {"query": "hello world", "tokens": ["a", "b"]}}, runtime=WorkflowRuntime()))
+session = create_workflow_session()
+result = asyncio.run(workflow.invoke(inputs={"user_inputs": {"query": "hello world", "tokens": ["a", "b"]}}, session=session))
 ```
 
-The `Start` component will format the user's `inputs` according to `conf` and pass it to the next component. The formatted result is:
-
-```python
-{
-    "query": "hello world",
-    "infos": ["c", "d"],
-    "tokens": ["a", "b"]
-}
-```
-
-When the `Start` component is not configured with `conf`, the `Start` component will output `inputs_schema` directly based on the user's `inputs` parameters. In this case, the output result is:
+The `Start` component will directly output `inputs_schema` based on the user's `inputs` parameters. The output result is:
 
 ```python
 {
@@ -64,51 +34,44 @@ When the `Start` component is not configured with `conf`, the `Start` component 
 To output the final result of the workflow, you need to configure an `End` component. Below is a complete example of configuring a `Start` component and an `End` component, and running the output:
 
 ```python
-from openjiuwen.core.component.start_comp import Start
-from openjiuwen.core.component.end_comp import End
-from openjiuwen.core.workflow.base import Workflow
-from openjiuwen.core.runtime.workflow import WorkflowRuntime
+from openjiuwen.core.workflow import Start
+from openjiuwen.core.workflow import End
+from openjiuwen.core.workflow import Workflow
+from openjiuwen.core.workflow import create_workflow_session
 import asyncio
 
-# 配置Start组件
-start_conf = {
-    "inputs": [
-        {"id": "query", "required": True},
-        {"id": "infos", "default_value": ["c", "d"], "required": False},
-        {"id": "tokens", "default_value": [], "required": False},
-    ]
-}
-start = Start(conf=start_conf)
+start = Start()
 
-# 新建工作流
+# Create new workflow
 workflow = Workflow()
 workflow.set_start_comp("s", start, 
     inputs_schema={"query": "${user_inputs.query}", "tokens": "${user_inputs.tokens}"})
 
-# 配置End组件，可以带模板（conf），也可以不带
-end_conf = {"responseTemplate": "Query:{{param1}}, Infos:{{param2}}, Tokens:{{param3}}"}
+# Configure End component, can have template (conf) or not
+end_conf = {"response_template": "Query:{{param1}}, Infos:{{param2}}, Tokens:{{param3}}"}
 end = End(conf=end_conf)
 workflow.set_end_comp("e", end, 
     inputs_schema={"param1": "${s.query}", "param2": "${s.infos}", "param3": "${s.tokens}"})
 
-# 连接start和end节点
+# Connect start and end nodes
 workflow.add_connection("s", "e")
 
-# 输入并运行
+# Input and run
 inputs = {
     "user_inputs": {
         "query": "你好 openJiuwen",
         "tokens": ["a", "b"]
     }
 }
-result = asyncio.run(workflow.invoke(inputs=inputs, runtime=WorkflowRuntime()))
+session = create_workflow_session()
+result = asyncio.run(workflow.invoke(inputs=inputs, session=session))
 print(result.result)
 ```
 
 In the above code, the `End` component renders the template with the formatted input parameters and outputs the following result:
 
 ```python
-{'responseContent': "Query:你好 openJiuwen, Infos:['c', 'd'], Tokens:['a', 'b']"}
+{'response': "Query:你好 openJiuwen, Infos:['c', 'd'], Tokens:['a', 'b']"}
 ```
 
 If the `End` component is not configured with a template `conf` (i.e., directly `End()`), the output is:
@@ -119,43 +82,43 @@ If the `End` component is not configured with a template `conf` (i.e., directly 
 
 # End Component
 
-The `End` component is the built-in end component of the openJiuwen workflow, defining the output point of the workflow. When adding an `End` component to the workflow, you can format the input parameters of the `End` component according to `input_schema`. When creating an `End` component, you can render the workflow output information via the `conf` template. The `End` component implements four capabilities of the base class component `ComponentExecutable`: `invoke`, `stream`, `transform`, and `collect`. The implementation principle is to perform corresponding formatted output for different inputs. The template of the `End` component adopts standard language specifications, using the `{{}}` syntax to represent placeholder slots. During the template rendering process, these slots are dynamically filled based on the actual input of the `End` component to generate the complete output result.
+The `End` component is the built-in end component of the openJiuwen workflow, defining the output point of the workflow. When adding an `End` component to the workflow, you can format the input parameters of the `End` component according to `input_schema`. When creating an `End` component, you can render the workflow output information via the `conf` template. The `End` component implements four capabilities: `invoke`, `stream`, `transform`, and `collect`. The implementation principle is to perform corresponding formatted output for different inputs. The template of the `End` component adopts standard language specifications, using the `{{}}` syntax to represent placeholder slots. During the template rendering process, these slots are dynamically filled based on the actual input of the `End` component to generate the complete output result.
 
-- **invoke**: Synchronously executes the component and returns the final result at once, suitable for scenarios where the complete result needs to be obtained in one go. When the `End` component is configured with a template (`conf` contains `responseTemplate`), the returned result includes the `responseContent` field, representing the result after template rendering; when the `End` component is not configured with a template, the returned result includes the `output` field, representing the output result of the `End` component.
+- **invoke**: Synchronously executes the component and returns the final result at once, suitable for scenarios where the complete result needs to be obtained in one go. When the `End` component is configured with a template (`conf` contains `response_template`), the returned result includes the `response` field, representing the result after template rendering; when the `End` component is not configured with a template, the returned result includes the `output` field, representing the output result of the `End` component.
 
   Construct a simple workflow and add a `Start` component to the workflow:
 
   ```python
-  from openjiuwen.core.component.start_comp import Start
-  from openjiuwen.core.workflow.base import Workflow
+  from openjiuwen.core.workflow import Start
+  from openjiuwen.core.workflow import Workflow
   flow = Workflow()
-  # 增加Start节点
-  flow.set_start_comp("s", Start({}),
+  # Add Start node
+  flow.set_start_comp("s", Start(),
                     inputs_schema={"query": "${user_inputs.query}", "content": "${user_inputs.content}"})
   ```
   
   Create an `End` component without a `conf` template and add it to the workflow, with `inputs_schema` specifying the input format of the `End` component:
   
   ```python
-  from openjiuwen.core.component.end_comp import End
+  from openjiuwen.core.workflow import End
   flow.set_end_comp("e", End(), inputs_schema={"param1": "${s.query}", "param2": "${s.content}"})
   ```
   
-  Connect the `Start` component and the `End` component, and run the workflow. The workflow input is `{"user_inputs": {"query": "Hello", "content": "Hangzhou"}}`:
+  Connect the `Start` component and the `End` component, and run the workflow. The workflow input is `{"user_inputs": {"query": "你好", "content": "杭州"}}`:
   
   ```python
   import asyncio
-  from openjiuwen.core.runtime.workflow import WorkflowRuntime
+  from openjiuwen.core.workflow import create_workflow_session
 
   flow.add_connection("s", "e")
-  # 调用工作流
-  result = asyncio.run(flow.invoke(inputs={"user_inputs": {"query": "你好", "content": "杭州"}},
-                                   runtime=WorkflowRuntime()))
-  # 输出结果
+  # Call workflow
+  session = create_workflow_session()
+  result = asyncio.run(flow.invoke(inputs={"user_inputs": {"query": "你好", "content": "杭州"}}, session=session))
+  # Output result
   print(result.result)
   ```
   
-  The output of the `Start` component (which is the input of the `End` component) is `{"query": "Hello", "content": "Hangzhou"}`. The `inputs_schema` will format the `End` component input as `{"param1": "Hello", "param2": "Hangzhou"}` and output it to the output field. The output result is as follows:
+  The output of the `Start` component (which is the input of the `End` component) is `{"query": "你好", "content": "杭州"}`. The `inputs_schema` will format the `End` component input as `{"param1": "你好", "param2": "杭州"}` and output it to the output field. The output result is as follows:
   
   ```python
   {'output': {'param1': '你好', 'param2': '杭州'}}
@@ -164,14 +127,14 @@ The `End` component is the built-in end component of the openJiuwen workflow, de
   If creating an `End` component with a `conf` template:
   
   ```python
-   conf = {"responseTemplate": "渲染结果:{{param1}},{{param2}}"}
+   conf = {"response_template": "渲染结果:{{param1}},{{param2}}"}
    flow.set_end_comp("e", End(conf=conf), inputs_schema={"param1": "${s.query}", "param2": "${s.content}"})
   ```
   
-  The input of the `End` component will be rendered by the template and then output to the responseContent field. The output result is as follows:
+  The input of the `End` component will be rendered by the template and then output to the response field. The output result is as follows:
   
   ```python
-  {'responseContent': '渲染结果:你好,杭州'}
+  {'response': '渲染结果:你好,杭州'}
   ```
 
 - **stream**: The `End` component formats batch results into multi-frame openJiuwen `OutputSchema` format streaming data, suitable for scenarios requiring real-time feedback. Streaming data is output based on `payload` and supports both rendered and non-rendered situations.
@@ -179,12 +142,12 @@ The `End` component is the built-in end component of the openJiuwen workflow, de
   Construct a simple workflow and add a `Start` component to the workflow:
   
   ```python
-  from openjiuwen.core.workflow.base import Workflow
-  from openjiuwen.core.component.start_comp import Start
-  from openjiuwen.core.component.end_comp import End
+  from openjiuwen.core.workflow import Workflow
+  from openjiuwen.core.workflow import Start
+  from openjiuwen.core.workflow import End
   
   flow = Workflow()
-  # 为工作流增加Start节点
+  # Add Start node to workflow
   flow.set_start_comp("s", Start(), inputs_schema={"query": "${user_inputs.query}", "content": "${user_inputs.content}"})
   ```
   
@@ -194,20 +157,21 @@ The `End` component is the built-in end component of the openJiuwen workflow, de
   flow.set_end_comp("e", End(), inputs_schema={"param1": "${s.query}", "param2": "${s.content}"},response_mode="streaming")
   ```
   
-  Connect the `Start` component and the `End` component, and run the workflow. The workflow input is `{"user_inputs": {"query": "Hello", "content": "Hangzhou"}}`:
+  Connect the `Start` component and the `End` component, and run the workflow. The workflow input is `{"user_inputs": {"query": "你好", "content": "杭州"}}`:
   
   ```python
   import asyncio
 
-  from openjiuwen.core.runtime.workflow import WorkflowRuntime
-  from openjiuwen.core.stream.base import BaseStreamMode
+  from openjiuwen.core.workflow import create_workflow_session
+  from openjiuwen.core.session.stream import BaseStreamMode
 
-  # 连接Start组件和End组件
+  # Connect Start component and End component
   flow.add_connection("s", "e")
 
   async def main():
-      # 调用工作流流式输出接口
-      result = flow.stream(inputs={"user_inputs": {"query": "你好", "content": "杭州"}}, runtime=WorkflowRuntime(),
+      # Call workflow streaming output interface
+      session = create_workflow_session()
+      result = flow.stream(inputs={"user_inputs": {"query": "你好", "content": "杭州"}}, session=session,
                           stream_modes=[BaseStreamMode.OUTPUT])
 
       streams = []
@@ -234,18 +198,18 @@ The `End` component is the built-in end component of the openJiuwen workflow, de
   
   ```python
   # 为工作流增加End节点，并提供渲染模板
-  conf = {"responseTemplate": "渲染结果:{{param1}},{{param2}}"}
+  conf = {"response_template": "渲染结果:{{param1}},{{param2}}"}
   flow.set_end_comp("e", End(conf=conf), inputs_schema={"param1": "${s.query}", "param2": "${s.content}"},response_mode="streaming")
   ```
   
-  For the input data of the `End` component, the system will first decompose the template into multiple sub-templates based on slot symbols, then render these sub-templates one by one, and output each rendering result as the `payload` of the streaming data, finally writing to the responseContent field. Final result:
+  For the input data of the `End` component, the system will first decompose the template into multiple sub-templates based on slot symbols, then render these sub-templates one by one, and output each rendering result as the `payload` of the streaming data, finally writing to the response field. Final result:
   
   ```python
   # 子模板的渲染结果
-   type='end node stream' index=0 payload={'answer': '渲染结果:'}
-   type='end node stream' index=1 payload={'answer': '你好'}
-   type='end node stream' index=2 payload={'answer': ','}
-   type='end node stream' index=3 payload={'answer': '杭州'}
+   type='end node stream' index=0 payload={'response': '渲染结果:'}
+   type='end node stream' index=1 payload={'response': '你好'}
+   type='end node stream' index=2 payload={'response': ','}
+   type='end node stream' index=3 payload={'response': '杭州'}
   ```
 
 - **transform**: The `End` component formats the streaming input frame by frame into `OutputSchema` format streaming data. The `payload` is the content of each streaming input. Rendering output is not supported.
@@ -255,33 +219,33 @@ The `End` component is the built-in end component of the openJiuwen workflow, de
   ```python
   from typing import AsyncIterator
 
-  from openjiuwen.core.component.base import WorkflowComponent
-  from openjiuwen.core.context_engine.base import Context
-  from openjiuwen.core.runtime.base import ComponentExecutable, Input, Output
-  from openjiuwen.core.runtime.runtime import Runtime
+  from openjiuwen.core.workflow import ComponentAbility, WorkflowComponent, Workflow
+  from openjiuwen.core.workflow.components.component import Input, Output
+  from openjiuwen.core.workflow.components import Session
+  from openjiuwen.core.context_engine import ModelContext
 
-  class MockStreamCmp(WorkflowComponent, ComponentExecutable):
-      async def stream(self, inputs: Input, runtime: Runtime, context: Context) -> AsyncIterator[Output]:
+  class MockStreamCmp(WorkflowComponent):
+      async def stream(self, inputs: Input, session: Session, context: ModelContext) -> AsyncIterator[Output]:
           yield inputs
   ```
   
   Construct a simple workflow and add a `Start` component to the workflow:
   
   ```python
-  from openjiuwen.core.workflow.base import Workflow
-  from openjiuwen.core.component.start_comp import Start
+  from openjiuwen.core.workflow import Workflow
+  from openjiuwen.core.workflow import Start
 
   flow = Workflow()
-  # 为工作流增加Start节点
+  # Add Start node to workflow
   flow.set_start_comp("s", Start(),inputs_schema={"query": "${user_inputs.query}", "content": "${user_inputs.content}"})
   ```
   
   Add a mock node to the workflow:
   
   ```python
-  from openjiuwen.core.workflow.workflow_config import ComponentAbility
+  from openjiuwen.core.workflow import ComponentAbility
   
-  # 为工作流增加mock节点
+  # Add mock node to workflow
   flow.add_workflow_comp("n", MockStreamCmp(), inputs_schema={"param1": "${s.query}", "param2": "${s.content}"},
                           comp_ability=[ComponentAbility.STREAM], wait_for_all=True)
   ```
@@ -289,30 +253,31 @@ The `End` component is the built-in end component of the openJiuwen workflow, de
   Add an End node to the workflow:
   
   ```python
-  from openjiuwen.core.component.end_comp import End
+  from openjiuwen.core.workflow import End
 
-  # 为工作流增加End节点
+  # Add End node to workflow
   flow.set_end_comp("e", End(), stream_inputs_schema={"param1": "${n.param1}", "param2": "${n.param2}"}, response_mode="streaming")
   ```
   
   Connect the `Start` component, Mock component, and `End` component:
   
   ```python
-  # 连接组件
+  # Connect components
   flow.add_connection("s", "n")
   flow.add_stream_connection("n", "e")
   ```
   
-  The workflow input is `{"user_inputs": {"query": "Hello", "content": "Hangzhou"}}`, triggering the `transform` capability of the `End` component:
+  The workflow input is `{"user_inputs": {"query": "你好", "content": "杭州"}}`, triggering the `transform` capability of the `End` component:
   
   ```python
   import asyncio
 
-  from openjiuwen.core.runtime.workflow import WorkflowRuntime
-  from openjiuwen.core.stream.base import BaseStreamMode
+  from openjiuwen.core.workflow import create_workflow_session
+  from openjiuwen.core.session.stream import BaseStreamMode
   async def main():
-      # 调用工作流流式输出接口
-      result = flow.stream(inputs={"user_inputs": {"query": "你好", "content": "杭州"}}, runtime=WorkflowRuntime(),
+      # Call workflow streaming output interface
+      session = create_workflow_session()
+      result = flow.stream(inputs={"user_inputs": {"query": "你好", "content": "杭州"}}, session=session,
                            stream_modes=[BaseStreamMode.OUTPUT])
 
       streams = []
@@ -336,7 +301,7 @@ The `End` component is the built-in end component of the openJiuwen workflow, de
   
   ```python
   # 为工作流增加End节点，并提供渲染模板
-  conf = {"responseTemplate": "渲染结果:{{param1}},{{param2}}"}
+  conf = {"response_template": "渲染结果:{{param1}},{{param2}}"}
   flow.set_end_comp("e", End(conf=conf),
                     stream_inputs_schema={"param1": "${n.param1}", "param2": "${n.param2}"},
                     response_mode = "streaming")
@@ -345,71 +310,71 @@ The `End` component is the built-in end component of the openJiuwen workflow, de
   For the input stream data of the `End` component, the system will first decompose the template into multiple sub-templates based on slot symbols, then render these sub-templates one by one, and output them frame by frame:
 
   ```python
-  type='end node stream' index=0 payload={'answer': '渲染结果:'}
-  type='end node stream' index=1 payload={'answer': '你好'}
-  type='end node stream' index=2 payload={'answer': ','}
-  type='end node stream' index=3 payload={'answer': '杭州'}
+  type='end node stream' index=0 payload={'response': '渲染结果:'}
+  type='end node stream' index=1 payload={'response': '你好'}
+  type='end node stream' index=2 payload={'response': ','}
+  type='end node stream' index=3 payload={'response': '杭州'}
   ```
   
-- **collect**: The `End` component aggregates streaming data and merges it into a single complete return. When the `End` component is configured with a template (`conf` contains `responseTemplate`), the returned result includes the `responseContent` field, representing the final result after template rendering of all collected streaming data; when the `End` component is not configured with a template, the returned result includes the `collect_output` field, representing the content of all collected original streaming outputs. 
+- **collect**: The `End` component aggregates streaming data and merges it into a single complete return. When the `End` component is configured with a template (`conf` contains `response_template`), the returned result includes the `response` field, representing the final result after template rendering of all collected streaming data; when the `End` component is not configured with a template, the returned result includes the `collect_output` field, representing the content of all collected original streaming outputs. 
    For example, first create a mock node for streaming output:
   
    ```python
   from typing import AsyncIterator
 
-  from openjiuwen.core.component.base import WorkflowComponent
-  from openjiuwen.core.context_engine.base import Context
-  from openjiuwen.core.runtime.base import ComponentExecutable, Input, Output
-  from openjiuwen.core.runtime.runtime import Runtime
+  from openjiuwen.core.workflow import ComponentAbility, WorkflowComponent, Workflow
+  from openjiuwen.core.workflow.components.component import Input, Output
+  from openjiuwen.core.workflow.components import Session
+  from openjiuwen.core.context_engine import ModelContext
 
-  class MockStreamCmp(WorkflowComponent, ComponentExecutable):
-      async def stream(self, inputs: Input, runtime: Runtime, context: Context) -> AsyncIterator[Output]:
+  class MockStreamCmp(WorkflowComponent):
+      async def stream(self, inputs: Input, session: Session, context: ModelContext) -> AsyncIterator[Output]:
           yield inputs
    ```
   
   Construct a simple workflow and add a `Start` component to the workflow:
   
   ```python
-  from openjiuwen.core.workflow.base import Workflow
-  from openjiuwen.core.component.start_comp import Start
+  from openjiuwen.core.workflow import Workflow
+  from openjiuwen.core.workflow import Start
 
   flow = Workflow()
-  # 为工作流增加Start节点
+  # Add Start node to workflow
   flow.set_start_comp("s", Start(),inputs_schema={"query": "${user_inputs.query}", "content": "${user_inputs.content}"})
   ```
   
   Add a mock node to the workflow:
   
   ```python
-  from openjiuwen.core.workflow.workflow_config import ComponentAbility
-  # 为工作流增加mock节点
+  from openjiuwen.core.workflow import ComponentAbility
+  # Add mock node to workflow
   flow.add_workflow_comp("n", MockStreamCmp(), inputs_schema={"param1": "${s.query}", "param2": "${s.content}"},comp_ability=[ComponentAbility.STREAM], wait_for_all=True)
   ```
   
   Add an End node to the workflow:
   
   ```python
-  from openjiuwen.core.component.end_comp import End
-  # 为工作流增加End节点
+  from openjiuwen.core.workflow import End
+  # Add End node to workflow
   flow.set_end_comp("e", End(), stream_inputs_schema={"param1": "${n.param1}", "param2": "${n.param2}"})
   ```
   
   Connect the `Start` component, Mock component, and `End` component:
   
   ```python
-  # 连接组件
+  # Connect components
   flow.add_connection("s", "n")
   flow.add_stream_connection("n", "e")
   ```
   
-  The workflow input is `{"user_inputs": {"query": "Hello", "content": "Hangzhou"}}`, triggering the `collect` capability of the `End` component:
+  The workflow input is `{"user_inputs": {"query": "你好", "content": "杭州"}}`, triggering the `collect` capability of the `End` component:
   
   ```python
   import asyncio
-  from openjiuwen.core.runtime.workflow import WorkflowRuntime
+  from openjiuwen.core.workflow import create_workflow_session
   
-  # 调用工作流的invoke接口
-  result = asyncio.run(flow.invoke(inputs={"user_inputs": {"query": "你好", "content": "杭州"}}, runtime=WorkflowRuntime()))
+  # Call workflow invoke interface
+  result = asyncio.run(flow.invoke(inputs={"user_inputs": {"query": "你好", "content": "杭州"}}, session=create_workflow_session()))
   print(result)
   ```
 
@@ -423,14 +388,14 @@ The `End` component is the built-in end component of the openJiuwen workflow, de
   
   ```python
   # 为工作流增加End节点，并提供渲染模板
-  conf = {"responseTemplate": "渲染结果:{{param1}},{{param2}}"}
+  conf = {"response_template": "渲染结果:{{param1}},{{param2}}"}
   flow.set_end_comp("e", End(conf=conf), stream_inputs_schema={"param1": "${s.query}", "param2": "${s.content}"})
   ```
   
-  For the input stream data of the `End` component, the system will first decompose the template into multiple sub-templates based on slot symbols, then render these sub-templates one by one, and output each rendering result as the `payload` of the streaming data, finally writing to the `responseContent` field. Final result:
+  For the input stream data of the `End` component, the system will first decompose the template into multiple sub-templates based on slot symbols, then render these sub-templates one by one, and output each rendering result as the `payload` of the streaming data, finally writing to the `response` field. Final result:
   
   ```python
-  result={'responseContent': '渲染结果:你好,杭州'} state=<WorkflowExecutionState.COMPLETED: 'COMPLETED'>
+  result={'response': '渲染结果:你好,杭州'} state=<WorkflowExecutionState.COMPLETED: 'COMPLETED'>
   ```
 
 # LLM Component
@@ -440,9 +405,8 @@ The Large Model (LLM) Component generates output content by invoking large langu
 Create the configuration information object `LLMCompConfig` for the LLM component, specifying the specific configuration information of the large model invoked by the component (`model`), the prompt template information (`template_content`), the output format information (`response_format`), and the output parameter information (`output_config`). The LLM component also supports whether to enable conversation history (`enable_history`).
 
 ```python
-from openjiuwen.core.component.common.configs.model_config import ModelConfig
-from openjiuwen.core.utils.llm.base import BaseModelInfo
-from openjiuwen.core.component.llm_comp import LLMCompConfig
+from openjiuwen.core.foundation.llm import ModelConfig, BaseModelInfo
+from openjiuwen.core.workflow import LLMCompConfig
 
 # 定义模型配置变量（实际使用时需要替换为真实值）
 MODEL_PROVIDER = "openai"  # 示例值
@@ -479,7 +443,7 @@ config = LLMCompConfig(
 Create the LLM component object `LLMComponent`:
 
 ```python
-from openjiuwen.core.component.llm_comp import LLMComponent
+from openjiuwen.core.workflow import LLMComponent
 llm_component = LLMComponent(config)
 ```
 
@@ -488,7 +452,7 @@ The input definition of the LLM component contains only user-defined key-value p
 Add the LLM component object to the workflow using the `add_workflow_comp` method of `Workflow`, defining the component name as "llm", and the input parameters as custom key-value pairs, where the key is `"query"` and the value is `"Generate a verse about the moon"`:
 
 ```python
-from openjiuwen.core.workflow.base import Workflow
+from openjiuwen.core.workflow import Workflow
 
 flow = Workflow()
 flow.add_workflow_comp(
@@ -545,27 +509,36 @@ The Plugin Component can invoke tools (including external APIs and local functio
 Use `RestfulApi` to create a plugin for interfacing with plugin services that provide Restful interfaces. Define the plugin name `name`, description `description`, input parameters `params`, request URL address `path`, request headers, request method, and other information:
 
 ```python
-from openjiuwen.core.utils.tool.param import Param
-from openjiuwen.core.utils.tool.service_api.restful_api import RestfulApi
+from openjiuwen.core.foundation.tool import RestfulApi, RestfulApiCard
 
-weather_tool = RestfulApi(
-        name="WeatherReporter",
-        description="天气查询插件",
-        params=[
-            Param(name="location", description="天气查询的地点，必须为英文", type="string", required=True),
-            Param(name="date", description="天气查询的时间，格式为YYYY-MM-DD", type="string", required=True),
-        ],
-        path="your weather search api url",  # 天气查询服务部署地址
-        headers={},
-        method="GET",
-        response=[]
-    )
+weather_card = RestfulApiCard(
+    name="WeatherReporter",
+    description="天气查询插件",
+    url="user's path to weather service",
+    method="GET",
+    headers={},
+    input_params={
+        "type": "object",
+        "properties": {
+            "location": {
+                "type": "string",
+                "description": "天气查询的地点，必须为英文"
+            },
+            "date": {
+                "type": "string",
+                "description": "天气查询的时间，格式为YYYY-MM-DD"
+            }
+        },
+        "required": ["location", "date"]
+    },
+)
+weather_tool = RestfulApi(card=weather_card)
 ```
 
 Create the configuration information `ToolComponentConfig` for the plugin component. Currently, no specific configuration is involved, and it is reserved for future use.
 
 ```python
-from openjiuwen.core.component.tool_comp import ToolComponentConfig
+from openjiuwen.core.workflow import ToolComponentConfig
 
 tool_config = ToolComponentConfig()
 ```
@@ -575,7 +548,7 @@ The input of the Plugin Component has no fixed parameters; developers must ensur
 Create the Plugin Component object `ToolComponent` and associate it with the tool object via `bind_tool`:
 
 ```python
-from openjiuwen.core.component.tool_comp import ToolComponent
+from openjiuwen.core.workflow import ToolComponent
 
 tool_component = ToolComponent(tool_config)
 # 插件组件绑定RestfulAPI对象
@@ -585,7 +558,7 @@ tool_component.bind_tool(weather_tool)
 Add the plugin component object to the workflow using the `add_workflow_comp` method of `Workflow`, defining the component name as "tool" and the input parameters as several key-value pairs of custom parameters. For example, in the weather plugin binding example, enter two key-value pairs `{"location":"hangzhou","date":"2025-08-01"}`.
 
 ```python
-from openjiuwen.core.workflow.base import Workflow
+from openjiuwen.core.workflow import Workflow
 
 flow = Workflow()
 flow.add_workflow_comp(
@@ -636,9 +609,8 @@ The Intent Detection Component uses Large Language Model (LLM) services to accur
 Create the configuration object `IntentDetectionCompConfig` for the intent component, specifying the detailed configuration information of the large model invoked by the component (`model`), the prompt information for determining user intent (`user_prompt`), the list of intent category names (`category_name_list`), and whether to rely on conversation history (`enable_history`), etc.
 
 ```python
-from openjiuwen.core.component.common.configs.model_config import ModelConfig
-from openjiuwen.core.utils.llm.base import BaseModelInfo
-from openjiuwen.core.component.intent_detection_comp import IntentDetectionCompConfig, IntentDetectionComponent
+from openjiuwen.core.foundation.llm import ModelConfig, BaseModelInfo
+from openjiuwen.core.workflow import IntentDetectionCompConfig, IntentDetectionComponent
 
 # 定义模型配置变量（实际使用时需要替换为真实值）
 MODEL_PROVIDER = "openai"  # 示例值
@@ -692,7 +664,7 @@ The fixed input parameter for the Intent Detection Component is `query`, indicat
 Add the Intent Detection Component object to the workflow using the `add_workflow_comp` method of `Workflow`, defining the component name as "intent", and referencing the value of the query field from the start component in the input parameters.
 
 ```python
-from openjiuwen.core.workflow.base import Workflow
+from openjiuwen.core.workflow import Workflow
 
 workflow = Workflow()
 workflow.add_workflow_comp(
@@ -733,9 +705,8 @@ The Questioner Component supports configuring preset questions and actively aski
 Create the configuration object `QuestionerConfig` for the Questioner Component, specifying the detailed configuration information of the large model invoked by the component (`model`), custom preset questions (`question_content`), whether to extract parameters (`extract_fields_from_response`), parameter information to be extracted (`field_names`), and whether to extract parameters based on external conversation history (`with_chat_history`). Other configuration information will be filled into the prompt template built into the Questioner.
 
 ```python
-from openjiuwen.core.component.common.configs.model_config import ModelConfig
-from openjiuwen.core.utils.llm.base import BaseModelInfo
-from openjiuwen.core.component.questioner_comp import FieldInfo, QuestionerConfig, QuestionerComponent
+from openjiuwen.core.foundation.llm import ModelConfig, BaseModelInfo
+from openjiuwen.core.workflow import FieldInfo, QuestionerConfig, QuestionerComponent
 
 # 定义模型配置变量（实际使用时需要替换为真实值）
 MODEL_PROVIDER = "openai"  # 示例值
@@ -790,7 +761,7 @@ config = QuestionerConfig(
 Create the Questioner Component object `QuestionerComponent`:
 
 ```python
-from openjiuwen.core.component.questioner_comp import QuestionerComponent
+from openjiuwen.core.workflow import QuestionerComponent
 questioner_component = QuestionerComponent(config)
 ```
 
@@ -799,8 +770,8 @@ The input definition of the Questioner Component includes the fixed input parame
 Add the Questioner Component object to the workflow using the `add_workflow_comp` method of `Workflow`, naming the component "questioner", and referencing the value of the `query` field from the start component in the input parameters:
 
 ```python
-from openjiuwen.core.workflow.base import Workflow
-from openjiuwen.core.component.start_comp import Start
+from openjiuwen.core.workflow import Workflow
+from openjiuwen.core.workflow import Start
 
 workflow = Workflow()
 workflow.set_start_comp("start", Start({"inputs": [{"id": "query", "type": "String", "required": "true", "sourceType": "ref"}]}), inputs_schema={"query": "${query}"})
@@ -812,17 +783,17 @@ workflow.add_workflow_comp(
 workflow.add_connection("start", "questioner")
 ```
 
-By calling the `interact` interface of the `Runtime` module inside the Questioner Component, the execution flow of the Questioner is interrupted, and a follow-up question is asked to the user. When a developer orchestrates a workflow containing a Questioner Component, the return value of the workflow includes the follow-up question. Developers can judge whether it is a return result of human-machine interaction through the field `state=WorkflowExecutionState.INPUT_REQUIRED` in the workflow output data structure `WorkflowOutput`.
+By calling the `interact` interface of the session/interaction module inside the Questioner Component, the execution flow of the Questioner is interrupted, and a follow-up question is asked to the user. When a developer orchestrates a workflow containing a Questioner Component, the return value of the workflow includes the follow-up question. Developers can judge whether it is a return result of human-machine interaction through the field `state=WorkflowExecutionState.INPUT_REQUIRED` in the workflow output data structure `WorkflowOutput`.
 
 In the following example, execute the workflow:
 
 ```python
 import asyncio
-from openjiuwen.core.runtime.wrapper import TaskRuntime
+from openjiuwen.core.workflow import create_workflow_session
 
 session_id = "test_questioner"
-workflow_runtime = TaskRuntime(trace_id=session_id).create_workflow_runtime()  # 基于TaskRuntime，创建一个对应该session id的工作流Runtime
-workflow_result = asyncio.run(workflow.invoke({"query": "时间是2025年8月1日", "conversation_id": "c123"}, workflow_runtime))
+session = create_workflow_session(session_id=session_id)  # Use the same session_id to support breakpoint continuation
+workflow_result = asyncio.run(workflow.invoke({"query": "时间是2025年8月1日", "conversation_id": "c123"}, session))
 print(repr(workflow_result))
 ```
 
@@ -840,14 +811,14 @@ It can be seen that the state is `WorkflowExecutionState.INPUT_REQUIRED`, requir
 By creating an `InteractiveInput` object carrying the user's feedback information, you can call `invoke_workflow` again to execute the workflow, triggering the breakpoint to continue execution, re-executing the Questioner's process, and continuing to extract parameters based on user feedback.
 
 ```python
-from openjiuwen.core.runtime.interaction.interactive_input import InteractiveInput
+from openjiuwen.core.session.interaction.interactive_input import InteractiveInput
 
-# 用户反馈追问的地点信息`"地点是杭州"`后，继续执行工作流
+# After user feedback on the location information `"地点是杭州"`, continue executing the workflow
 user_input = InteractiveInput()
 for item in workflow_result.result:
-    user_input.update(item.payload.id, "地点是杭州")  # 从上一次追问用户的信息中能够获取到工作流中的断点组件id，并且反馈用户结果
-workflow_runtime = TaskRuntime(trace_id=session_id).create_workflow_runtime()  # 基于TaskRuntime保证同一session id时，Runtime中的状态维持不变，从而实现工作流的断点继续执行
-result = asyncio.run(workflow.invoke(user_input, workflow_runtime))
+    user_input.update(item.payload.id, "地点是杭州")  # Get the breakpoint component id from the previous question to the user, and provide user feedback
+session = create_workflow_session(session_id=session_id)  # Reuse the same session_id, the state in the session remains unchanged, thus enabling workflow breakpoint continuation
+result = asyncio.run(workflow.invoke(user_input, session))
 ```
 
 > **Note**
@@ -912,7 +883,7 @@ The following describes how to use the Branch Component to design workflow branc
 Create a Branch Component instance with default configuration:
 
 ```python
-from openjiuwen.core.component.branch_comp import BranchComponent
+from openjiuwen.core.workflow import BranchComponent
 
 branch_comp = BranchComponent()
 ```
@@ -930,7 +901,7 @@ branch_comp.add_branch(expression_str, ["end"], "pos_branch")
 - Add a `Condition` type branch: Set the preset condition to `ExpressionCondition("${start.query} < 0")`, the target component to the custom absolute value calculation component, and the branch name to neg_branch.
 
 ```python
-from openjiuwen.core.component.condition.expression import ExpressionCondition
+from openjiuwen.core.workflow import ExpressionCondition
 # Condition类型，表示一个预定义的、可调用的条件对象
 expression_condition = ExpressionCondition("${start.query} < 0")
 branch_comp.add_branch(expression_condition, ["abs"], "neg_branch")
@@ -954,21 +925,22 @@ import asyncio
 import os
 
 from openjiuwen.core.common.exception.exception import JiuWenBaseException
-from openjiuwen.core.component.condition.expression import ExpressionCondition
-from openjiuwen.core.context_engine.base import Context
-from openjiuwen.core.runtime.base import ComponentExecutable
-from openjiuwen.core.runtime.runtime import Runtime
-from openjiuwen.core.component.base import WorkflowComponent
-from openjiuwen.core.runtime.workflow import WorkflowRuntime
-from openjiuwen.core.workflow.base import Workflow, WorkflowOutput
-from openjiuwen.core.graph.executable import Input, Output
-from openjiuwen.core.component.start_comp import Start
-from openjiuwen.core.component.end_comp import End
-from openjiuwen.core.component.branch_comp import BranchComponent
+from openjiuwen.core.workflow import ExpressionCondition
+from openjiuwen.core.common.exception.exception import JiuWenBaseException
+from openjiuwen.core.workflow import ExpressionCondition
+from openjiuwen.core.workflow import ComponentAbility, WorkflowComponent, Workflow
+from openjiuwen.core.workflow.components.component import Input, Output
+from openjiuwen.core.workflow.components import Session
+from openjiuwen.core.context_engine import ModelContext
+from openjiuwen.core.workflow import create_workflow_session
+from openjiuwen.core.workflow import Workflow, WorkflowOutput
+from openjiuwen.core.workflow import Start
+from openjiuwen.core.workflow import End
+from openjiuwen.core.workflow import BranchComponent
 
 
-class AbsComponent(ComponentExecutable, WorkflowComponent):
-    async def invoke(self, inputs: Input, runtime: Runtime, context: Context) -> Output:
+class AbsComponent(WorkflowComponent):
+    async def invoke(self, inputs: Input, session: Session, context: ModelContext) -> Output:
         num = inputs["num"]
         if num < 0:
             return {"result": -num}
@@ -1004,15 +976,15 @@ async def run_workflow(num: int) -> tuple[WorkflowOutput | str, bool]:
     branch_comp.add_branch(expression_callable, ["abs"], "zero_branch")
     workflow.add_workflow_comp("branch", branch_comp)
 
-    # 定义组件连接：分支组件的条件边无需显式地调用工作流的add_connection或add_conditional_connection方法
+    # Define component connections: branch component conditional edges do not need to explicitly call workflow's add_connection or add_conditional_connection methods
     workflow.add_connection("start", "branch")
     workflow.add_connection("abs", "end")
-    # 构造输入、工作流运行时，调用工作流
+    # Construct input, workflow session, and call workflow
     inputs = {"user_inputs": {"query": num}}
-    runtime = WorkflowRuntime()
+    session = create_workflow_session()
 
     try:
-        workflow_output = await workflow.invoke(inputs, runtime)
+        workflow_output = await workflow.invoke(inputs, session)
         return workflow_output, True
     except JiuWenBaseException as e:
         print(f"workflow execute error: {e}")
@@ -1073,7 +1045,7 @@ From the workflow execution results, it can be seen that:
 
 In workflow orchestration, simple loop processes can be achieved via conditional connections by jumping the process back to executed preceding components for repetition. However, for sub-process loop scenarios requiring multi-component coordination and complex logic, the more powerful `LoopComponent` should be used. This component supports configuring loop conditions to flexibly control the continuation or termination of the loop, thereby realizing more complex and refined process control logic.
 
-The Loop Component defines the loop body through `LoopGroup` and controls the loop process in combination with loop configurations, supporting various loop scenarios. Additionally, it can work with the `SetVariableComponent` to implement variable assignment and passing within the loop body for flexible variable control, and cooperate with the `BreakComponent` to actively break out of the loop under specific conditions, achieving early termination of the loop.
+The Loop Component defines the loop body through `LoopGroup` and controls the loop process in combination with loop configurations, supporting various loop scenarios. Additionally, it can work with the `LoopSetVariableComponent` to implement variable assignment and passing within the loop body for flexible variable control, and cooperate with the `LoopBreakComponent` to actively break out of the loop under specific conditions, achieving early termination of the loop.
 
 The Loop Component supports 4 types of loop scenarios, configured via the `loop_type` parameter:
 
@@ -1081,7 +1053,7 @@ The Loop Component supports 4 types of loop scenarios, configured via the `loop_
 | :--- | :--- | :--- |
 | **Array Loop** | `"array"` | Iterates through an array, using each element of the array as variable input. The number of iterations equals the array length. The array can be configured based on variables output by preceding components in array type, or specific array data can be specified. |
 | **Number Loop** | `"number"` | Specifies a fixed number of iterations. The count configuration can be based on output variable values of executed components or configured as a fixed value. |
-| **Infinite Loop** | `"always_true"` | Implements an infinite loop. Components within the loop body execute indefinitely within the maximum limit (max 1000 iterations), relying entirely on `BreakComponent` to implement the logic for terminating the loop process. |
+| **Infinite Loop** | `"always_true"` | Implements an infinite loop. Components within the loop body execute indefinitely within the maximum limit (max 1000 iterations), relying entirely on `LoopBreakComponent` to implement the logic for terminating the loop process. |
 | **Expression Loop** | `"expression"` | Controls loop conditions via an expression. The loop continues when the calculation result of the expression is true; otherwise, it terminates. It can be combined with intermediate variables to implement complex loop control logic. |
 
 Inside the loop body, loop-related variables can be accessed in the form of `${loop_id.variable_name}`, where `loop_id` is the ID of the loop component. This ID can be customized to other fields, such as `loop1`, `loop2`, etc. Examples:
@@ -1090,13 +1062,13 @@ Inside the loop body, loop-related variables can be accessed in the form of `${l
 - `loop_id.Current element name in Array Loop`: The current element in an Array Loop, e.g., `loop_id.item`.
 - `loop_id.Custom variable name`: Intermediate variables defined via `intermediate_var`. Example: `workflow.add_workflow_comp("loop", loop_component, inputs_schema={..., "intermediate_var": {"user_var": "openJiuwen"}} )`. Inside the loop body, the custom variable can be accessed via `loop.user_var`.
 
-When custom intermediate variables are needed in the loop body, these variables can be initialized via the `intermediate_var` parameter. These intermediate variables can be updated during the loop process via `SetVariableComponent`, thereby implementing complex state management and loop control logic.
+When custom intermediate variables are needed in the loop body, these variables can be initialized via the `intermediate_var` parameter. These intermediate variables can be updated during the loop process via `LoopSetVariableComponent`, thereby implementing complex state management and loop control logic.
 
 > **Note**
 >
-> 1. When adding a Loop Component to a workflow, subscript access (e.g., `"loop_array": {"item": "${a.b}[0]"}`、`"loop_number": "${a.b}[0]['c']"`、`SetVariableComponent({"${loop.user_var": "${a.b}[0]"})`、`"intermediate_var": {"user_var": "${a.b}[0]['c']"}`) is **not supported** when configuring the `loop_array` parameter for Array Loop, the `loop_number` parameter for Number Loop, the `SetVariableComponent` parameter, and the `intermediate_var` parameter. Otherwise, a "LoopComponent error" will be reported.
+> 1. When adding a Loop Component to a workflow, subscript access (e.g., `"loop_array": {"item": "${a.b}[0]"}`、`"loop_number": "${a.b}[0]['c']"`、`LoopSetVariableComponent({"${loop.user_var": "${a.b}[0]"})`、`"intermediate_var": {"user_var": "${a.b}[0]['c']"}`) is **not supported** when configuring the `loop_array` parameter for Array Loop, the `loop_number` parameter for Number Loop, the `LoopSetVariableComponent` parameter, and the `intermediate_var` parameter. Otherwise, a "LoopComponent error" will be reported.
 > 2. The Loop Component does not support nested loops.
-> 3. `SetVariableComponent` does not support updating output variables of preceding components.
+> 3. `LoopSetVariableComponent` does not support updating output variables of preceding components.
 
 ## Array Loop
 
@@ -1105,16 +1077,15 @@ The Array Loop is the most common loop type, used to iterate through each elemen
 Create a loop body. Adding components within the loop body is consistent with adding components to a workflow. Specify the start and end components via the `start_nodes` and `end_nodes` methods, respectively.
 
 ```python
-from openjiuwen.core.component.base import WorkflowComponent
-from openjiuwen.core.component.loop_comp import LoopGroup, LoopComponent
-from openjiuwen.core.context_engine.base import Context
-from openjiuwen.core.graph.executable import Input, Output
-from openjiuwen.core.runtime.base import ComponentExecutable
-from openjiuwen.core.runtime.runtime import Runtime
+from openjiuwen.core.workflow import LoopGroup, LoopComponent
+from openjiuwen.core.workflow import ComponentAbility, WorkflowComponent, Workflow
+from openjiuwen.core.workflow.components.component import Input, Output
+from openjiuwen.core.workflow.components import Session
+from openjiuwen.core.context_engine import ModelContext
 
-# 通用节点组件，返回输入值
-class CommonNode(ComponentExecutable, WorkflowComponent):
-    async def invoke(self, inputs: Input, runtime: Runtime, context: Context) -> Output:
+# Common node component that returns input value
+class CommonNode(WorkflowComponent):
+    async def invoke(self, inputs: Input, session: Session, context: ModelContext) -> Output:
         return {"output": inputs["value"]}
 
 # 创建LoopGroup
@@ -1148,9 +1119,9 @@ loop_component = LoopComponent(
 Add the Loop Component to the workflow:
 
 ```python
-from openjiuwen.core.workflow.base import Workflow
-from openjiuwen.core.component.start_comp import Start
-from openjiuwen.core.component.end_comp import End
+from openjiuwen.core.workflow import Workflow
+from openjiuwen.core.workflow import Start
+from openjiuwen.core.workflow import End
 
 # 创建工作流实例
 workflow = Workflow()
@@ -1179,7 +1150,7 @@ workflow.add_connection("loop", "e")
 Run the workflow containing the Loop Component. The output result is an array formed by concatenating the output values of the 3 components within the loop body after 3 iterations:
 
 ```python
-from openjiuwen.core.runtime.workflow import WorkflowRuntime
+from openjiuwen.core.workflow import create_workflow_session
 import asyncio
 
 # 准备输入参数
@@ -1187,8 +1158,8 @@ inputs = {
     "user_input": [1, 2, 3]  # 要循环遍历的数组
 }
 
-# 调用invoke方法执行工作流
-result = asyncio.run(workflow.invoke(inputs, WorkflowRuntime()))
+# Call invoke method to execute workflow
+result = asyncio.run(workflow.invoke(inputs, create_workflow_session()))
 
 assert result.result["output"]["user_var"] == {"a": [1, 2, 3], "b": [1, 2, 3], "c": [1, 2, 3]}
 ```
@@ -1200,17 +1171,16 @@ The Number Loop is used to execute loop operations a fixed number of times, suit
 Configure `loop_type` as "number" in `LoopComponent`, and specify the number of iterations via `loop_number`. Inside the loop body, the current loop index (starting from 0) can be obtained via `${loop.index}`:
 
 ```python
-from openjiuwen.core.component.base import WorkflowComponent
-from openjiuwen.core.component.loop_comp import LoopGroup, LoopComponent
-from openjiuwen.core.context_engine.base import Context
-from openjiuwen.core.graph.executable import Input, Output
-from openjiuwen.core.runtime.base import ComponentExecutable
-from openjiuwen.core.runtime.runtime import Runtime
+from openjiuwen.core.workflow import LoopGroup, LoopComponent
+from openjiuwen.core.workflow import ComponentAbility, WorkflowComponent, Workflow
+from openjiuwen.core.workflow.components.component import Input, Output
+from openjiuwen.core.workflow.components import Session
+from openjiuwen.core.context_engine import ModelContext
 
-# 为LoopGroup添加3个工作流组件，每个组件输入都是当前循环索引
-# （使用前面定义的CommonNode组件）
-class CommonNode(ComponentExecutable, WorkflowComponent):
-    async def invoke(self, inputs: Input, runtime: Runtime, context: Context) -> Output:
+# Add 3 workflow components to LoopGroup, each component input is the current loop index
+# (using the CommonNode component defined earlier)
+class CommonNode(WorkflowComponent):
+    async def invoke(self, inputs: Input, session: Session, context: ModelContext) -> Output:
         return {"output": inputs["value"]}
 
 loop_group = LoopGroup()
@@ -1232,9 +1202,9 @@ loop_component = LoopComponent(
 Add to the workflow, setting the loop type and count:
 
 ```python
-from openjiuwen.core.workflow.base import Workflow
-from openjiuwen.core.component.start_comp import Start
-from openjiuwen.core.component.end_comp import End
+from openjiuwen.core.workflow import Workflow
+from openjiuwen.core.workflow import Start
+from openjiuwen.core.workflow import End
 
 # 创建工作流实例
 workflow = Workflow()
@@ -1263,7 +1233,7 @@ workflow.add_connection("loop", "e")
 The workflow structure remains unchanged. Run the workflow with an input of `3`. The output is an array of the results from the components within the loop body for each of the 3 iterations.
 
 ```python
-from openjiuwen.core.runtime.workflow import WorkflowRuntime
+from openjiuwen.core.workflow import create_workflow_session
 import asyncio
 
 # 准备输入参数
@@ -1271,8 +1241,8 @@ inputs = {
     "user_input": 3  # 要循环遍历的次数
 }
 
-# 调用invoke方法执行工作流
-result = asyncio.run(workflow.invoke(inputs, WorkflowRuntime()))
+# Call invoke method to execute workflow
+result = asyncio.run(workflow.invoke(inputs, create_workflow_session()))
 
 assert result.result["output"]["user_var"] == {"a": [0, 1, 2], "b": [0, 1, 2], "c": [0, 1, 2]}
 ```
@@ -1281,26 +1251,25 @@ assert result.result["output"]["user_var"] == {"a": [0, 1, 2], "b": [0, 1, 2], "
 
 The Expression Loop dynamically controls the continuation or termination of the loop through expressions, providing the most flexible way of loop control, suitable for complex loop condition judgments. Configure `loop_type` as "expression" in `LoopComponent`, set the loop condition expression via the `bool_expression` parameter, and define intermediate variables via `intermediate_var` to implement complex loop state management.
 
-First, create the loop body and related components. Expression loops usually need to work with intermediate variables and the `SetVariableComponent` to implement complex state management:
+First, create the loop body and related components. Expression loops usually need to work with intermediate variables and the `LoopSetVariableComponent` to implement complex state management:
 
 ```python
 import asyncio
-from openjiuwen.core.component.base import WorkflowComponent
-from openjiuwen.core.component.loop_comp import LoopComponent, LoopGroup
-from openjiuwen.core.component.set_variable_comp import SetVariableComponent
-from openjiuwen.core.context_engine.base import Context
-from openjiuwen.core.graph.executable import Input, Output
-from openjiuwen.core.runtime.base import ComponentExecutable
-from openjiuwen.core.runtime.runtime import Runtime
-from openjiuwen.core.runtime.workflow import WorkflowRuntime
+from openjiuwen.core.workflow import LoopComponent, LoopGroup
+from openjiuwen.core.workflow import LoopSetVariableComponent
+from openjiuwen.core.workflow import ComponentAbility, WorkflowComponent, Workflow, ComponentExecutable
+from openjiuwen.core.workflow.components.component import Input, Output
+from openjiuwen.core.workflow.components import Session
+from openjiuwen.core.context_engine import ModelContext
+from openjiuwen.core.workflow import create_workflow_session
 
-# 简单的加法组件，将输入值加10
+# Simple addition component that adds 10 to the input value
 class AddTenNode(ComponentExecutable, WorkflowComponent):
     def __init__(self, node_id: str = None):
         super().__init__()
         self.node_id = node_id
 
-    async def invoke(self, inputs: Input, runtime: Runtime, context: Context) -> Output:
+    async def invoke(self, inputs: Input, session: Session, context: ModelContext) -> Output:
         # 安全处理输入
         if inputs is None or "source" not in inputs:
             return {"result": 10}
@@ -1314,7 +1283,7 @@ loop_group.add_workflow_comp("1", AddTenNode("1"), inputs_schema={"source": "${l
 loop_group.add_workflow_comp("2", AddTenNode("2"),
                              inputs_schema={"source": "${loop.user_var}"})
 # 创建变量设置组件，将第二个组件的结果更新到中间变量user_var中
-set_variable_component = SetVariableComponent({"${loop.user_var}": "${2.result}"})  
+set_variable_component = LoopSetVariableComponent({"${loop.user_var}": "${2.result}"})  
 loop_group.add_workflow_comp("3", set_variable_component)
 
 # 指定起始和结束组件
@@ -1336,9 +1305,9 @@ loop_component = LoopComponent(loop_group, {"results": "${1.result}", "user_var"
 Add the Loop Component to the workflow, setting the Expression Loop type and loop condition:
 
 ```python
-from openjiuwen.core.workflow.base import Workflow
-from openjiuwen.core.component.start_comp import Start
-from openjiuwen.core.component.end_comp import End
+from openjiuwen.core.workflow import Workflow
+from openjiuwen.core.workflow import Start
+from openjiuwen.core.workflow import End
 
 # 创建工作流实例
 workflow = Workflow()
@@ -1368,7 +1337,7 @@ Run the workflow and verify the results:
 
 ```python
 import asyncio
-from openjiuwen.core.runtime.workflow import WorkflowRuntime
+from openjiuwen.core.workflow import create_workflow_session
 
 # 准备输入参数
 inputs = {
@@ -1376,8 +1345,8 @@ inputs = {
     "loop_number": 2   # 控制循环次数
 }
 
-# 调用invoke方法执行工作流
-result = asyncio.run(workflow.invoke(inputs, WorkflowRuntime()))
+# Call invoke method to execute workflow
+result = asyncio.run(workflow.invoke(inputs, create_workflow_session()))
 
 # 验证结果
 output = result.result.get("output", {})
@@ -1393,9 +1362,9 @@ assert output.get("user_var") == 22
 
 ## Infinite Loop
 
-The Infinite Loop is suitable for scenarios where the stop time needs to be dynamically decided based on runtime conditions. Early termination of the loop is implemented via `BreakComponent`.
+The Infinite Loop is suitable for scenarios where the stop time needs to be dynamically decided based on runtime conditions. Early termination of the loop is implemented via `LoopBreakComponent`.
 
-Configure `loop_type` as "always_true" in `LoopComponent` to implement an infinite loop. The loop body will execute continuously until it encounters a `BreakComponent` or reaches the system's maximum loop limit (default is 1000 times). The following example demonstrates how to use an Infinite Loop combined with condition judgment and the Break Component to achieve flexible loop control.
+Configure `loop_type` as "always_true" in `LoopComponent` to implement an infinite loop. The loop body will execute continuously until it encounters a `LoopBreakComponent` or reaches the system's maximum loop limit (default is 1000 times). The following example demonstrates how to use an Infinite Loop combined with condition judgment and the Break Component to achieve flexible loop control.
 
 The process within the loop body is shown below:
 
@@ -1406,28 +1375,27 @@ The process within the loop body is shown below:
 Create the loop body, registering custom components, branch components, variable setting components, and the break component.
 
 ```python
-from openjiuwen.core.component.base import WorkflowComponent
-from openjiuwen.core.context_engine.base import Context
-from openjiuwen.core.runtime.runtime import Runtime
-from openjiuwen.core.runtime.base import Input, Output, ComponentExecutable
-from openjiuwen.core.component.loop_comp import LoopGroup
-from openjiuwen.core.component.break_comp import BreakComponent
-from openjiuwen.core.component.set_variable_comp import SetVariableComponent
-from openjiuwen.core.component.branch_comp import BranchComponent
-from openjiuwen.core.workflow.base import Workflow
+from openjiuwen.core.workflow import ComponentAbility, WorkflowComponent, Workflow
+from openjiuwen.core.workflow.components.component import Input, Output
+from openjiuwen.core.workflow.components import Session
+from openjiuwen.core.context_engine import ModelContext
+from openjiuwen.core.workflow import LoopGroup
+from openjiuwen.core.workflow import LoopBreakComponent
+from openjiuwen.core.workflow import LoopSetVariableComponent
+from openjiuwen.core.workflow import BranchComponent
 
-# 创建LoopGroup
+# Create LoopGroup
 loop_group = LoopGroup()
 
-# 创建通用节点作为循环体核心组件
+# Create common node as the core component of the loop body
 class CommonNode(ComponentExecutable, WorkflowComponent):
-    async def invoke(self, inputs: Input, runtime: Runtime, context: Context) -> Output:
-        # 模拟循环体的工作，返回结果
+    async def invoke(self, inputs: Input, session: Session, context: ModelContext) -> Output:
+        # Simulate the work of the loop body and return result
         return {"output": True}
 
-# 创建递增组件，用于递增循环变量
+# Create increment component for incrementing loop variable
 class IncrementNode(ComponentExecutable, WorkflowComponent):
-    async def invoke(self, inputs: Input, runtime: Runtime, context: Context) -> Output:
+    async def invoke(self, inputs: Input, session: Session, context: ModelContext) -> Output:
         # 从输入中获取当前值并递增
         current_value = inputs.get("value", 0)
         return {"result": current_value + 1}
@@ -1444,11 +1412,11 @@ increment_node = IncrementNode()
 loop_group.add_workflow_comp("increment", increment_node, inputs_schema={"value": "${loop.user_var}"})
 
 # 创建变量设置组件，将递增后的值赋值回循环变量
-set_variable_component = SetVariableComponent({"${loop.user_var}": "${increment.result}"})
+set_variable_component = LoopSetVariableComponent({"${loop.user_var}": "${increment.result}"})
 loop_group.add_workflow_comp("setVar", set_variable_component)
 
 # 创建终止循环组件
-break_node = BreakComponent()
+break_node = LoopBreakComponent()
 loop_group.add_workflow_comp("break", break_node)
 
 # 指定组件"a"为循环开始，组件"setVar"为正常循环结束
@@ -1469,7 +1437,7 @@ loop_group.add_connection("increment", "setVar")
 Create the Loop Component and set intermediate variables:
 
 ```python
-from openjiuwen.core.component.loop_comp import LoopComponent
+from openjiuwen.core.workflow import LoopComponent
 
 # 创建LoopComponent，设置输出模式，捕获最终的中间变量、循环计数和循环结果
 loop_component = LoopComponent(loop_group, {"user_var": "${loop.user_var}", "loop_count": "${loop.index}", "results": "${a.output}"})
@@ -1478,8 +1446,8 @@ loop_component = LoopComponent(loop_group, {"user_var": "${loop.user_var}", "loo
 Add to the workflow:
 
 ```python
-from openjiuwen.core.component.end_comp import End
-from openjiuwen.core.component.start_comp import Start
+from openjiuwen.core.workflow import End
+from openjiuwen.core.workflow import Start
 
 # 创建工作流实例
 workflow = Workflow()
@@ -1505,10 +1473,10 @@ The workflow structure remains unchanged. Run the workflow; the loop body loops 
 
 ```python
 import asyncio
-from openjiuwen.core.runtime.workflow import WorkflowRuntime
+from openjiuwen.core.workflow import create_workflow_session
 
-# 调用invoke方法执行工作流
-result = asyncio.run(workflow.invoke({}, WorkflowRuntime()))
+# Call invoke method to execute workflow
+result = asyncio.run(workflow.invoke({}, create_workflow_session()))
 
 print(f"执行结果: {result.result}")
 output = result.result.get('output', {})
@@ -1527,19 +1495,19 @@ The following example introduces how to use `SubWorkflowComponent` to implement 
 First, define the `CustomComponent` component:
 
 ```python
-from openjiuwen.core.component.base import WorkflowComponent
-from openjiuwen.core.context_engine.base import Context
-from openjiuwen.core.runtime.base import ComponentExecutable, Input, Output
-from openjiuwen.core.runtime.runtime import Runtime
+from openjiuwen.core.workflow import ComponentAbility, WorkflowComponent, Workflow
+from openjiuwen.core.workflow.components.component import Input, Output
+from openjiuwen.core.workflow.components import Session
+from openjiuwen.core.context_engine import ModelContext
 
-class CustomComponent(WorkflowComponent, ComponentExecutable):
-    """自定义组件"""
+class CustomComponent(WorkflowComponent):
+    """Custom component"""
 
     def __init__(self):
         super().__init__()
 
-    async def invoke(self, inputs: Input, runtime: Runtime, context: Context) -> Output:
-        """处理输入并返回用户query"""
+    async def invoke(self, inputs: Input, session: Session, context: ModelContext) -> Output:
+        """Process input and return user query"""
         query = inputs.get("query", "")
         return {
             "result": query
@@ -1549,9 +1517,9 @@ class CustomComponent(WorkflowComponent, ComponentExecutable):
 Next, define the sub-workflow, containing `Start`, `CustomComponent`, and `End` components:
 
 ```python
-from openjiuwen.core.workflow.base import Workflow
-from openjiuwen.core.component.start_comp import Start
-from openjiuwen.core.component.end_comp import End
+from openjiuwen.core.workflow import Workflow
+from openjiuwen.core.workflow import Start
+from openjiuwen.core.workflow import End
 
 # 初始化子工作流
 sub_workflow = Workflow()
@@ -1569,7 +1537,7 @@ sub_workflow.add_connection("sub_custom_comp", "sub_end")
 Finally, define the main workflow and add the sub-workflow to it:
 
 ```python
-from openjiuwen.core.component.workflow_comp import SubWorkflowComponent
+from openjiuwen.core.workflow import SubWorkflowComponent
 
 # 初始化主工作流
 main_workflow = Workflow()
@@ -1591,17 +1559,17 @@ Execute the main workflow, invoking the created sub-workflow via the Workflow Ex
 
 ```python
 import asyncio
-from openjiuwen.core.runtime.workflow import WorkflowRuntime
+from openjiuwen.core.workflow import create_workflow_session
 
 async def run_workflow():
-    # 创建工作流运行时
-    runtime = WorkflowRuntime(workflow_id="test_workflow", session_id="test_session")
+    # Create workflow session
+    session = create_workflow_session(session_id="test_session")
 
-    # 构造输入
+    # Construct input
     inputs = {"user_inputs": {"query": "hello"}}
 
-    # 调用工作流
-    result = await main_workflow.invoke(inputs, runtime)
+    # Call workflow
+    result = await main_workflow.invoke(inputs, session)
     return result
 
 

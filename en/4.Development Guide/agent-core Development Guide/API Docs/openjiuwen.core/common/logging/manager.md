@@ -1,9 +1,9 @@
-# openjiuwen.core.common.logging.manager
+# openjiuwen.core.common.logging
 
 ## class openjiuwen.core.common.logging.manager.LogManager
 
 ```python
-LogManager()
+class openjiuwen.core.common.logging.manager.LogManager
 ```
 
 The `LogManager` class centrally manages all loggers and provides functionality for registering and retrieving loggers.
@@ -115,3 +115,59 @@ Retrieves a logger.
 >>> logger.info("This is a message from the custom logger")
 2025-09-29 03:07:04,789 | [CUSTOM] | INFO | This is a message from the custom logger
 ```
+
+### set_default_logger_class
+
+```python
+classmethod set_default_logger_class(cls, logger_class: Type[LoggerProtocol]) -> None
+```
+
+Sets the default logger class.
+
+**Parameters**:
+
+* **logger_class** (Type[LoggerProtocol]): Default logger class, must implement the `LoggerProtocol` protocol.
+
+**Returns**:
+
+No return value.
+
+### initialize
+
+```python
+classmethod initialize(cls) -> None
+```
+
+Initializes the log manager. In async environments, typically called only once at application startup. When called multiple times, already initialized parts are skipped (idempotent operation).
+
+**Returns**:
+
+No return value.
+
+**Exceptions**:
+
+* **RuntimeError**: Raised if `LogConfig` is unavailable.
+
+### get_all_loggers
+
+```python
+classmethod get_all_loggers(cls) -> Dict[str, LoggerProtocol]
+```
+
+Retrieves all registered loggers.
+
+**Returns**:
+
+`Dict[str, LoggerProtocol]`, a copy dictionary of all loggers, with logger IDs as keys and logger instances as values.
+
+### reset
+
+```python
+classmethod reset(cls) -> None
+```
+
+Resets the log manager. Clears all loggers and initialization state. Mainly used for testing scenarios.
+
+**Returns**:
+
+No return value.

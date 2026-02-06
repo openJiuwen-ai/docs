@@ -1,154 +1,196 @@
-# openjiuwen.core.common.logging.protocol
+# openjiuwen.core.common.logging
 
 ## class openjiuwen.core.common.logging.protocol.LoggerProtocol
 
-```python
-LoggerProtocol(Protocol)
+```
+class openjiuwen.core.common.logging.protocol.LoggerProtocol
 ```
 
-Developers can implement custom loggers by inheriting from the `LoggerProtocol` class.
+Logger protocol interface. When developers implement custom loggers, they need to implement all methods defined in the `LoggerProtocol` protocol.
 
-### get_config()
+### debug(msg: str, *args, **kwargs) -> None
 
-```python
-get_config() -> Dict[str, Any]
-```
-
-Retrieves the logger configuration.
-
-**Returns**:
-
-* **Dict[str, Any]**: Logger configuration information.
-
-**Example**:
-
-```python
->>> 
->>> from openjiuwen.core.common.logging.protocol import LoggerProtocol
->>> import logging
->>> 
->>> class CustomLogger(LoggerProtocol):
-...     """Custom logger implementation"""
-... 
-...     def __init__(self, log_type: str, config: dict):
-...         '''Custom logger initialisation'''
-...         self.log_type = log_type
-...         self.config = config
-...         self._logger = logging.getLogger(f"custom_{log_type}")
-...         self._setup_logger()
-... 
-...     def _setup_logger(self):
-...         '''Custom logger setup'''
-...         level = self.config.get('level', logging.INFO)
-...         self._logger.setLevel(level)
-... 
-...         # Add a custom format
-...         formatter = logging.Formatter(
-...             '%(asctime)s | [CUSTOM] | %(levelname)s | %(message)s'
-...         )
-... 
-...         handler = logging.StreamHandler()
-...         handler.setFormatter(formatter)
-...         self._logger.addHandler(handler)
-... 
-...     # Implement all methods required by LoggerProtocol
-...     def get_config(self) -> dict:
-...         """Get logger configuration"""
-...         return self.config.copy()
-... 
->>> from openjiuwen.core.common.logging import LogManager
->>> 
->>> # Create a custom logger
->>> custom_config = {
-...     'level': logging.INFO,
-...     'format': 'custom_format'
-... }
-... 
->>> custom_logger = CustomLogger('my_app', custom_config)
->>> 
->>> # Register with LogManager
->>> LogManager.register_logger('my_app', custom_logger)
->>> 
->>> # Use the logger
->>> logger = LogManager.get_logger('my_app')
->>> print(logger.get_config())
-{"level": 20, "format": "custom_format"}
-```
-
-### reconfigure
-
-```python
-reconfigure(config: Dict[str, Any]) -> None
-```
-
-Reconfigures the logger.
+Log a debug-level message.
 
 **Parameters**:
 
-* **config** (Dict[str, Any]): Logger configuration.
+* **msg** (str): Log message content
+* **\*args**: Variable positional arguments for message formatting
+* **\*\*kwargs**: Variable keyword arguments for passing additional information
 
-**Example**:
+**Returns**:
 
-```python
->>> from openjiuwen.core.common.logging.protocol import LoggerProtocol
->>> import logging
->>> 
->>> class CustomLogger(LoggerProtocol):
-...     """Custom logger implementation"""
-... 
-...     def __init__(self, log_type: str, config: dict):
-...         '''Custom logger initialisation'''
-...         self.log_type = log_type
-...         self.config = config
-...         self._logger = logging.getLogger(f"custom_{log_type}")
-...         self._setup_logger()
-... 
-...     def _setup_logger(self):
-...         '''Custom logger setup'''
-...         level = self.config.get('level', logging.INFO)
-...         self._logger.setLevel(level)
-... 
-...         # Add a custom format
-...         formatter = logging.Formatter(
-...             '%(asctime)s | [CUSTOM] | %(levelname)s | %(message)s'
-...         )
-... 
-...         handler = logging.StreamHandler()
-...         handler.setFormatter(formatter)
-...         self._logger.addHandler(handler)
-... 
-...     # Implement all methods required by LoggerProtocol
-...     def get_config(self) -> dict:
-...         """Get logger configuration"""
-...         return self.config.copy()
-... 
-...     def reconfigure(self, config: dict) -> None:
-...         """Reconfigure the logger"""
-...         self.config = config
-...         self._setup_logger()
-... 
->>> from openjiuwen.core.common.logging import LogManager
->>> 
->>> # Create a custom logger
->>> custom_config = {
-...     'level': logging.INFO,
-...     'format': 'custom_format'
-... }
-... 
->>> custom_logger = CustomLogger('my_app', custom_config)
->>> 
->>> # New configuration
->>> new_custom_config = {
-...     'level': logging.DEBUG,
-...     'format': 'new_custom_format'
-... }
-... 
->>> # Register with LogManager
->>> LogManager.register_logger('my_app', custom_logger)
->>> 
->>> # Use the logger
->>> logger = LogManager.get_logger('my_app')
->>> logger.reconfigure(new_custom_config)
->>> print(logger.get_config())
-{"level": 10, "format": "new_custom_format"}
-```
+No return value.
+
+### info(msg: str, *args, **kwargs) -> None
+
+Log an info-level message.
+
+**Parameters**:
+
+* **msg** (str): Log message content
+* **\*args**: Variable positional arguments for message formatting
+* **\*\*kwargs**: Variable keyword arguments for passing additional information
+
+**Returns**:
+
+No return value.
+
+### warning(msg: str, *args, **kwargs) -> None
+
+Log a warning-level message.
+
+**Parameters**:
+
+* **msg** (str): Log message content
+* **\*args**: Variable positional arguments for message formatting
+* **\*\*kwargs**: Variable keyword arguments for passing additional information
+
+**Returns**:
+
+No return value.
+
+### error(msg: str, *args, **kwargs) -> None
+
+Log an error-level message.
+
+**Parameters**:
+
+* **msg** (str): Log message content
+* **\*args**: Variable positional arguments for message formatting
+* **\*\*kwargs**: Variable keyword arguments for passing additional information
+
+**Returns**:
+
+No return value.
+
+### critical(msg: str, *args, **kwargs) -> None
+
+Log a critical-level message.
+
+**Parameters**:
+
+* **msg** (str): Log message content
+* **\*args**: Variable positional arguments for message formatting
+* **\*\*kwargs**: Variable keyword arguments for passing additional information
+
+**Returns**:
+
+No return value.
+
+### exception(msg: str, *args, **kwargs) -> None
+
+Log exception information, including stack trace.
+
+**Parameters**:
+
+* **msg** (str): Log message content
+* **\*args**: Variable positional arguments for message formatting
+* **\*\*kwargs**: Variable keyword arguments for passing additional information
+
+**Returns**:
+
+No return value.
+
+### log(level: int, msg: str, *args, **kwargs) -> None
+
+Generic logging method that allows specifying the log level.
+
+**Parameters**:
+
+* **level** (int): Log level (e.g., logging.DEBUG, logging.INFO, etc.)
+* **msg** (str): Log message content
+* **\*args**: Variable positional arguments for message formatting
+* **\*\*kwargs**: Variable keyword arguments for passing additional information
+
+**Returns**:
+
+No return value.
+
+### set_level(level: int) -> None
+
+Set the log level.
+
+**Parameters**:
+
+* **level** (int): Log level (e.g., logging.DEBUG, logging.INFO, logging.WARNING, logging.ERROR, logging.CRITICAL)
+
+**Returns**:
+
+No return value.
+
+### add_handler(handler: logging.Handler) -> None
+
+Add a log handler.
+
+**Parameters**:
+
+* **handler** (logging.Handler): The log handler to add
+
+**Returns**:
+
+No return value.
+
+### remove_handler(handler: logging.Handler) -> None
+
+Remove a log handler.
+
+**Parameters**:
+
+* **handler** (logging.Handler): The log handler to remove
+
+**Returns**:
+
+No return value.
+
+### add_filter(filter) -> None
+
+Add a log filter.
+
+**Parameters**:
+
+* **filter**: The log filter to add
+
+**Returns**:
+
+No return value.
+
+### remove_filter(filter) -> None
+
+Remove a log filter.
+
+**Parameters**:
+
+* **filter**: The log filter to remove
+
+**Returns**:
+
+No return value.
+
+### get_config() -> Dict[str, Any]
+
+Get logger configuration information.
+
+**Returns**:
+
+`Dict[str, Any]`, the logger's configuration dictionary.
+
+### reconfigure(config: Dict[str, Any]) -> None
+
+Reconfigure the logger.
+
+**Parameters**:
+
+* **config** (Dict[str, Any]): New configuration dictionary
+
+**Returns**:
+
+No return value.
+
+### logger()
+
+Return the internal logger object.
+
+**Returns**:
+
+Internal logger object.

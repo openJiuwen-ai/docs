@@ -41,20 +41,20 @@ The connection relationship between components describes the flow path of data, 
 
 This diverse connection mechanism enables workflows to balance the needs for sequential execution, conditional control, and real-time processing, enhancing the flexibility and expressive power of business processes.
 
-# Workflow Runtime Propagation
+# Workflow Session Propagation
 
-The Workflow Runtime (`WorkflowRuntime`) is the core carrier of workflow execution, responsible for passing necessary data and state information between components to ensure the consistency and integrity of the entire workflow execution process.
+The workflow session (Session) is the core carrier of workflow execution, responsible for passing necessary data and state information between components to ensure the consistency and integrity of the entire workflow execution process.
 
-Every time a workflow is invoked, the system creates a brand-new runtime instance. This runtime encapsulates multiple categories of information required for workflow execution:
+Each time a workflow is invoked, the caller needs to pass in a workflow session (usually created by `create_workflow_session()`). This session encapsulates multiple categories of information required for workflow execution:
 
 * **Workflow Configuration**: Defines the overall running parameters of the workflow.
 * **Component Configuration**: Records the personalized parameters of each component.
 * **Component State**: Saves the intermediate states of components during operation.
 * **Global State**: Supports data sharing between different components.
 
-During operation, components can read and write data through the runtime, thereby achieving collaboration with other components. In addition, the runtime also provides access capabilities to framework functional modules, such as streaming output, further extending the capability boundaries of components.
+During operation, components can read and write data through the session, thereby achieving collaboration with other components. In addition, the session also provides access capabilities to framework functional modules, such as streaming output, further extending the capability boundaries of components.
 
-Through this design, the runtime serves not only as a centralized management center for data and state but also as the infrastructure for collaboration and extension between components.
+Through this design, the session serves not only as a centralized management center for data and state but also as the infrastructure for collaboration and extension between components.
 
 # Workflow Composition
 

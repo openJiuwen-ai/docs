@@ -13,54 +13,68 @@ Runner supports single-output and streaming-output execution for all Agents, inc
 Below is an example using a `WorkflowAgent` to illustrate executing an `Agent` via `Runner`.
 
 First, create a WorkflowAgent instance:
+
 ```python
-from openjiuwen.agent.common.enum import ControllerType
-from openjiuwen.agent.common.schema import WorkflowSchema
-from openjiuwen.agent.config.workflow_config import WorkflowAgentConfig
-from openjiuwen.agent.workflow_agent.workflow_agent import WorkflowAgent
-from openjiuwen.core.component.end_comp import End
-from openjiuwen.core.component.start_comp import Start
-from openjiuwen.core.runner.runner import resource_mgr
-from openjiuwen.core.workflow.base import Workflow
-from openjiuwen.core.workflow.workflow_config import WorkflowConfig, WorkflowMetadata
+from openjiuwen.core.common.constants.enums import ControllerType
+from openjiuwen.core.single_agent.legacy import WorkflowSchema
+from openjiuwen.core.application.workflow_agent import WorkflowAgentConfig, WorkflowAgent
+from openjiuwen.core.workflow import End, Start, Workflow, WorkflowCard, generate_workflow_key
+from openjiuwen.core.workflow.workflow_config import WorkflowConfig
+from openjiuwen.core.runner.runner import Runner
+from openjiuwen.core.common import BaseCard
 
-def create_agent():
-   # Create a workflow flow and register it to the resource manager
-   flow = Workflow(workflow_config=WorkflowConfig(
-       metadata=WorkflowMetadata(id="workflow_id", version="1", name="Simple Workflow",
-                                 description="this_is_a_demo")))
-   flow.set_start_comp("start", Start(), inputs_schema={"query": "${query}"})
-   flow.set_end_comp("end", End(), inputs_schema={"result": "${start.query}"})
-   flow.add_connection("start", "end")
 
-   resource_mgr.workflow().add_workflow("workflow_id_1", flow)
+def create_agent(runner):
+    # Create workflow flow
+    card = WorkflowCard(id="workflow_id", name="Simple Workflow", version="1",
+                        description="this_is_a_demo")
+    flow = Workflow(workflow_config=WorkflowConfig(card=card))
+    flow.set_start_comp("start", Start(), inputs_schema={"query": "${query}"})
+    flow.set_end_comp("end", End(), inputs_schema={"result": "${start.query}"})
+    flow.add_connection("start", "end")
 
-   # Create Agent
-   workflow_agent_config = WorkflowAgentConfig(id="agent_id", version="1", description="this_is_a_demo",
-                                               workflows=[WorkflowSchema(
-                                                   id="workflow_id",
-                                                   version="1",
-                                                   name="Simple Workflow",
-                                                   description="this_is_a_demo",
-                                                   inputs={"query": {"type": "string"}},
-                                               )],
-                                               controller_type=ControllerType.WorkflowController
-                                               )
-   agent = WorkflowAgent(agent_config=workflow_agent_config)
-   return agent
+    # Register flow to resource manager (use generate_workflow_key to generate correct key)
+    # Note: When registering, use id_version format key
+    register_card = WorkflowCard(
+        id=generate_workflow_key(card.id, card.version),
+        name=card.name,
+        version=card.version,
+        description=card.description
+    )
+    runner.resource_mgr.add_workflow(register_card, lambda: flow)
 
-agent = create_agent()
+    # Create Agent
+    workflow_agent_config = WorkflowAgentConfig(id="agent_id", version="1", description="this_is_a_demo",
+                                                workflows=[WorkflowSchema(
+                                                    id="workflow_id",
+                                                    version="1",
+                                                    name="Simple Workflow",
+                                                    description="this_is_a_demo",
+                                                    inputs={"query": {"type": "string"}},
+                                                )],
+                                                controller_type=ControllerType.WorkflowController
+                                                )
+    agent = WorkflowAgent(agent_config=workflow_agent_config)
+    return agent
+
+
+# Use global Runner instance
+runner = Runner
+agent = create_agent(runner)
 ```
-Then, call the `run_agent` interface of `Runner` to directly run the WorkflowAgent:
+
+Then, call the `run_agent` interface to directly run the WorkflowAgent:
+
 ```python
 import asyncio
-from openjiuwen.core.runner.runner import Runner
 
-print(asyncio.run(Runner.run_agent(agent=agent, inputs={"conversion_id": "id1", "query": "haha"})))
+print(asyncio.run(runner.run_agent(agent=agent, inputs={"conversation_id": "id1", "query": "haha"})))
 ```
 Execution result:
+
 ```python
-{'output': WorkflowOutput(result={'output': {'result': 'haha'}}, state=<WorkflowExecutionState.COMPLETED: 'COMPLETED'>), 'result_type': 'answer'}
+{'output': WorkflowOutput(result={'output': {'result': 'haha'}},
+                          state= < WorkflowExecutionState.COMPLETED: 'COMPLETED' >), 'result_type': 'answer'}
 ```
 
 ## Workflow Execution
@@ -70,36 +84,40 @@ Runner supports single-output and streaming-output execution for Workflow.
 Below, we construct a simple workflow to introduce the process of executing a `Workflow` via `Runner`.
 
 First, create a Workflow:
+
 ```python
-from openjiuwen.core.component.end_comp import End
-from openjiuwen.core.component.start_comp import Start
-from openjiuwen.core.workflow.base import Workflow
-from openjiuwen.core.workflow.workflow_config import WorkflowConfig, WorkflowMetadata
+from openjiuwen.core.workflow import End, Start, Workflow, WorkflowCard
+from openjiuwen.core.workflow.workflow_config import WorkflowConfig
+
 
 def build_workflow(name, workflow_id, version):
     flow = Workflow(workflow_config=WorkflowConfig(
-        metadata=WorkflowMetadata(id=workflow_id, version=version, name=name,
-                                  description="this_is_a_demo")))
+        card=WorkflowCard(id=workflow_id, name=name, version=version,
+                          description="this_is_a_demo")))
     flow.set_start_comp("start", Start(), inputs_schema={"query": "${query}"})
     flow.set_end_comp("end", End(), inputs_schema={"result": "${start.query}"})
     flow.add_connection("start", "end")
     return flow
 
+
 workflow = build_workflow("test_workflow", "test_workflow", "1")
 ```
 
-Then, call `Runner.run_workflow` to directly execute the `Workflow`:
+Then, call `Runner`'s `run_workflow` to directly run the `Workflow` (no need to explicitly construct a session, it will automatically create `WorkflowSession` internally):
+
 ```python
 import asyncio
 from openjiuwen.core.runner.runner import Runner
-from openjiuwen.core.runtime.workflow import WorkflowRuntime
 
-result = asyncio.run(Runner.run_workflow(workflow=workflow, inputs={"query": "query workflow"}, runtime=WorkflowRuntime()))
+runner = Runner
+result = asyncio.run(runner.run_workflow(workflow=workflow, inputs={"query": "query workflow"}))
 print(result)
 ```
 Execution result:
+
 ```python
-result={'output': {'result': 'query workflow'}} state=<WorkflowExecutionState.COMPLETED: 'COMPLETED'>
+result = {'output': {'result': 'query workflow'}}
+state = < WorkflowExecutionState.COMPLETED: 'COMPLETED' >
 ```
 
 ## Tool Execution

@@ -55,12 +55,12 @@ Make sure your machine meets the following requirements:
 - Extract the corresponding architecture version package
   - Extract the x86_64 package
     ```
-    unzip deployTool_0.1.3_amd64
+    unzip deployTool_0.1.3_amd64.zip
     ```
 
   - Extract the arm package
     ```
-    unzip deployTool_0.1.3_arm64
+    unzip deployTool_0.1.3_arm64.zip
     ```
 
 - Enter the *deployTool_0.1.3_xxx64* directory and run the following commands to confirm Docker is running:
@@ -116,15 +116,19 @@ Make sure your machine meets the following requirements:
 
 - Upon successful startup, it will output:
 
-  Local access: *local access address*
+  Local access: *local access URL*
 
-  Network access: *network access address*
+  Network access: *network access URL*
 
 ### 3. Access the system
 
-- For local access, copy the *local access address* above into your browser and press Enter to open the openJiuwen interface.
+- For local access, copy the *local access URL* above into your browser and press Enter to open the openJiuwen interface.
 
-- For access from another machine, copy the *network access address* above into your browser and press Enter to open the openJiuwen interface.
+- For access from another machine, copy the *network access URL* above into your browser and press Enter to open the openJiuwen interface.
+
+- When connecting to the openJiuwen interface, you may see a page warning "Your connection is not private". This is because a self-signed SSL certificate is used to enable HTTPS encrypted communication. This warning does not indicate a security risk, but rather reminds users that the current certificate is not certified by a third-party authority.
+
+- Click "Advanced" at the bottom left and select "Proceed to [site]" to access the openJiuwen interface.
 
 ## III. Frequently Asked Questions (FAQ)
 

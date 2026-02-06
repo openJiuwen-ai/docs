@@ -102,7 +102,7 @@ Older Windows versions do not support the full automation of this one-click comm
 
   * After obtaining the embedding model information, configure it in the *openJiuwen installation directory* as follows:
 
-   If you are starting the openJiuwen platform for the first time, add the embedding-related information to *.env.custom*:
+  * If you are starting the openJiuwen platform for the first time, add the embedding-related information to *.env.custom*:
 
     | Variable Name | Description                                                                         |
     | --- |-------------------------------------------------------------------------------------|
@@ -110,22 +110,26 @@ Older Windows versions do not support the full automation of this one-click comm
     | EMBED_MODEL_NAME                  | The embedding model name                                                            |
     | EMBEDDING_MODEL_DIMENTION         | The embedding vector dimension, determined by the model chosen via EMBED_MODEL_NAME |
     | EMBED_API_KEY                     | The embedding model API key                                                         |
-    | EMBED_TIMEOUT                     | Maximum wait time for the embedding model(unit: second), default value `60`         |
+    | EMBED_TIMEOUT                     | Maximum wait time for the embedding model (unit: second), default value `60`         |
     | EMBED_MAX_RETRIES                 | Maximum number of retries on embedding request failure, default value `3`           |
 
-  * Run the following command to start openJiuwen:
+* Run the following command to start openJiuwen:
 
-    ```bash
-    ./service.sh up
-    ```
+  ```bash
+  ./service.sh up
+  ```
 
-  >   **Note**: You may see an “up Plugin + Sandbox Server failed” error due to network issues. Please run `./service.sh up` again.
+  > **Note**: You may see an "up Plugin + Sandbox Server failed" error due to network issues. Please run `./service.sh up` again.
 
-* After a successful start, it will output Local access: access URL.
+* After a successful start, it will output Local access: *access URL*.
 
 ### 4. Access the system
 
-Copy the access URL above into your browser’s address bar and press Enter to see the openJiuwen interface.
+Copy the above *access URL* into your browser's address bar and press Enter to see the openJiuwen interface.
+
+* When connecting to the openJiuwen interface, you may see a page warning "Your connection is not private". This is because a self-signed SSL certificate is used to enable HTTPS encrypted communication. This warning does not indicate a security risk, but rather reminds users that the current certificate is not certified by a third-party authority.
+
+* Click "Advanced" at the bottom left and select "Proceed to [site]" to access the openJiuwen interface.
 
 ## III. Frequently Asked Questions (FAQ)
 
@@ -159,7 +163,7 @@ The memory feature depends on an embedding model. The following steps use Huawei
   | EMBED_MODEL_NAME                  | The embedding model name |
   | EMBED_API_KEY                     | The embedding model API key |
   | EMBEDDING_MODEL_DIMENTION         | The embedding vector dimension, determined by the model chosen via EMBED_MODEL_NAME |
-  | EMBED_TIMEOUT                     | Maximum wait time for the embedding model(unit: second), default value `60`         |
+    | EMBED_TIMEOUT                     | Maximum wait time for the embedding model (unit: second), default value `60`         |
   | EMBED_MAX_RETRIES                 | Maximum number of retries on embedding request failure, default value `3`           |
 
 * To enable the memory function after starting openJiuwen, directly modifying the `.env` file in the root directory will not take effect immediately. Running containers read from specific instance files in the `.envs/` directory. Follow the steps below:

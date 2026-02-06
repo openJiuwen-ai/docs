@@ -22,10 +22,8 @@ class openjiuwen.core.memory.long_term_memory.LongTermMemory(metaclass=Singleton
 > 2. 再调用 `set_config(MemoryEngineConfig(...))` 设置全局配置；
 > 3. 可选地通过 `set_scope_config(scope_id, MemoryScopeConfig(...))` 为不同业务场景配置独立的模型/向量参数。
 
-### __init__
-
 ```
-def __init__(self) -> None
+LongTermMemory()
 ```
 
 初始化 `LongTermMemory` 实例（单例模式，多次调用返回同一实例）。

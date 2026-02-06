@@ -3,7 +3,7 @@
 ## class openjiuwen.dev_tools.tune.optimizer.instruction_optimizer.InstructionOptimizer
 
 ```python
-openjiuwen.dev_tools.tune.optimizer.instruction_optimizer.InstructionOptimizer(model_config: ModelConfig, parameters: Optional[Dict[str, LLMCall]] = None, **kwargs)
+openjiuwen.dev_tools.tune.optimizer.instruction_optimizer.InstructionOptimizer(model_config: ModelRequestConfig, model_client_config: ModelClientConfig, parameters: Optional[Dict[str, LLMCall]] = None, **kwargs)
 ```
 
 `InstructionOptimizer`类为Agent提示词指令优化器，通过分析Agent输入输出的错误用例生成的反馈，修正内部提示词模板，优化Agent在错误用例上的准确率。

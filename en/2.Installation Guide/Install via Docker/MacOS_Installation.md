@@ -18,7 +18,7 @@ Ensure your machine meets the following requirements:
     brew install git
     ```
 
-  * Docker: Docker Desktop is reocmmended. The installation steps are described below.
+  * Docker: Docker Desktop is recommended. The installation steps are described below.
 
 ### Docker Desktop Installation
 
@@ -90,7 +90,7 @@ Ensure your machine meets the following requirements:
     | EMBED_MODEL_NAME                  | The embedding model name                                                            |
     | EMBEDDING_MODEL_DIMENTION         | The embedding vector dimension, determined by the model chosen via EMBED_MODEL_NAME |
     | EMBED_API_KEY                     | The embedding model API key                                                         |
-    | EMBED_TIMEOUT                     | Maximum wait time for the embedding model(unit: second), default value `60`         |
+    | EMBED_TIMEOUT                     | Maximum wait time for the embedding model (unit: second), default value `60`         |
     | EMBED_MAX_RETRIES                 | Maximum number of retries on embedding request failure, default value `3`           |
 
 * Open **Terminal**, navigate to the directory where *service.sh* is located, and enter the following command to start openJiuwen: 
@@ -103,17 +103,21 @@ Ensure your machine meets the following requirements:
 
 * After a successful startup, the following information will be displayed:
 
-  Local access: *local access address*
+  Local access: *local access URL*
 
-  Network access: *network access address*
+  Network access: *network access URL*
 
 ### 3. Access the System
 
-* To access locally, copy the above *local access address* into your browser's address bar and press "Enter" to see the openJiuwen interface.
+* To access locally, copy the above *local access URL* into your browser's address bar and press "Enter" to see the openJiuwen interface.
 
-* To access on another machine, copy the above *network access address* into your browser's address bar and press "Enter" to see the openJiuwen interface.
+* To access on another machine, copy the above *network access URL* into your browser's address bar and press "Enter" to see the openJiuwen interface.
 
-## III、Frequently Asked Questions (FAQ) 
+* When connecting to the openJiuwen interface, you may see a page warning "Your connection is not private". This is because a self-signed SSL certificate is used to enable HTTPS encrypted communication. This warning does not indicate a security risk, but rather reminds users that the current certificate is not certified by a third-party authority.
+
+* Click "Advanced" at the bottom left and select "Proceed to [site]" to access the openJiuwen interface.
+
+## III. Frequently Asked Questions (FAQ) 
 
 ### <a id="docker-macos-memory"></a>Question 1: If the memory function was not enabled in the early stage of openJiuwen, how can it be activated later
 

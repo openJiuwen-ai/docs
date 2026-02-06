@@ -334,7 +334,7 @@ async def invoke(
 ### stream
 
 ```python
-aasync def stream(
+async def stream(
             self,
             inputs: Input,
             session: Session,

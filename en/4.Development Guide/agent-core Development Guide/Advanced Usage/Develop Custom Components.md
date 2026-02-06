@@ -2,7 +2,7 @@ openJiuwen provides flexible and powerful component development capabilities. Us
 
 - Process component input data to generate component output data, supporting both stream and batch processing.
 - Customize supporting branch scenarios for the component.
-- Use capabilities provided by `Runtime`, including fetching configuration information, updating or retrieving state, recording trace information, managing resources, and interaction interruption. Refer to [Runtime](./Runtime/Abstract.md).
+- Use capabilities provided by `Session`, including fetching configuration information, updating or retrieving state, recording trace information, managing resources, and interaction interruption. Refer to [Session](./Session/Overview.md).
 
 # Implementing Custom Components
 
@@ -25,14 +25,14 @@ Below are examples of implementing custom components in both ways: a compute nod
 import json
 from typing import AsyncIterator
 
-from openjiuwen.core.component.base import WorkflowComponent
-from openjiuwen.core.runtime.base import ComponentExecutable, Input, Output
+from openjiuwen.core.workflow import WorkflowComponent
+from openjiuwen.core.session.base import ComponentExecutable, Input, Output
 from openjiuwen.core.context_engine.base import Context
-from openjiuwen.core.runtime.runtime import Runtime
+from openjiuwen.core.workflow import Session
 
 
 class ResponseHandlerComponent(WorkflowComponent, ComponentExecutable):
-    async def transform(self, inputs: Input, runtime: Runtime, context: Context) -> AsyncIterator[Output]:
+    async def transform(self, inputs: Input, session: Session, context: Context) -> AsyncIterator[Output]:
         """ Handle streaming inputs: iterate over all inputs, retrieve response content,
             call __deserialize__ to deserialize it, and yield a generator element
             containing the deserialized result. """
@@ -43,7 +43,7 @@ class ResponseHandlerComponent(WorkflowComponent, ComponentExecutable):
 
         yield {"status": "finished"}
 
-    async def collect(self, inputs: Input, runtime: Runtime, context: Context) -> Output:
+    async def collect(self, inputs: Input, session: Session, context: Context) -> Output:
         """ Collect all parsed response messages and return them in batch. """
         responses = []
         response_generator = inputs.get("response")
@@ -73,7 +73,7 @@ workflow.add_workflow_comp("response_handler", ResponseHandlerComponent(),
                            stream_inputs_schema={"response": "${llm.response}"})
 ```
 
-Execute the workflow by calling `workflow.stream({"user_inputs": "Help me generate an image of a little girl"}, runtime=WorkflowRuntime(), stream_modes=[BaseStreamMode.OUTPUT])`. The workflow execution results contain the following 3 frames:
+Execute the workflow by calling `workflow.stream({"user_inputs": "Help me generate an image of a little girl"}, session=create_workflow_session(), stream_modes=[BaseStreamMode.OUTPUT])`. The workflow execution results contain the following 3 frames:
 
 ```python
 receive chunk:  type='end node stream' index=0 payload={'end_transform': {'response_handler': {'content': {'url': 'http://xxxxx', 'description': 'a little girl in the park'}}}}
@@ -90,7 +90,7 @@ workflow.add_workflow_comp("response_handler", ResponseHandlerComponent(),
                            stream_inputs_schema={"response": "${llm.response}"})
 ```
 
-Execute the workflow by calling `workflow.invoke({"user_inputs": "Help me generate an image of a little girl"}, runtime=WorkflowRuntime())`. The output is as follows:
+Execute the workflow by calling `workflow.invoke({"user_inputs": "Help me generate an image of a little girl"}, session=create_workflow_session())`. The output is as follows:
 
 ```python
 result={'result': {'result': [{'url': 'http://xxxxx', 'description': 'a little girl in the park'}, {'url': 'http://xxxxx', 'description': 'a schoolgirl'}, {'status': 'finished'}]}} state=<WorkflowExecutionState.COMPLETED: 'COMPLETED'>
@@ -103,19 +103,18 @@ import asyncio
 import json
 from typing import AsyncIterator
 
-from openjiuwen.core.component.base import WorkflowComponent
-from openjiuwen.core.component.end_comp import End
-from openjiuwen.core.component.start_comp import Start
+from openjiuwen.core.workflow import WorkflowComponent
+from openjiuwen.core.workflow import End, Start
 from openjiuwen.core.context_engine.base import Context
 from openjiuwen.core.graph.executable import Output, Input
-from openjiuwen.core.runtime.base import ComponentExecutable
-from openjiuwen.core.runtime.runtime import Runtime
-from openjiuwen.core.runtime.workflow import WorkflowRuntime
-from openjiuwen.core.stream.base import BaseStreamMode
+from openjiuwen.core.session.base import ComponentExecutable
+from openjiuwen.core.workflow import Session
+from openjiuwen.core.workflow import create_workflow_session
+from openjiuwen.core.session.stream import BaseStreamMode
 from openjiuwen.core.workflow.base import Workflow
 from openjiuwen.core.workflow.workflow_config import ComponentAbility
 
-# Mock LLM component that outputs 3 frames
+# mock llm component that outputs 3 frames
 class MockLLMComponent(WorkflowComponent, ComponentExecutable):
     def __init__(self):
         super().__init__()
@@ -125,12 +124,12 @@ class MockLLMComponent(WorkflowComponent, ComponentExecutable):
             json.dumps({"status": "finished"}).encode("utf-8"),
         ]
 
-    async def stream(self, inputs: Input, runtime: Runtime, context: Context) -> AsyncIterator[Output]:
+    async def stream(self, inputs: Input, session: Session, context: Context) -> AsyncIterator[Output]:
         for stream in self.mock_llm_streams:
             yield {"response": { "content": stream }}
 
 class ResponseHandlerComponent(WorkflowComponent, ComponentExecutable):
-    async def transform(self, inputs: Input, runtime: Runtime, context: Context) -> AsyncIterator[Output]:
+    async def transform(self, inputs: Input, session: Session, context: Context) -> AsyncIterator[Output]:
         """ Handle streaming inputs: iterate over all inputs, retrieve response content,
             call __deserialize__ to deserialize it, and yield a generator element
             containing the deserialized result. """
@@ -141,7 +140,7 @@ class ResponseHandlerComponent(WorkflowComponent, ComponentExecutable):
 
         yield {"status": "finished"}
 
-    async def collect(self, inputs: Input, runtime: Runtime, context: Context) -> Output:
+    async def collect(self, inputs: Input, session: Session, context: Context) -> Output:
         """ Collect all parsed response messages and return them in batch. """
         responses = []
         response_generator = inputs.get("response")
@@ -174,7 +173,7 @@ async def run_transform_workflow():
     workflow.add_connection("s", "llm")
     workflow.add_stream_connection("llm", "response_handler")
     workflow.add_stream_connection("response_handler", "e")
-    async for chunk in workflow.stream({"user_inputs": "Help me generate an image of a little girl"}, runtime=WorkflowRuntime(),
+    async for chunk in workflow.stream({"user_inputs": "Help me generate an image of a little girl"}, session=create_workflow_session(),
                                        stream_modes=[BaseStreamMode.OUTPUT]):
         print("receive chunk: ", chunk)
 
@@ -193,7 +192,7 @@ async def run_collect_workflow():
     workflow.add_connection("s", "llm")
     workflow.add_stream_connection("llm", "response_handler")
     workflow.add_connection("response_handler", "e")
-    output = await workflow.invoke({"user_inputs": "Help me generate an image of a little girl"}, runtime=WorkflowRuntime())
+    output = await workflow.invoke({"user_inputs": "Help me generate an image of a little girl"}, session=create_workflow_session())
     print(output)
 
 if __name__ == "__main__":
@@ -219,16 +218,16 @@ result={'output': {'result': {'result': [{'url': 'http://xxxxx', 'description': 
 from typing import AsyncIterator
 
 from openjiuwen.core.context_engine.base import Context
-from openjiuwen.core.runtime.base import ComponentExecutable, Input, Output
-from openjiuwen.core.runtime.runtime import Runtime
+from openjiuwen.core.session.base import ComponentExecutable, Input, Output
+from openjiuwen.core.workflow import Session
 
 
 class ComputeExecutor(ComponentExecutable):
-    async def invoke(self, inputs: Input, runtime: Runtime, context: Context) -> Output:
+    async def invoke(self, inputs: Input, session: Session, context: Context) -> Output:
         """ Process a single input, call __calculate__ to perform the specific math operation, and return the result. """
         return {"result": self.__calculate__(data=inputs.get("data"))}
 
-    async def stream(self, inputs: Input, runtime: Runtime, context: Context) -> AsyncIterator[Output]:
+    async def stream(self, inputs: Input, session: Session, context: Context) -> AsyncIterator[Output]:
         datas = inputs.get("data")
         for data in datas:
             yield {"result": self.__calculate__(data=data)}
@@ -257,7 +256,7 @@ class ComputeExecutor(ComponentExecutable):
 ```python
 from openjiuwen.core.graph.base import Graph
 from openjiuwen.core.graph.executable import Executable
-from openjiuwen.core.component.base import WorkflowComponen
+from openjiuwen.core.workflow import WorkflowComponent
 
 
 class ComputeComponent(WorkflowComponent):
@@ -291,26 +290,25 @@ Complete code:
 import asyncio
 from typing import AsyncIterator
 
-from openjiuwen.core.component.base import WorkflowComponent
-from openjiuwen.core.component.end_comp import End
-from openjiuwen.core.component.start_comp import Start
+from openjiuwen.core.workflow import WorkflowComponent
+from openjiuwen.core.workflow import End, Start
 from openjiuwen.core.context_engine.base import Context
 from openjiuwen.core.graph.base import Graph
 from openjiuwen.core.graph.executable import Output, Input, Executable
-from openjiuwen.core.runtime.base import ComponentExecutable
-from openjiuwen.core.runtime.runtime import Runtime
-from openjiuwen.core.runtime.workflow import WorkflowRuntime
-from openjiuwen.core.stream.base import BaseStreamMode
+from openjiuwen.core.session.base import ComponentExecutable
+from openjiuwen.core.workflow import Session
+from openjiuwen.core.workflow import create_workflow_session
+from openjiuwen.core.session.stream import BaseStreamMode
 from openjiuwen.core.workflow.base import Workflow
 from openjiuwen.core.workflow.workflow_config import ComponentAbility
 
 
 class ComputeExecutor(ComponentExecutable):
-    async def invoke(self, inputs: Input, runtime: Runtime, context: Context) -> Output:
+    async def invoke(self, inputs: Input, session: Session, context: Context) -> Output:
         """ Process a single input, call __calculate__ to perform the specific math operation, and return the result. """
         return {"result": self.__calculate__(data=inputs.get("data"))}
 
-    async def stream(self, inputs: Input, runtime: Runtime, context: Context) -> AsyncIterator[Output]:
+    async def stream(self, inputs: Input, session: Session, context: Context) -> AsyncIterator[Output]:
         datas = inputs.get("data")
         for data in datas:
             yield {"result": self.__calculate__(data=data)}
@@ -351,7 +349,7 @@ async def run_invoke_workflow():
     workflow.add_connection("start", "compute")
     workflow.add_connection("compute", "end")
     print(await workflow.invoke(inputs={"user_input": {"data": {"op": "add", "data": {"a": 1, "b": 2}}}},
-                                runtime=WorkflowRuntime()))
+                                session=create_workflow_session()))
 async def run_stream_workflow():
     workflow = Workflow()
     workflow.set_start_comp("start", Start(), inputs_schema={"data": "${user_input.data}"})
@@ -360,7 +358,7 @@ async def run_stream_workflow():
     workflow.add_connection("start", "compute")
     workflow.add_stream_connection("compute", "end")
     async for chunk in workflow.stream(inputs={"user_input": {"data":[{"op": "add", "data":{ "a":1, "b":2}}, {"op": "multiply", "data":{ "a":1, "b":2}}, {"op": "add", "data":{ "a":2, "b":3}}]}},
-                                       runtime=WorkflowRuntime(), stream_modes=[BaseStreamMode.OUTPUT]):
+                                       session=create_workflow_session(), stream_modes=[BaseStreamMode.OUTPUT]):
         print(chunk)
 
 
@@ -392,17 +390,17 @@ First, develop a component `CustomComponent` for travel intent recognition that 
 ```python
 import random
 
-from openjiuwen.core.component.base import WorkflowComponent
+from openjiuwen.core.workflow import WorkflowComponent
 from openjiuwen.core.context_engine.base import Context
-from openjiuwen.core.runtime.base import ComponentExecutable, Input, Output
-from openjiuwen.core.runtime.runtime import Runtime
+from openjiuwen.core.session.base import ComponentExecutable, Input, Output
+from openjiuwen.core.workflow import Session
 
 class CustomComponent(WorkflowComponent, ComponentExecutable):
     def __init__(self):
         super().__init__()
         self.intent = ['Dining', 'Travel']
 
-    async def invoke(self, inputs: Input, runtime: Runtime, context: Context) -> Output:
+    async def invoke(self, inputs: Input, session: Session, context: Context) -> Output:
         # Simulate an intent recognition filtering process
         return {'result': self.intent[random.randint(0, len(self.intent))]}
 ```
@@ -423,8 +421,7 @@ When constructing the workflow, connect a `BranchComponent` after your custom co
 Workflow construction code:
 
 ```python
-from openjiuwen.core.component.branch_comp import BranchComponent
-from openjiuwen.core.component.workflow_comp import SubWorkflowComponent
+from openjiuwen.core.workflow import BranchComponent, SubWorkflowComponent
 from openjiuwen.core.workflow.base import Workflow
 
 workflow = Workflow()
@@ -454,12 +451,12 @@ Add conditional edges to the custom node and provide a BranchRouter. Example:
 ```python
 import random
 
-from openjiuwen.core.component.base import WorkflowComponent
-from openjiuwen.core.component.branch_router import BranchRouter
+from openjiuwen.core.workflow import WorkflowComponent
+from openjiuwen.core.workflow import BranchRouter
 from openjiuwen.core.context_engine.base import Context
-from openjiuwen.core.runtime.base import ComponentExecutable, Input, Output
-from openjiuwen.core.runtime.runtime import Runtime
-from openjiuwen.core.component.workflow_comp import SubWorkflowComponent
+from openjiuwen.core.session.base import ComponentExecutable, Input, Output
+from openjiuwen.core.workflow import Session
+from openjiuwen.core.workflow import SubWorkflowComponent
 from openjiuwen.core.workflow.base import Workflow
 
 class CustomComponent(WorkflowComponent, ComponentExecutable):
@@ -467,7 +464,7 @@ class CustomComponent(WorkflowComponent, ComponentExecutable):
         super().__init__()
         self.intent = ['Dining', 'Travel']
 
-    async def invoke(self, inputs: Input, runtime: Runtime, context: Context) -> Output:
+    async def invoke(self, inputs: Input, session: Session, context: Context) -> Output:
         # Simulate an intent recognition filtering process
         return {'result': self.intent[random.randint(0, len(self.intent))]}
 
@@ -496,14 +493,14 @@ Re-implemented custom component:
 import random
 from typing import Callable, Union
 
-from openjiuwen.core.component.base import WorkflowComponent
-from openjiuwen.core.component.branch_router import BranchRouter
-from openjiuwen.core.component.condition.condition import Condition
-from openjiuwen.core.component.workflow_comp import SubWorkflowComponent
+from openjiuwen.core.workflow import WorkflowComponent
+from openjiuwen.core.workflow import BranchRouter
+from openjiuwen.core.workflow import Condition
+from openjiuwen.core.workflow import SubWorkflowComponent
 from openjiuwen.core.context_engine.base import Context
 from openjiuwen.core.graph.base import Graph
-from openjiuwen.core.runtime.base import ComponentExecutable, Input, Output
-from openjiuwen.core.runtime.runtime import Runtime
+from openjiuwen.core.session.base import ComponentExecutable, Input, Output
+from openjiuwen.core.workflow import Session
 from openjiuwen.core.workflow.base import Workflow
 
 
@@ -514,9 +511,9 @@ class CustomComponent(WorkflowComponent, ComponentExecutable):
         # Use an actual router instance so branches can be registered and evaluated.
         self._router = BranchRouter()
 
-    async def invoke(self, inputs: Input, runtime: Runtime, context: Context) -> Output:
+    async def invoke(self, inputs: Input, session: Session, context: Context) -> Output:
         # Simulate an intent recognition filtering process
-        self._router.set_runtime(runtime)
+        self._router.set_session(session)
         return {"result": random.choice(self.intent)}
 
     def to_executable(self) -> ComponentExecutable:
@@ -556,14 +553,14 @@ Complete example:
 import random
 from typing import Callable, Union
 
-from openjiuwen.core.component.base import WorkflowComponent
-from openjiuwen.core.component.branch_router import BranchRouter
-from openjiuwen.core.component.condition.condition import Condition
-from openjiuwen.core.component.workflow_comp import SubWorkflowComponent
+from openjiuwen.core.workflow import WorkflowComponent
+from openjiuwen.core.workflow import BranchRouter
+from openjiuwen.core.workflow import Condition
+from openjiuwen.core.workflow import SubWorkflowComponent
 from openjiuwen.core.context_engine.base import Context
 from openjiuwen.core.graph.base import Graph
-from openjiuwen.core.runtime.base import ComponentExecutable, Input, Output
-from openjiuwen.core.runtime.runtime import Runtime
+from openjiuwen.core.session.base import ComponentExecutable, Input, Output
+from openjiuwen.core.workflow import Session
 from openjiuwen.core.workflow.base import Workflow
 
 
@@ -574,9 +571,9 @@ class CustomComponent(WorkflowComponent, ComponentExecutable):
         # Use an actual router instance so branches can be registered and evaluated.
         self._router = BranchRouter()
 
-    async def invoke(self, inputs: Input, runtime: Runtime, context: Context) -> Output:
+    async def invoke(self, inputs: Input, session: Session, context: Context) -> Output:
         # Simulate an intent recognition filtering process
-        self._router.set_runtime(runtime)
+        self._router.set_session(session)
         return {"result": random.choice(self.intent)}
 
     def to_executable(self) -> ComponentExecutable:

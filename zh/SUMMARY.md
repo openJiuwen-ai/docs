@@ -54,6 +54,7 @@
     - [插件管理](4.开发指南/agent-studio开发指南/插件管理.md)
   - [agent-core开发指南](4.开发指南/agent-core开发指南/README.md)
     - [安全配置](4.开发指南/agent-core开发指南/安全配置.md)
+    - [Makefile](4.开发指南/agent-core开发指南/Makefile.md)
     - [基础功能](4.开发指南/agent-core开发指南/基础功能/README.md)
       - [填充提示词模板](4.开发指南/agent-core开发指南/基础功能/填充提示词模板.md)
       - [接入大模型](4.开发指南/agent-core开发指南/基础功能/接入大模型.md)

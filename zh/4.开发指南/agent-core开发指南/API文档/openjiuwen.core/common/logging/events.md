@@ -98,7 +98,7 @@
 * **module_id**(Optional[str])：模块ID（例如AgentID、WorkflowID、ToolName等）。默认值：`None`
 * **module_name**(Optional[str])：模块名称。默认值：`None`
 * **session_id**(Optional[str])：会话ID。默认值：`None`
-* **conversation_id**(Optional[str])：对诚ID。默认值：`None`
+* **conversation_id**(Optional[str])：对话ID。默认值：`None`
 * **trace_id**(Optional[str])：TraceID。默认值：`None`
 * **correlation_id**(Optional[str])：关联ID，用于关联相关事件。默认值：`None`
 * **parent_event_id**(Optional[str])：父事件ID，用于构建事件树。默认值：`None`

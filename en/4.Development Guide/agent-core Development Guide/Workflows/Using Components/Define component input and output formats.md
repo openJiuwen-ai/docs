@@ -28,8 +28,7 @@ schema is a structural description of component inputs and outputs:
 - Taking a standard connection between a Start component and an End component as an example, the End component can reference the `query` parameter of the Start component using the format `${start.query}`:
   
   ```python
-  from openjiuwen.core.component.end_comp import End
-  from openjiuwen.core.workflow.base import Workflow
+  from openjiuwen.core.workflow import End, Workflow
 
   workflow = Workflow()
   workflow.set_end_comp("end", End(), inputs_schema={"query": "${start.query}"})
@@ -38,13 +37,12 @@ schema is a structural description of component inputs and outputs:
 - If connected to a preceding component via a streaming connection, taking a streaming connection between an LLM component and an End component as an example:
   
   ```python
-  from openjiuwen.core.component.end_comp import End
-  from openjiuwen.core.workflow.base import Workflow
+  from openjiuwen.core.workflow import End, Workflow
   
   workflow = Workflow()
-  # 注册end组件时，指定流式连接输入定义stream_inputs_schema
+  # When registering the end component, specify the stream connection input definition stream_inputs_schema
   workflow.set_end_comp("end_stream", End(), stream_inputs_schema={"data": "${llm.output}"})
-  # 添加流式连接：从"llm"指向"end"，其中大模型组件默认实现了`stream`接口，end组件默认实现了`transform`和`collect`接口
+  # Add stream connection: from "llm" to "end", where the LLM component implements the `stream` interface by default, and the end component implements the `transform` and `collect` interfaces by default
   workflow.add_stream_connection("llm", "end_stream")
   ```
 - If connected to preceding components via both standard and streaming connections, taking an End component as an example, where it has a standard connection with the Start component and a streaming connection with the LLM component. Its standard connection input schema:
@@ -66,8 +64,7 @@ schema is a structural description of component inputs and outputs:
   After defining the `inputs_schema`, add the End component to the workflow. The End component's batch input `query` references the `userInput` from the user input, and the stream input `llm_output` references the `output` from the LLM component:
   
   ```python
-  from openjiuwen.core.component.end_comp import End
-  from openjiuwen.core.workflow.base import Workflow
+  from openjiuwen.core.workflow import End, Workflow
   
   workflow = Workflow()
   workflow.set_end_comp("end", End(), inputs_schema=end_inputs_schema,stream_inputs_schema=end_stream_inputs_schema)
@@ -80,27 +77,25 @@ schema is a structural description of component inputs and outputs:
 - If connected to a succeeding component via a standard connection, the return value `invoke_value` of component a's invoke method is formatted as `invoke_output` via outputs_schema. The succeeding component b retrieves component a's return value via `${a.invoke_output}`:
   
   ```python
-  from openjiuwen.core.component.base import WorkflowComponent
+  from openjiuwen.core.workflow import WorkflowComponent, Session, Workflow
   from openjiuwen.core.context_engine.base import Context
-  from openjiuwen.core.runtime.base import ComponentExecutable, Input, Output
-  from openjiuwen.core.runtime.runtime import Runtime
-  from openjiuwen.core.workflow.base import Workflow
+  from openjiuwen.core.workflow.components.component import Input, Output
   from openjiuwen.core.workflow.workflow_config import ComponentAbility
 
-  class InvokeCompNode(ComponentExecutable, WorkflowComponent):
+  class InvokeCompNode(WorkflowComponent):
       def __init__(self, node_id: str = ''):
           super().__init__()
           self.node_id = node_id
 
-      async def invoke(self, inputs: Input, runtime: Runtime, context: Context) -> Output:
+      async def invoke(self, inputs: Input, session: Session, context: Context) -> Output:
           if inputs and "value" in inputs:
-              return {"value": inputs["value"] * 2}  # 组件实际返回的字段名为"value"
-          return {"value": 0}  # 组件实际返回的字段名为"value"
-  
+              return {"value": inputs["value"] * 2}  # The actual field name returned by the component is "value"
+          return {"value": 0}  # The actual field name returned by the component is "value"
+
   workflow = Workflow()
-  # 注册实现invoke能力的源组件a，将其返回的"value"字段格式化为"invoke_output"
+  # Register source component a that implements the invoke capability, format its returned "value" field as "invoke_output"
   workflow.add_workflow_comp("a", InvokeCompNode("a"), inputs_schema={"value": "${start.a}"},
-                            outputs_schema={"invoke_output": "${value}"},  # "${value}"引用组件a实际返回的"value"字段
+                            outputs_schema={"invoke_output": "${value}"},  # "${value}" references the actual "value" field returned by component a
                             comp_ability=[ComponentAbility.INVOKE])
   workflow.add_workflow_comp("b", InvokeCompNode("b"), inputs_schema={"value": "${a.invoke_output}"},
                             comp_ability=[ComponentAbility.INVOKE])
@@ -112,31 +107,29 @@ schema is a structural description of component inputs and outputs:
   from typing import AsyncIterator
 
   from openjiuwen.core.common.logging import logger
-  from openjiuwen.core.component.base import WorkflowComponent
+  from openjiuwen.core.workflow import WorkflowComponent, Session, Workflow
   from openjiuwen.core.context_engine.base import Context
-  from openjiuwen.core.runtime.base import ComponentExecutable, Input, Output
-  from openjiuwen.core.runtime.runtime import Runtime
-  from openjiuwen.core.workflow.base import Workflow
+  from openjiuwen.core.workflow.components.component import Input, Output
   from openjiuwen.core.workflow.workflow_config import ComponentAbility
 
-  class StreamCompNode(ComponentExecutable, WorkflowComponent):
+  class StreamCompNode(WorkflowComponent):
       def __init__(self, node_id: str = ''):
           super().__init__()
           self.node_id = node_id
 
-      async def stream(self, inputs: Input, runtime: Runtime, context: Context) -> AsyncIterator[Output]:
+      async def stream(self, inputs: Input, session: Session, context: Context) -> AsyncIterator[Output]:
           if inputs and "value" in inputs:
-              # 生成两条流式数据帧
+              # Generate two streaming data frames
               for i in range(1, 3):
-                  yield {"value": inputs["value"] * i}  # 组件实际返回的字段名为"value"
+                  yield {"value": inputs["value"] * i}  # The actual field name returned by the component is "value"
 
-  # 实现transform能力的组件，对流数据进行逐帧处理
-  class TransformCompNode(ComponentExecutable, WorkflowComponent):
+  # Component that implements transform capability, processes stream data frame by frame
+  class TransformCompNode(WorkflowComponent):
       def __init__(self, node_id: str = ''):
           super().__init__()
           self.node_id = node_id
 
-      async def transform(self, inputs: Input, runtime: Runtime, context: Context) -> AsyncIterator[Output]:
+      async def transform(self, inputs: Input, session: Session, context: Context) -> AsyncIterator[Output]:
           try:
               value_generator = inputs.get("value")
               async for value in value_generator:
@@ -145,11 +138,11 @@ schema is a structural description of component inputs and outputs:
           except Exception as e:
               logger.error(f"===TransformCompNode[{self.node_id}], error in transform: {e}")
               raise
-  
+
   workflow = Workflow()
-  # 注册实现stream能力的源组件a，将其返回的"value"字段格式化为"stream_output"
+  # Register source component a that implements the stream capability, format its returned "value" field as "stream_output"
   workflow.add_workflow_comp("a", StreamCompNode("a"), inputs_schema={"value": "${start.a}"},
-                            stream_outputs_schema={"stream_output": "${value}"},  # "${value}"引用组件a实际返回的"value"字段
+                            stream_outputs_schema={"stream_output": "${value}"},  # "${value}" references the actual "value" field returned by component a
                             comp_ability=[ComponentAbility.STREAM], wait_for_all=True)
   workflow.add_workflow_comp("b", TransformCompNode("b"), stream_inputs_schema={"value": "${a.stream_output}"},
                             comp_ability=[ComponentAbility.TRANSFORM], wait_for_all=True)
@@ -161,46 +154,44 @@ schema is a structural description of component inputs and outputs:
   from typing import AsyncIterator
 
   from openjiuwen.core.common.logging import logger
-  from openjiuwen.core.component.base import WorkflowComponent
+  from openjiuwen.core.workflow import WorkflowComponent, Session, Workflow
   from openjiuwen.core.context_engine.base import Context
-  from openjiuwen.core.runtime.base import ComponentExecutable, Input, Output
-  from openjiuwen.core.runtime.runtime import Runtime
-  from openjiuwen.core.workflow.base import Workflow
+  from openjiuwen.core.workflow.components.component import Input, Output
   from openjiuwen.core.workflow.workflow_config import ComponentAbility
 
-  # 实现invoke能力的组件，用于批处理
-  class InvokeCompNode(ComponentExecutable, WorkflowComponent):
+  # Component that implements invoke capability, used for batch processing
+  class InvokeCompNode(WorkflowComponent):
       def __init__(self, node_id: str = ''):
           super().__init__()
           self.node_id = node_id
 
-      async def invoke(self, inputs: Input, runtime: Runtime, context: Context) -> Output:
+      async def invoke(self, inputs: Input, session: Session, context: Context) -> Output:
           if inputs and "value" in inputs:
-              # 简单实现：将输入值加倍
+              # Simple implementation: double the input value
               return {"value": inputs["value"] * 2}
           return {"value": 0}
 
 
-  # 实现stream能力的组件，将批输入转换为流式输出
-  class StreamCompNode(ComponentExecutable, WorkflowComponent):
+  # Component that implements stream capability, converts batch input to streaming output
+  class StreamCompNode(WorkflowComponent):
       def __init__(self, node_id: str = ''):
           super().__init__()
           self.node_id = node_id
 
-      async def stream(self, inputs: Input, runtime: Runtime, context: Context) -> AsyncIterator[Output]:
+      async def stream(self, inputs: Input, session: Session, context: Context) -> AsyncIterator[Output]:
           if inputs and "value" in inputs:
-              # 生成两条流式数据帧
+              # Generate two streaming data frames
               for i in range(1, 3):
-                  yield {"value": inputs["value"] * i}  # 组件实际返回的字段名为"value"
+                  yield {"value": inputs["value"] * i}  # The actual field name returned by the component is "value"
 
 
-  # 实现transform能力的组件，对流数据进行逐帧处理
-  class TransformCompNode(ComponentExecutable, WorkflowComponent):
+  # Component that implements transform capability, processes stream data frame by frame
+  class TransformCompNode(WorkflowComponent):
       def __init__(self, node_id: str = ''):
           super().__init__()
           self.node_id = node_id
 
-      async def transform(self, inputs: Input, runtime: Runtime, context: Context) -> AsyncIterator[Output]:
+      async def transform(self, inputs: Input, session: Session, context: Context) -> AsyncIterator[Output]:
           try:
               value_generator = inputs.get("value")
               async for value in value_generator:
@@ -211,8 +202,8 @@ schema is a structural description of component inputs and outputs:
 
   workflow = Workflow()
   workflow.add_workflow_comp("a", StreamCompNode("a"), inputs_schema={"value": "${start.a}"},
-                            outputs_schema={"invoke_output": "${value}"},  # "${value}"引用组件a实际返回的"value"字段
-                            stream_outputs_schema={"stream_output": "${value}"},  # "${value}"引用组件a实际返回的"value"字段
+                            outputs_schema={"invoke_output": "${value}"},  # "${value}" references the actual "value" field returned by component a
+                            stream_outputs_schema={"stream_output": "${value}"},  # "${value}" references the actual "value" field returned by component a
                             comp_ability=[ComponentAbility.STREAM, ComponentAbility.INVOKE], wait_for_all=True)
   workflow.add_workflow_comp("b", TransformCompNode("b"), stream_inputs_schema={"value": "${a.stream_output}"},
                             comp_ability=[ComponentAbility.TRANSFORM], wait_for_all=True)
@@ -233,25 +224,24 @@ transformer is an interface used for custom data formatting. When adding a compo
 The `inputs_transformer` for an LLM component is defined as follows (if the input is empty, a default input is set):
 
 ```python
-from openjiuwen.core.runtime.state import ReadableStateLike
+from openjiuwen.core.session.state import ReadableStateLike
 
 def llm_inputs_transformer(state: ReadableStateLike):
     query = state.get("start.query")
     if query:
         return {"query": query}
-    return {"query": "默认输入"}  # 设置默认输入
+    return {"query": "Default Input"}  # Set default input
 ```
 
 Add the LLM component to the workflow, set the component ID to `llm`, and specify its `inputs_transformer`:
 
 ```python
-from openjiuwen.core.component.llm_comp import LLMComponent
-from openjiuwen.core.workflow.base import Workflow
+  from openjiuwen.core.workflow import LLMComponent, Workflow
 
-workflow = Workflow()
-workflow.add_workflow_comp("llm", LLMComponent(),
+  workflow = Workflow()
+  workflow.add_workflow_comp("llm", LLMComponent(),
                            inputs_transformer=llm_inputs_transformer)
-```
+  ```
 
 When executing the workflow, if the Start component output is `{"query": "Book a hotel in Beijing"}`, the LLM component's input references the `query` field of the Start component, therefore the LLM component's final input is `{"query": "Book a hotel in Beijing"}`; if the Start component has no query field, then the LLM's final input is `{"query": "Default Input"}`.
 
@@ -266,32 +256,31 @@ def llm_outputs_transformer(results: dict):
     output = results.get("output", None)
     if output:
         return {"result": output}
-    return {"result": "默认输出"}
+    return {"result": "Default Output"}
 ```
 
 Add the LLM component to the workflow, set the component ID to `llm`, and specify its `inputs_transformer` and `outputs_transformer`:
 
 ```python
-from openjiuwen.core.component.llm_comp import LLMComponent
-from openjiuwen.core.workflow.base import Workflow
-from openjiuwen.core.runtime.state import ReadableStateLike
+  from openjiuwen.core.workflow import LLMComponent, Workflow
+  from openjiuwen.core.session.state import ReadableStateLike
 
-def llm_inputs_transformer(state: ReadableStateLike):
-    query = state.get("start.query")
-    if query:
-        return {"query": query}
-    return {"query": "默认输入"}
+  def llm_inputs_transformer(state: ReadableStateLike):
+      query = state.get("start.query")
+      if query:
+          return {"query": query}
+      return {"query": "Default Input"}
 
-def llm_outputs_transformer(results: dict):
-    output = results.get("output", None)
-    if output:
-        return {"result": output}
-    return {"result": "默认输出"}
+  def llm_outputs_transformer(results: dict):
+      output = results.get("output", None)
+      if output:
+          return {"result": output}
+      return {"result": "Default Output"}
 
-workflow = Workflow()
-workflow.add_workflow_comp("llm", LLMComponent(),
+  workflow = Workflow()
+  workflow.add_workflow_comp("llm", LLMComponent(),
                            inputs_transformer=llm_inputs_transformer,
                            outputs_transformer=llm_outputs_transformer)
-```
+  ```
 
 If the LLM component's output is `{"output": "Beijing Hotel"}`, then the formatted output result is `{"result" : "Beijing Hotel"}`; if the LLM component's output is `{"output": None}`, then the formatted output result is `{"result" : "Default Output"}`.

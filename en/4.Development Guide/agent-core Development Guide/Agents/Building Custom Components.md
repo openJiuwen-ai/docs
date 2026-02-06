@@ -12,8 +12,8 @@ The overall process of creating a Workflow is as follows: First, initialize the 
 Initialize workflow:
 
 ```python
-from openjiuwen.core.workflow.base import Workflow
-# 创建工作流
+from openjiuwen.core.workflow import Workflow
+# Create workflow
 flow = Workflow()
 ```
 
@@ -26,7 +26,7 @@ Create core component instances according to task requirements, configure input/
 Create a Start component object via `Start` and set the start component for the workflow:
 
 ```python
-from openjiuwen.core.component.start_comp import Start
+from openjiuwen.core.workflow import Start
 
 flow.set_start_comp("start", Start(), inputs_schema={"query":"${user_inputs.query}"})
 ```
@@ -38,12 +38,16 @@ Create a custom branch component `CustomIntentComponent`, inheriting both `Workf
 ```python
 import random
 
-from openjiuwen.core.component.base import WorkflowComponent
-from openjiuwen.core.component.branch_router import BranchRouter
-from openjiuwen.core.context_engine.base import Context
+from openjiuwen.core.context_engine import ModelContext
 from openjiuwen.core.graph.base import Graph
-from openjiuwen.core.runtime.base import ComponentExecutable, Input, Output
-from openjiuwen.core.runtime.runtime import Runtime
+from openjiuwen.core.workflow import (
+    BranchRouter,
+    ComponentExecutable,
+    Input,
+    Output,
+    Session,
+    WorkflowComponent
+)
 
 
 class CustomIntentComponent(WorkflowComponent, ComponentExecutable):
@@ -59,8 +63,8 @@ class CustomIntentComponent(WorkflowComponent, ComponentExecutable):
     def add_branch(self, condition: str, target: list[str], branch_id:str):
         self._router.add_branch(condition=condition, target=target, branch_id=branch_id)
 
-    async def invoke(self, inputs: Input, runtime: Runtime, context: Context) -> Output:
-        self._router.set_runtime(runtime)
+    async def invoke(self, inputs: Input, session: Session, context: ModelContext) -> Output:
+        self._router.set_session(session)
         return {'result': self._intents[random.randint(0, len(self._intents) - 1)]}
 ```
 
@@ -83,10 +87,14 @@ flow.add_workflow_comp("intent", intent_component, inputs_schema={"query": "${st
 Create custom component `TravelComponent` for the `Travel` branch:
 
 ```python
-from openjiuwen.core.component.base import WorkflowComponent
-from openjiuwen.core.context_engine.base import Context
-from openjiuwen.core.runtime.base import ComponentExecutable, Input, Output
-from openjiuwen.core.runtime.runtime import Runtime
+from openjiuwen.core.context_engine import ModelContext
+from openjiuwen.core.workflow import (
+    ComponentExecutable,
+    Input,
+    Output,
+    Session,
+    WorkflowComponent
+)
 
 
 class TravelComponent(WorkflowComponent, ComponentExecutable):
@@ -94,7 +102,7 @@ class TravelComponent(WorkflowComponent, ComponentExecutable):
         super().__init__()
         self.node_id = node_id
 
-    async def invoke(self, inputs: Input, runtime: Runtime, context: Context) -> Output:
+    async def invoke(self, inputs: Input, session: Session, context: ModelContext) -> Output:
         print(f'[{self.node_id}] inputs = {inputs}')
         return inputs
 ```
@@ -102,10 +110,14 @@ class TravelComponent(WorkflowComponent, ComponentExecutable):
 Create custom component `EatComponent` for the `Dining` branch:
 
 ```python
-from openjiuwen.core.component.base import WorkflowComponent
-from openjiuwen.core.context_engine.base import Context
-from openjiuwen.core.runtime.base import ComponentExecutable, Input, Output
-from openjiuwen.core.runtime.runtime import Runtime
+from openjiuwen.core.context_engine import ModelContext
+from openjiuwen.core.workflow import (
+    ComponentExecutable,
+    Input,
+    Output,
+    Session,
+    WorkflowComponent
+)
 
 
 class EatComponent(WorkflowComponent, ComponentExecutable):
@@ -113,7 +125,7 @@ class EatComponent(WorkflowComponent, ComponentExecutable):
         super().__init__()
         self.node_id = node_id
 
-    async def invoke(self, inputs: Input, runtime: Runtime, context: Context) -> Output:
+    async def invoke(self, inputs: Input, session: Session, context: ModelContext) -> Output:
         print(f'[{self.node_id}] inputs = {inputs}')
         return inputs
 ```
@@ -130,7 +142,7 @@ flow.add_workflow_comp("travel", TravelComponent("travel"), inputs_schema={"inte
 Register the `End` component to the workflow:
 
 ```python
-from openjiuwen.core.component.end_comp import End
+from openjiuwen.core.workflow import End
 
 flow.set_end_comp("end", End(), inputs_schema={"eat": "${eat.intent}", "travel": "${travel.intent}"})
 ```
@@ -151,10 +163,10 @@ Based on the workflow built above, trigger the `invoke` function to trigger work
 
 ```python
 import asyncio
-from openjiuwen.core.runtime.workflow import WorkflowRuntime
+from openjiuwen.core.workflow import create_workflow_session
 
-runtime = WorkflowRuntime()
-output = asyncio.run(flow.invoke({"user_inputs": {"query": "去新疆"}}, runtime))
+session = create_workflow_session()
+output = asyncio.run(flow.invoke({"user_inputs": {"query": "去新疆"}}, session))
 print(output.result)
 ```
 
@@ -178,16 +190,20 @@ The complete example reference is shown below:
 import asyncio
 import random
 
-from openjiuwen.core.component.base import WorkflowComponent
-from openjiuwen.core.component.branch_router import BranchRouter
-from openjiuwen.core.component.end_comp import End
-from openjiuwen.core.component.start_comp import Start
-from openjiuwen.core.context_engine.base import Context
+from openjiuwen.core.context_engine import ModelContext
 from openjiuwen.core.graph.base import Graph
-from openjiuwen.core.runtime.base import ComponentExecutable, Input, Output
-from openjiuwen.core.runtime.runtime import Runtime
-from openjiuwen.core.runtime.workflow import WorkflowRuntime
-from openjiuwen.core.workflow.base import Workflow
+from openjiuwen.core.workflow import (
+    BranchRouter,
+    ComponentExecutable,
+    create_workflow_session,
+    End,
+    Input,
+    Output,
+    Session,
+    Start,
+    Workflow,
+    WorkflowComponent
+)
 
 
 class CustomIntentComponent(WorkflowComponent, ComponentExecutable):
@@ -203,8 +219,8 @@ class CustomIntentComponent(WorkflowComponent, ComponentExecutable):
     def add_branch(self, condition: str, target: list[str], branch_id: str):
         self._router.add_branch(condition=condition, target=target, branch_id=branch_id)
 
-    async def invoke(self, inputs: Input, runtime: Runtime, context: Context) -> Output:
-        self._router.set_runtime(runtime)
+    async def invoke(self, inputs: Input, session: Session, context: ModelContext) -> Output:
+        self._router.set_session(session)
         return {'result': self._intents[random.randint(0, len(self._intents) - 1)]}
 
 
@@ -213,7 +229,7 @@ class TravelComponent(WorkflowComponent, ComponentExecutable):
         super().__init__()
         self.node_id = node_id
 
-    async def invoke(self, inputs: Input, runtime: Runtime, context: Context) -> Output:
+    async def invoke(self, inputs: Input, session: Session, context: ModelContext) -> Output:
         print(f'[{self.node_id}] inputs = {inputs}')
         return inputs
 
@@ -223,12 +239,12 @@ class EatComponent(WorkflowComponent, ComponentExecutable):
         super().__init__()
         self.node_id = node_id
 
-    async def invoke(self, inputs: Input, runtime: Runtime, context: Context) -> Output:
+    async def invoke(self, inputs: Input, session: Session, context: ModelContext) -> Output:
         print(f'[{self.node_id}] inputs = {inputs}')
         return inputs
 
 
-# 创建工作流
+# Create workflow
 flow = Workflow()
 flow.set_start_comp("start", Start(), inputs_schema={"query": "${user_inputs.query}"})
 intent_component = CustomIntentComponent(["出行", "餐饮"])
@@ -247,8 +263,8 @@ flow.add_connection("travel", "end")
 
 
 if __name__ == '__main__':
-    runtime = WorkflowRuntime()
-    output = asyncio.run(flow.invoke({"user_inputs": {"query": "去新疆"}}, runtime))
+    session = create_workflow_session()
+    output = asyncio.run(flow.invoke({"user_inputs": {"query": "去新疆"}}, session))
     print(output.result)
 ```
 

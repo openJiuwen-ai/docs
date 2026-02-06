@@ -364,10 +364,8 @@ class openjiuwen.core.memory.store.impl.memory_chroma_vector_store.MemoryChromaV
 
 Chroma 向量存储实现类，继承自 `VectorStore` 抽象类，用于管理和操作 Chroma 向量数据库中的向量数据。
 
-### __init__
-
 ```
-def __init__(self, persist_directory: str)
+MemoryChromaVectorStore(persist_directory: str)
 ```
 
 初始化 Chroma 向量存储客户端。
@@ -741,10 +739,8 @@ class openjiuwen.core.memory.store.impl.memory_milvus_vector_store.MemoryMilvusV
 
 Milvus 向量存储实现类，继承自 `VectorStore` 抽象类，用于管理和操作 Milvus 向量数据库中的向量数据。
 
-### __init__
-
 ```
-def __init__(self, milvus_host: str, milvus_port: str, token: str | None, embedding_dims: int)
+MemoryMilvusVectorStore(milvus_host: str, milvus_port: str, token: str | None, embedding_dims: int)
 ```
 
 初始化 Milvus 向量存储客户端。

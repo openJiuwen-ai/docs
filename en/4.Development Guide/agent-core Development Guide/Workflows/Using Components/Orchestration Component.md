@@ -18,18 +18,17 @@ import asyncio
 from typing import AsyncIterator
 
 from openjiuwen.core.common.logging import logger
-from openjiuwen.core.component.base import WorkflowComponent
-from openjiuwen.core.graph.executable import Input, Output
-from openjiuwen.core.context_engine.base import Context
-from openjiuwen.core.runtime.base import ComponentExecutable
-from openjiuwen.core.runtime.runtime import Runtime
+from openjiuwen.core.workflow import WorkflowComponent
+from openjiuwen.core.workflow.components.component import Input, Output
+from openjiuwen.core.workflow.components import Session
+from openjiuwen.core.context_engine import ModelContext
 
-class StreamCompNode(ComponentExecutable, WorkflowComponent):
+class StreamCompNode(WorkflowComponent):
     def __init__(self, node_id: str = ''):
         super().__init__()
         self.node_id = node_id
 
-    async def stream(self, inputs: Input, runtime: Runtime, context: Context) -> AsyncIterator[Output]:
+    async def stream(self, inputs: Input, session: Session, context: ModelContext) -> AsyncIterator[Output]:
         logger.debug(f"===StreamCompNode[{self.node_id}], input: {inputs}")
         if inputs is None:
             yield 1
@@ -44,30 +43,29 @@ class StreamCompNode(ComponentExecutable, WorkflowComponent):
 import asyncio
 from typing import AsyncIterator
 from openjiuwen.core.common.logging import logger
-from openjiuwen.core.component.base import WorkflowComponent
-from openjiuwen.core.graph.executable import Input, Output
-from openjiuwen.core.context_engine.base import Context
-from openjiuwen.core.runtime.base import ComponentExecutable
-from openjiuwen.core.runtime.runtime import Runtime
+from openjiuwen.core.workflow import WorkflowComponent
+from openjiuwen.core.workflow.components.component import Input, Output
+from openjiuwen.core.workflow.components import Session
+from openjiuwen.core.context_engine import ModelContext
 
-class TransformCompNode(ComponentExecutable, WorkflowComponent):
+class TransformCompNode(WorkflowComponent):
     def __init__(self, node_id: str = ''):
         super().__init__()
         self.node_id = node_id
 
-    # inputs是generator字典
-    async def transform(self, inputs: Input, runtime: Runtime, context: Context) -> AsyncIterator[
+    # inputs is a generator dictionary
+    async def transform(self, inputs: Input, session: Session, context: Context) -> AsyncIterator[
         Output]:
         logger.debug(f"===TransformCompNode[{self.node_id}], input stream started")
         try:
-            # 假设key是value，取对应generator
+            # Assume key is value, get corresponding generator
             value_generator = inputs.get("value")
             async for value in value_generator:
                 logger.debug(f"===TransformCompNode[{self.node_id}], processed input: {value}")
                 yield {"value": value}
         except Exception as e:
             logger.error(f"===TransformCompNode[{self.node_id}], critical error in transform: {e}")
-            raise  # 重新抛出关键异常（如流中断）
+            raise  # Re-raise critical exceptions (e.g., stream interruption)
 ```
 
 `CollectCompNode` implements the `collect` method (corresponding to `ComponentAbility.COLLECT`), aggregating stream input into batch output. Specifically, it receives input stream data `[{"value":1}, {"value":2}]`, aggregates the calculation 1+2, and outputs the batch result `{"value":3}`. `CollectCompNode` uses `add_stream_connection` to connect with predecessors and `add_connection` to connect with successors. The example code is as follows:
@@ -76,43 +74,40 @@ class TransformCompNode(ComponentExecutable, WorkflowComponent):
 import asyncio
 from typing import AsyncIterator
 from openjiuwen.core.common.logging import logger
-from openjiuwen.core.component.base import WorkflowComponent
-from openjiuwen.core.graph.executable import Input, Output
-from openjiuwen.core.context_engine.base import Context
-from openjiuwen.core.runtime.base import ComponentExecutable
-from openjiuwen.core.runtime.runtime import Runtime
+from openjiuwen.core.workflow import WorkflowComponent
+from openjiuwen.core.workflow.components.component import Input, Output
+from openjiuwen.core.workflow.components import Session
+from openjiuwen.core.context_engine import ModelContext
 
-class CollectCompNode(ComponentExecutable, WorkflowComponent):
+class CollectCompNode(WorkflowComponent):
     def __init__(self, node_id: str = ''):
         super().__init__()
         self.node_id = node_id
 
-    # inputs是generator字典
-    async def collect(self, inputs: Input, runtime: Runtime, context: Context) -> Output:
+    # inputs is a generator dictionary
+    async def collect(self, inputs: Input, session: Session, context: Context) -> Output:
         logger.info(f"===CollectCompNode[{self.node_id}], input stream started")
         result = 0
         try:
-            # 假设key是value，取对应generator
+            # Assume key is value, get corresponding generator
             value_generator = inputs.get("value")
             async for value in value_generator:
                 if value is None:
-                    logger.warning(f"===CollectCompNode[{self.node_id}], missing 'value' in input: {input}")
+                    logger.warning(f"===CollectCompNode[{self.node_id}], missing 'value' in input: {value}")
                     continue
-                result += value
-                logger.info(f"===CollectCompNode[{self.node_id}], processed input: {input}")
+                result += value.get("value", 0) if isinstance(value, dict) else value
+                logger.info(f"===CollectCompNode[{self.node_id}], processed input: {value}")
             return {"value": result}
         except Exception as e:
             logger.error(f"===CollectCompNode[{self.node_id}], critical error in collect: {e}")
-            raise  # 重新抛出关键异常，如流中断
+            raise  # Re-raise critical exceptions, e.g., stream interruption
 ```
 
 Construct the workflow, set the start and end components, and add the three components above to the workflow:
 
 ```python
-from openjiuwen.core.workflow.base import Workflow
-from openjiuwen.core.component.start_comp import Start
-from openjiuwen.core.component.end_comp import End
-from openjiuwen.core.workflow.workflow_config import ComponentAbility
+from openjiuwen.core.workflow import Workflow
+from openjiuwen.core.workflow import Start, End
 
 flow = Workflow()
 flow.set_start_comp("start", Start({}), inputs_schema={"a": "${a}"})
@@ -138,8 +133,8 @@ Execute the workflow:
 
 ```python
 import asyncio
-from openjiuwen.core.runtime.workflow import WorkflowRuntime
-result = asyncio.run(flow.invoke({"a": 1}, WorkflowRuntime()))
+from openjiuwen.core.workflow import create_workflow_session
+result = asyncio.run(flow.invoke({"a": 1}, create_workflow_session()))
 print(f"{result}")
 ```
 
@@ -158,9 +153,9 @@ During the workflow construction process, data transmission between components c
 Assuming the input is `{"inputs": "test"}`, a successor component can reference the input via `${inputs}`.
 
 ```python
-from openjiuwen.core.component.end_comp import End
-from openjiuwen.core.workflow.base import Workflow
-from openjiuwen.core.component.start_comp import Start
+from openjiuwen.core.workflow import End
+from openjiuwen.core.workflow import Workflow
+from openjiuwen.core.workflow import Start
 
 workflow = Workflow()
 workflow.set_start_comp("start", Start(), inputs_schema={"query": "${inputs}"})
@@ -179,60 +174,59 @@ The output of a predecessor component can be referenced via `${<predecessor_comp
 ```python
 workflow.set_end_comp("end", End(), inputs_schema={"query": "${start.query}"})
 ```
+
 Below is a complete runnable example demonstrating how to use reference expressions for data transmission between components:
 
 ```python
 import asyncio
-from openjiuwen.core.component.start_comp import Start
-from openjiuwen.core.component.end_comp import End
-from openjiuwen.core.workflow.base import Workflow
-from openjiuwen.core.runtime.workflow import WorkflowRuntime
+from openjiuwen.core.workflow import Start, End, create_workflow_session
+from openjiuwen.core.workflow import Workflow
 
-# 创建工作流
+# Create workflow
 workflow = Workflow()
 
-# 设置Start组件，演示引用简单输入和嵌套输入
-# inputs_schema中的${inputs}引用整个输入对象
-# ${inputs.message}引用输入对象中的message字段
+# Set Start component, demonstrating referencing simple input and nested input
+# ${inputs} in inputs_schema references the entire input object
+# ${inputs.message} references the message field in the input object
 workflow.set_start_comp(
     "start", 
     Start(), 
     inputs_schema={
-        "query": "${inputs.message}",  # 引用嵌套输入
-        "metadata": "${inputs}"         # 引用整个输入
+        "query": "${inputs.message}",  # Reference nested input
+        "metadata": "${inputs}"         # Reference entire input
     }
 )
 
-# 设置End组件，演示引用前序组件的输出
-# ${start.query}引用id为"start"的组件的query输出
-# ${start.metadata}引用id为"start"的组件的metadata输出
+# Set End component, demonstrating referencing predecessor component's output
+# ${start.query} references the query output of the component with id "start"
+# ${start.metadata} references the metadata output of the component with id "start"
 workflow.set_end_comp(
     "end", 
-    End({"responseTemplate": "处理结果: {{result}}, 元数据: {{meta}}"}),
+    End({"responseTemplate": "Processing result: {{result}}, Metadata: {{meta}}"}),
     inputs_schema={
-        "result": "${start.query}",      # 引用前序组件的输出
-        "meta": "${start.metadata}"      # 引用前序组件的输出
+        "result": "${start.query}",      # Reference predecessor component's output
+        "meta": "${start.metadata}"      # Reference predecessor component's output
     }
 )
 
-# 连接组件
+# Connect components
 workflow.add_connection("start", "end")
 
-# 执行工作流
+# Execute workflow
 inputs = {
     "inputs": {
         "message": "Hello, openJiuwen!"
     }
 }
 
-result = asyncio.run(workflow.invoke(inputs=inputs, runtime=WorkflowRuntime()))
-print(f"执行结果: {result.result}")
-print(f"执行状态: {result.state}")
+result = asyncio.run(workflow.invoke(inputs=inputs, session=create_workflow_session()))
+print(f"Execution result: {result.result}")
+print(f"Execution state: {result.state}")
 ```
 
 **Expected Output:**
 
 ```python
-执行结果: {'responseContent': "处理结果: Hello, openJiuwen!, 元数据: {'message': 'Hello, openJiuwen!'}"}
-执行状态: WorkflowExecutionState.COMPLETED
+Execution result: {'response': "Processing result: Hello, openJiuwen!, Metadata: {'message': 'Hello, openJiuwen!'}"}
+Execution state: WorkflowExecutionState.COMPLETED
 ```

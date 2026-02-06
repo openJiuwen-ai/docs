@@ -64,7 +64,7 @@ Please carefully read this guide before upgrading and follow the steps to comple
    python main.py
    ```
 
-## II.## Docker Installation Upgrade (Not Supported)
+## II. Docker Installation Upgrade (Not Supported)
 
 ## III. Verify Upgrade
 

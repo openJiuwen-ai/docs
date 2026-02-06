@@ -1,4 +1,7 @@
-This guide describes how to install openJiuwen locally on Windows.
+This guide describes how to install openJiuwen locally on Windows. Local installation provides two methods:
+
+* **Method 1: Using One-Click Installation Script**: Automatically completes most installation and configuration work, simplifying the installation process and suitable for rapid deployment.
+* **Method 2: Manual Installation of All Dependencies**: Requires manual installation and configuration of all dependency services, suitable for developers who need flexible configuration adjustments.
 
 ## I. Prerequisites
 
@@ -18,10 +21,127 @@ Ensure your machine meets the following requirements:
   * uv 0.5.0 or later
   * MySQL 8.0 or later
   * Milvus 2.6.2 or later
+  * PowerShell 5.1 or later (run `$PSVersionTable.PSVersion` to check)
 
-## II. Install Dependencies
+## II. Installation Methods
 
-Before proceeding with the full installation, install the dependencies below, then continue with fetching and installing the source code.
+### Method 1: Using One-Click Installation Script
+
+The one-click installation script can automatically complete steps such as basic tool checking, code pulling, environment configuration, and service startup, greatly simplifying the installation process.
+
+#### 1. Get the Installation Script
+
+* Download the <a href="https://openjiuwen-ci.obs.cn-north-4.myhuaweicloud.com/agentstudio/setup_scripts/setup_scripts_windows_v2.zip" target="_blank" rel="nofollow noopener noreferrer">installation script package</a>. The package contains the following files:
+  * `setup.ps1`: Main installation script that orchestrates the entire installation process
+  * `check_git.ps1`: Checks if Git is installed
+  * `check_nodejs.ps1`: Checks if Node.js is installed
+  * `check_python.ps1`: Checks if Python is installed
+  * `check_mysql.ps1`: Checks if MySQL is installed
+  * `fetch_codes.ps1`: Clones the agent-studio code repository
+  * `user_config.ps1`: User configuration file (optional, includes proxy, pip source, npm source configuration)
+
+#### 2. Configure Proxy, pip Source, and npm Source (Optional)
+
+If your network environment requires a proxy to access the internet, or if you need to use a custom pip source or npm source, you can configure it in the `user_config.ps1` file:
+
+* Open the `user_config.ps1` file and modify the following variables:
+
+  ```powershell
+  # User proxy configuration
+  $HTTP_PROXY=""  # HTTP proxy address, e.g., http://127.0.0.1:7890
+  $HTTPS_PROXY=""  # HTTPS proxy address, e.g., http://127.0.0.1:7890
+  $SSL_VERIFY=""  # Optional: true/false (corresponds to git http.sslVerify)
+
+  # pip source configuration (optional)
+  $PIP_INDEX_URL=""      # pip source address, e.g., https://pypi.tuna.tsinghua.edu.cn/simple
+  $PIP_TRUSTED_HOST=""   # Trusted host address, e.g., pypi.tuna.tsinghua.edu.cn
+
+  # npm source configuration (optional)
+  $NPM_REGISTRY=""       # npm source address, e.g., https://registry.npmmirror.com
+  ```
+
+* Proxy configuration notes:
+  * **No proxy needed**: Keep variables empty (script will automatically skip proxy configuration)
+  * **Proxy needed**: Fill in the complete proxy address, e.g., `http://127.0.0.1:7890`
+  * **Proxy with authentication**: Supports username and password, e.g., `http://user:pass@proxy.example.com:8080`
+  * **SSL verification**: Set `$SSL_VERIFY` to `true` or `false`, `true` means enable Git SSL certificate verification, `false` means disable it.
+
+* pip source configuration notes:
+  * **No pip source configuration needed**: Keep `$PIP_INDEX_URL` and `$PIP_TRUSTED_HOST` empty (script will automatically skip pip source configuration and use default source)
+  * **pip source configuration needed**: Must set both `$PIP_INDEX_URL` and `$PIP_TRUSTED_HOST` parameters
+  * **Common domestic mirror source examples**:
+    * Tsinghua University: `https://pypi.tuna.tsinghua.edu.cn/simple`, trusted host: `pypi.tuna.tsinghua.edu.cn`
+    * Alibaba Cloud: `https://mirrors.aliyun.com/pypi/simple/`, trusted host: `mirrors.aliyun.com`
+    * USTC: `https://pypi.mirrors.ustc.edu.cn/simple/`, trusted host: `pypi.mirrors.ustc.edu.cn`
+
+* npm source configuration notes:
+  * **No npm source configuration needed**: Keep `$NPM_REGISTRY` empty (script will automatically skip npm source configuration and use default source)
+  * **npm source configuration needed**: Set `$NPM_REGISTRY` to the desired npm source address
+  * **Common domestic mirror source examples**:
+    * Taobao mirror: `https://registry.npmmirror.com`
+    * Tencent Cloud: `https://mirrors.cloud.tencent.com/npm/`
+    * Huawei Cloud: `https://repo.huaweicloud.com/repository/npm/`
+
+#### 3. Run the Installation Script
+
+* Run PowerShell as administrator and set the execution policy:
+
+  ```powershell
+  Set-ExecutionPolicy Unrestricted -Scope CurrentUser
+  ```
+
+* Enter the script directory and run the main installation script:
+
+  ```powershell
+  cd setup_scripts_windows
+  # Default uses MySQL database
+  .\setup.ps1
+
+  # Or specify using SQLite database
+  .\setup.ps1 -DbType sqlite
+  ```
+
+* The script will automatically execute the following steps:
+  1. Check system version and PowerShell version
+  2. Check basic tools (git, nodejs, python), prompt for installation if not installed
+  3. Pull the agent-studio code repository
+  4. Generate AES key
+  5. Configure .env file (set database type according to -DbType parameter)
+  6. Deploy backend service (create virtual environment, install dependencies, start service)
+  7. Deploy frontend service (install dependencies, start service)
+
+* After the script execution is complete, it will output the PID of the backend and frontend services, log file paths, and frontend page access URL. Access the output page address in your browser to enter the openJiuwen interface.
+
+![image](../images/一键安装运行完成截图win.png)
+
+#### 4. Common Script Parameters
+
+  ```powershell
+  # View backend and frontend service status and access URLes
+  .\setup.ps1 -Status
+  
+  # Stop backend and frontend services
+  .\setup.ps1 -Stop
+
+  # Start backend and frontend services
+  .\setup.ps1 -Start
+
+  # Restart backend and frontend services
+  .\setup.ps1 -Restart
+
+  # View all supported parameters
+  .\setup.ps1 -Help
+  ```
+
+### Method 2: Manual Installation of All Dependencies
+
+> **Note**: This method requires manual installation of all dependency services, with complex steps, and is not recommended. It is recommended to use Method 1.
+
+Before proceeding with the formal installation, complete the dependency installation first, then proceed with source code retrieval and installation steps.
+
+#### 1. Install Dependencies
+
+Before proceeding with the formal installation, complete the dependency installation first, then proceed with source code retrieval and installation steps.
 
 ### 1. Install Git
 

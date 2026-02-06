@@ -8,14 +8,14 @@ The openJiuwen framework supports multi-dimensional intelligent prompt optimizat
 
 The prompt generation module aims to transform the user’s initial input into a structured prompt framework. By calling a large language model, this module expands simple original inputs (e.g., “You are a name extraction assistant”) into complete prompts with clear structure, explicit role definitions, task goals, and output specifications. This reduces the barrier to writing prompts, provides a standardized starting template, and removes the “don’t know how to write” obstacle.
 
-Generate the initial prompt via the MetaTemplateBuilder.build function
+Generate the initial prompt via the `MetaTemplateBuilder.build` function
 
 ```python
 import os
+import asyncio
 
-from openjiuwen.core.utils.llm.base import BaseModelInfo
-from openjiuwen.core.component.common.configs.model_config import ModelConfig
-from openjiuwen.agent_builder.prompt_builder.builder.meta_template_builder import MetaTemplateBuilder
+from openjiuwen.core.foundation.llm import ModelRequestConfig, ModelClientConfig
+from openjiuwen.dev_tools.prompt_builder import MetaTemplateBuilder
 
 API_BASE = os.getenv("API_BASE", "https://api.openai.com/v1")
 API_KEY = os.getenv("API_KEY", "sk-fake")
@@ -23,19 +23,22 @@ MODEL_NAME = os.getenv("MODEL_NAME", "")
 MODEL_PROVIDER = os.getenv("MODEL_PROVIDER", "")
 
 # 1. Create model configuration
-model_info = BaseModelInfo(
-    api_key=API_KEY,    # Replace with the actual API key
-    api_base=API_BASE,  # API endpoint
-    model=MODEL_NAME    # Model name
+model_config = ModelRequestConfig(model=MODEL_NAME)
+model_client_config = ModelClientConfig(
+    client_provider=MODEL_PROVIDER,
+    api_base=API_BASE,
+    api_key=API_KEY,
 )
-config = ModelConfig(model_provider=MODEL_PROVIDER, model_info=model_info)
 
 # 2. Create MetaTemplateBuilder object
-builder = MetaTemplateBuilder(config)
+builder = MetaTemplateBuilder(model_config, model_client_config)
 
-# 3. Execute prompt generation
-response = builder.build(prompt="You are a name information extraction assistant")
-print(response)
+# 3. Execute prompt generation (build is an async method)
+async def main():
+    response = await builder.build(prompt="You are a name information extraction assistant")
+    return response
+
+print(asyncio.run(main()))
 ```
 Expected return
 ```text
@@ -74,36 +77,39 @@ Your task is to extract all personal name information that appears in the user-p
 
 The initially generated prompt often cannot fully meet practical application needs. The feedback optimization module iteratively improves the prompt through user feedback and test results.
 
-Optimize prompts based on feedback via the FeedbackPromptBuilder.build function
+Optimize prompts based on feedback via the `FeedbackPromptBuilder.build` function
 
 ```python
 import os
+import asyncio
 
-from openjiuwen.core.utils.llm.base import BaseModelInfo
-from openjiuwen.core.component.common.configs.model_config import ModelConfig
-from openjiuwen.agent_builder.prompt_builder.builder.feedback_prompt_builder import FeedbackPromptBuilder
+from openjiuwen.core.foundation.llm import ModelRequestConfig, ModelClientConfig
+from openjiuwen.dev_tools.prompt_builder import FeedbackPromptBuilder
 
 API_BASE = os.getenv("API_BASE", "https://api.openai.com/v1")
 API_KEY = os.getenv("API_KEY", "sk-fake")
 MODEL_NAME = os.getenv("MODEL_NAME", "")
 MODEL_PROVIDER = os.getenv("MODEL_PROVIDER", "")
-os.environ.setdefault("LLM_SSL_VERIFY", "false")
 
 # 1. Create model configuration
-model_info = BaseModelInfo(
-    api_key=API_KEY,    # Replace with the actual API key
-    api_base=API_BASE,  # API endpoint
-    model=MODEL_NAME    # Model name
+model_config = ModelRequestConfig(model=MODEL_NAME)
+model_client_config = ModelClientConfig(
+    client_provider=MODEL_PROVIDER,
+    api_base=API_BASE,
+    api_key=API_KEY,
 )
-config = ModelConfig(model_provider=MODEL_PROVIDER, model_info=model_info)
 
-# 2. Create MetaTemplateBuilder object
-feedback_builder = FeedbackPromptBuilder(config)
+# 2. Create FeedbackPromptBuilder object
+feedback_builder = FeedbackPromptBuilder(model_config, model_client_config)
 # Prompt generated in the previous step
-prompt= '''## Persona Define the role or identity you will play: name extraction assistant list the role's...'''
-# 3. Execute prompt generation
-response = feedback_builder.build(prompt=prompt, feedback="Do not extract people who do not exist in real history")
-print(response)
+prompt = '''## Persona Define the role or identity you will play: name extraction assistant list the role's...'''
+
+# 3. Execute prompt feedback optimization (build is an async method)
+async def main():
+    response = await feedback_builder.build(prompt=prompt, feedback="Do not extract people who do not exist in real history")
+    return response
+
+print(asyncio.run(main()))
 ```
 Expected return
 ```text
@@ -114,48 +120,60 @@ Expected return
 
 The error case optimization module focuses on handling edge cases and exceptional scenarios. By analyzing failure cases, it identifies weak points in the prompt and performs targeted improvements.
 
-Execute error case optimization via the BadCasePromptBuilder.build function
+Execute error case optimization via the `BadCasePromptBuilder.build` function
 
 ```python
 import os
+import asyncio
 
-from openjiuwen.core.utils.llm.base import BaseModelInfo
-from openjiuwen.core.component.common.configs.model_config import ModelConfig
-from openjiuwen.agent_builder.prompt_builder.builder.badcase_prompt_builder import BadCasePromptBuilder
-from openjiuwen.agent_builder.tune.base import EvaluatedCase, Case
+from openjiuwen.core.foundation.llm import ModelRequestConfig, ModelClientConfig
+from openjiuwen.dev_tools.prompt_builder import BadCasePromptBuilder
+from openjiuwen.dev_tools.tune import EvaluatedCase, Case
 
 API_BASE = os.getenv("API_BASE", "https://api.openai.com/v1")
 API_KEY = os.getenv("API_KEY", "sk-fake")
 MODEL_NAME = os.getenv("MODEL_NAME", "")
 MODEL_PROVIDER = os.getenv("MODEL_PROVIDER", "")
-os.environ.setdefault("LLM_SSL_VERIFY", "false")
 
 # 1. Create model configuration
-model_info = BaseModelInfo(
-    api_key=API_KEY,    # Replace with the actual API key
-    api_base=API_BASE,  # API endpoint
-    model=MODEL_NAME    # Model name
+model_config = ModelRequestConfig(model=MODEL_NAME)
+model_client_config = ModelClientConfig(
+    client_provider=MODEL_PROVIDER,
+    api_base=API_BASE,
+    api_key=API_KEY,
 )
-config = ModelConfig(model_provider=MODEL_PROVIDER, model_info=model_info)
 
-# 2. Create MetaTemplateBuilder object
-feedback_builder = BadCasePromptBuilder(config)
+# 2. Create BadCasePromptBuilder object
+badcase_builder = BadCasePromptBuilder(model_config, model_client_config)
 
 BAD_CASES = [
-    EvaluatedCase(case=Case(
-        inputs={"query": "Pan Zhiheng (approx. 1536—1621), courtesy name Jingsheng, style names Luanxiaosheng and Binghuasheng, a native of She County and Yansi, Anhui; he resided in Jinling (present-day Nanjing, Jiangsu)"},
-        label={"label": "[PanZhiheng]"}),
-        answer={"answer": "[PanZhiheng, Binghuasheng]"}
+    EvaluatedCase(
+        case=Case(
+            inputs={"query": "Pan Zhiheng (approx. 1536—1621), courtesy name Jingsheng, style names Luanxiaosheng and Binghuasheng, a native of She County and Yansi, Anhui; he resided in Jinling (present-day Nanjing, Jiangsu)"},
+            label={"output": "[PanZhiheng]"},
+        ),
+        answer={"output": "[PanZhiheng, Binghuasheng]"},
+        reason="Mistakenly identified the style name 'Binghuasheng' as a personal name",
     ),
-    EvaluatedCase(case=Case(
-        inputs={"query": "Guo Zaoxing (1532—1593), courtesy name Jianchu, style name Haiyue, from Huananli, Fuqing County, Fujian (now Fuqing City), younger brother of Guo Yuqing. As a youth, Guo Zaoxing was famous and once studied in Wu and Yue"},
-        label={"label": "[GuoZaoxing, GuoYuqing]"}),
-        answer={"answer": "[GuoZaoxing, GuoYuqing, WuYue]"}
+    EvaluatedCase(
+        case=Case(
+            inputs={"query": "Guo Zaoxing (1532—1593), courtesy name Jianchu, style name Haiyue, from Huananli, Fuqing County, Fujian (now Fuqing City), younger brother of Guo Yuqing"},
+            label={"output": "[GuoZaoxing, GuoYuqing]"},
+        ),
+        answer={"output": "[GuoZaoxing, GuoYuqing, WuYue]"},
+        reason="Mistakenly identified the place name 'WuYue' as a personal name",
     ),
 ]
-# 3. Execute prompt generation
-response = feedback_builder.build(prompt="You are a professional personal name information extraction assistant", cases=BAD_CASES)
-print(response)
+
+# 3. Execute prompt error case optimization (build is an async method)
+async def main():
+    response = await badcase_builder.build(
+        prompt="You are a professional personal name information extraction assistant",
+        cases=BAD_CASES,
+    )
+    return response
+
+print(asyncio.run(main()))
 ```
 Expected result
 ```text

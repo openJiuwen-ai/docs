@@ -13,11 +13,11 @@ The list of capabilities for pre-built components (for details, please refer to 
 |IntentDetectionComponent  |√  |×  | × |×  |  
 |QuestionerComponent  | √ | × | ×| × |  
 |BranchComponent  |√  | × | × |×  |  
-| LoopComponent |√  | × | × | × |
-| BreakComponent|√  |×  |×  | × |
-| SetVariableComponent |√  | × |×  | × |
-| SubWorkflowComponent| √ | √ |×  |×  |
+| LoopComponent |√  | × | × | × |
+| LoopBreakComponent|√  |×  |×  | × |
+| LoopSetVariableComponent |√  | × |×  | × |
+| SubWorkflowComponent| √ | √ |×  |×  |
 
 ## Custom Components
 
-Custom components achieve corresponding capabilities by implementing the `invoke`, `stream`, `collect`, and `transform` interfaces in `ComponentExecutable`. Refer to: [Develop Custom Components](../../Advanced%20Usage/Develop%20Custom%20Components.md).
+Custom components achieve corresponding capabilities by implementing the `invoke`, `stream`, `collect`, and `transform` interfaces in `ComponentExecutable`. Refer to: [Develop Custom Components](../../Advanced Usage/Develop Custom Components.md).

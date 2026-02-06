@@ -1,6 +1,6 @@
 This chapter demonstrates how to rapidly develop a custom Agent based on openJiuwen. The Agent built in this example is capable of calling Large Language Model (LLM) services and identifying sensitive words that may be contained in the LLM output results. Through this example, you will learn the following information:
 
-- How to inherit the `AgentConfig` base class to implement a configuration class for a custom Agent.
+- How to inherit the `AgentCard` base class to implement a configuration class for a custom Agent.
 - How to override the initialization method `__init__` of the `BaseAgent` base class to implement the initialization method for a custom Agent.
 - How to implement the batch execution abstract interface `invoke` defined by the `BaseAgent` base class to asynchronously batch execute the specific business logic of the custom Agent.
 
@@ -30,43 +30,47 @@ pip install -U openjiuwen
 
 # Implementing the Custom Agent Configuration Class
 
-To implement an Agent capable of calling LLM services and identifying sensitive words that may be contained in the LLM output results, in addition to the basic configuration items defined in `AgentConfig` (such as the Agent's `id`, `version`, `description`, etc.), custom configurations are also needed (specifically including the configuration information `model` for calling the LLM and the custom sensitive words list `sensitive_words`). The example code is as follows:
+To implement an Agent capable of calling LLM services and identifying sensitive words that may be contained in the LLM output results, in addition to the basic configuration items defined in `AgentCard` (such as the Agent's `id`, `version`, `description`, etc.), custom configurations are also needed (specifically including the configuration information `model` for calling the LLM and the custom sensitive words list `sensitive_words`). The example code is as follows:
 
 ```python
 import os
 from typing import Optional, List
 from pydantic import Field
-from openjiuwen.agent.config.base import AgentConfig
-from openjiuwen.core.utils.llm.base import BaseModelInfo
-from openjiuwen.core.component.common.configs.model_config import ModelConfig
 
+from openjiuwen.core.foundation.llm import ModelConfig, BaseModelInfo
+from openjiuwen.core.single_agent import AgentCard, BaseAgent
 
-class MyAgentConfig(AgentConfig):
+API_BASE = os.getenv("API_BASE", "your api url")
+API_KEY = os.getenv("API_KEY", "your api token")
+MODEL_NAME = os.getenv("MODEL_NAME", "your model name")
+MODEL_PROVIDER = os.getenv("MODEL_PROVIDER", "your model provider")
+
+class MyAgentCard(AgentCard):
     model: Optional[ModelConfig] = Field(default=None)
     sensitive_words: List[str] = Field(default_factory=list)
 
 
 def create_model_config() -> ModelConfig:
-    """通过环境变量获取大模型相关的配置信息"""
+    """Get LLM-related configuration information through environment variables"""
     return ModelConfig(
-        model_provider=os.getenv("MODEL_PROVIDER", ""),
+        model_provider=MODEL_PROVIDER,
         model_info=BaseModelInfo(
-            model=os.getenv("MODEL_NAME", ""),
-            api_base=os.getenv("API_BASE", ""),
-            api_key=os.getenv("API_KEY", ""),
+            model=MODEL_NAME,
+            api_base=API_BASE,
+            api_key=API_KEY,
             temperature=0.7,
             top_p=0.9,
             timeout=30,
         ),
     )
 
-# 创建自定义智能体配置信息的对象
-my_agent_config = MyAgentConfig(
+# Create custom Agent configuration object
+my_agent_card = MyAgentCard(
     id="my_agent_id",
-    version="0.0.1",
-    description="我的自定义智能体",
-    model=create_model_config(),  # 配置大模型相关参数信息
-    sensitive_words=["自定义敏感词列表"]
+    name="my_agent",
+    description="My custom agent",
+    model=create_model_config(),  # Configure LLM-related parameter information
+    sensitive_words=["Custom sensitive words list"]
 )
 ```
 
@@ -74,58 +78,71 @@ Among them, the configuration information of the LLM service is read via the `cr
 
 # Implementing the Initialization Method
 
-Next, developers need to implement the initialization method of the custom Agent to support the creation of custom Agent objects. The initialization method of the `BaseAgent` base class provides the Agent with the capabilities of initializing `Runtime` and configuration management `Config`. In addition to calling the initialization method of the `BaseAgent` base class, the custom Agent also needs to create an LLM call object based on the LLM configuration information and initialize the configured sensitive words list. The specific example is as follows:
+Next, developers need to implement the initialization method of the custom Agent to support the creation of custom Agent objects. The initialization method of the `BaseAgent` base class provides the Agent with the capabilities of initializing `Session` and configuration management `Config`. In addition to calling the initialization method of the `BaseAgent` base class, the custom Agent also needs to create an LLM call object based on the LLM configuration information and initialize the configured sensitive words list. The specific example is as follows:
 
 ```python
-from openjiuwen.agent.config.base import AgentConfig
-from openjiuwen.core.agent.agent import BaseAgent
-from openjiuwen.core.utils.llm.model_utils.model_factory import ModelFactory
+from openjiuwen.core.foundation.llm import (
+    Model, ModelClientConfig, ModelRequestConfig
+)
+from openjiuwen.core.single_agent import AgentCard, BaseAgent
 
 class MyAgent(BaseAgent):
-    def __init__(self, agent_config : AgentConfig):
-        # 初始化配置信息
-        super().__init__(agent_config)
-        # 获取大模型配置
-        self._model_config = agent_config.model
-        # 使用ModelFactory 创建大模型调用对象
-        self._llm = ModelFactory().get_model(
-            model_provider=self._model_config.model_provider,
+    def __init__(self, agent_card: AgentCard):
+        # Initialize configuration information
+        super().__init__(agent_card)
+        # Get LLM configuration
+        self._model_config = agent_card.model
+        # Use Model + ModelClientConfig / ModelRequestConfig to create LLM call object
+        client_config = ModelClientConfig(
+            client_provider=self._model_config.model_provider,
             api_key=self._model_config.model_info.api_key,
-            api_base=self._model_config.model_info.api_base
+            api_base=self._model_config.model_info.api_base,
+            timeout=self._model_config.model_info.timeout,
+            verify_ssl=False,
         )
-        # 初始化配置自定义敏感词列表
-        self._sensitive_words = agent_config.sensitive_words
-```
+        request_config = ModelRequestConfig(
+            model=self._model_config.model_info.model_name,
+            temperature=self._model_config.model_info.temperature,
+            top_p=self._model_config.model_info.top_p,
+        )
+        self._llm = Model(
+            model_client_config=client_config,
+            model_config=request_config,
+        )
+        # Initialize configured custom sensitive words list
+        self._sensitive_words = agent_card.sensitive_words
 
-Here, the LLM instance is created via the `get_model` method of `ModelFactory` based on the configuration information in `ModelConfig`.
+    def configure(self, config) -> 'BaseAgent':
+        pass
+```
 
 # Implementing the invoke Method
 
 The Agent in this example possesses the following functions: it is capable of calling LLM services and identifying sensitive words that may be contained in the LLM output results.
 
-The `invoke` method is used to call the LLM. Before calling, the user input is encapsulated as a `HumanMessage`, combined with the custom Agent's built-in system prompt `SystemMessage`, and used as input for the LLM to obtain the returned result. Finally, check whether the LLM output contains custom sensitive words. Once the LLM output contains custom sensitive words, a fixed phrase is output: "Sorry, I cannot answer your question." The example code is as follows:
+The `invoke` method is used to call the LLM. Before calling, the user input is encapsulated as a `UserMessage`, combined with the custom Agent's built-in system prompt `SystemMessage`, and used as input for the LLM to obtain the returned result. Finally, check whether the LLM output contains custom sensitive words. Once the LLM output contains custom sensitive words, a fixed phrase is output: "对不起，无法回答您的问题。" The example code is as follows:
 
 ```python
 from typing import Dict
-from openjiuwen.core.agent.agent import BaseAgent
-from openjiuwen.core.runtime.runtime import Runtime
-from openjiuwen.core.utils.llm.messages import HumanMessage, SystemMessage
+from openjiuwen.core.foundation.llm import UserMessage, SystemMessage
+from openjiuwen.core.session import Session
+from openjiuwen.core.single_agent import BaseAgent
 
 class MyAgent(BaseAgent):
-    async def invoke(self, inputs: Dict, runtime: Runtime = None):
-        # inputs是自定义智能体的输入，以llm_inputs为键，用户输入信息作为用户提示词
-        user_message = HumanMessage(content=inputs.get("llm_inputs", "")).model_dump(exclude_none=True)
-        # 自定义智能体的默认系统提示词
-        system_message = SystemMessage(content="你是一个AI助手").model_dump(exclude_none=True)
-        # 大模型输入包括：系统提示词和用户提示词
+    async def invoke(self, inputs: Dict, session: Session | None = None):
+        # inputs is the input of the custom Agent, with llm_inputs as the key, user input information as the user prompt
+        user_message = UserMessage(content=inputs.get("llm_inputs", "")).model_dump(exclude_none=True)
+        # Default system prompt of the custom Agent
+        system_message = SystemMessage(content="You are an AI assistant").model_dump(exclude_none=True)
+        # LLM input includes: system prompt and user prompt
         llm_input_messages = [system_message, user_message]
-        # 调用模型的异步执行方法方法得到模型的输出
-        res = await self._llm.ainvoke(model_name=self._model_config.model_info.model_name, messages=llm_input_messages)
+        # Call the model's asynchronous execution method to get the model's output
+        res = await self._llm.invoke(model=self._model_config.model_info.model_name, messages=llm_input_messages)
         llm_output = res.content
         for word in self._sensitive_words:
             if word in llm_output:
-                return "对不起，无法回答您的问题。"
-        # 如果大模型输出不包含敏感词，则直接返回大模型输出内容
+                return "Sorry, I cannot answer your question."
+        # If the LLM output does not contain sensitive words, directly return the LLM output content
         return llm_output
 ```
 
@@ -134,10 +151,17 @@ class MyAgent(BaseAgent):
 The `stream` method enables streaming invocation capability for the agent, returning an asynchronous iterator to support real-time responses. In this example implementation, for simplicity, the method directly reuses the complete processing logic from `invoke`, returning the final result as a single streaming chunk. The implementation is as follows:
 
 ```python
-from typing import AsyncIterator, Any
+from typing import AsyncIterator, Any, Optional, List
+
+from openjiuwen.core.session.stream.base import StreamMode
+from openjiuwen.core.session import Session
 
 class MyAgent(BaseAgent):
-    async def stream(self, inputs: Dict, runtime: Runtime = None) -> AsyncIterator[Any]:
+    async def stream(self,
+            inputs: Any,
+            session: Optional[Session] = None,
+            stream_modes: Optional[List[StreamMode]] = None
+    ) -> AsyncIterator[Any]:
         content = await self.invoke(inputs)
         yield {"type": "answer", "content": content}
 ```
@@ -149,8 +173,8 @@ After the developer completes the relevant implementation of the custom Agent, t
 ```python
 import asyncio
 
-# 创建自定义智能体的对象
-my_agent = MyAgent(my_agent_config)
+# Create custom Agent object
+my_agent = MyAgent(my_agent_card)
 
 inputs = {"llm_inputs": "写一个笑话"}
 res = asyncio.run(my_agent.invoke(inputs))
@@ -164,104 +188,115 @@ The complete example reference is as follows:
 ```python
 import asyncio
 import os
-from typing import Optional, List, Dict, AsyncIterator, Any
 from pydantic import Field
+from typing import Optional, List, Dict, AsyncIterator, Any
 
-from openjiuwen.agent.config.base import AgentConfig
-from openjiuwen.core.agent.agent import BaseAgent
-from openjiuwen.core.runtime.runtime import Runtime
-from openjiuwen.core.utils.llm.base import BaseModelInfo
-from openjiuwen.core.component.common.configs.model_config import ModelConfig
-from openjiuwen.core.utils.llm.messages import HumanMessage, SystemMessage
-from openjiuwen.core.utils.llm.model_utils.model_factory import ModelFactory
+from openjiuwen.core.foundation.llm import (
+    ModelConfig, BaseModelInfo, UserMessage, SystemMessage,
+    Model, ModelClientConfig, ModelRequestConfig
+)
+from openjiuwen.core.session import Session
+from openjiuwen.core.session.stream.base import StreamMode
+from openjiuwen.core.single_agent import AgentCard, BaseAgent
+
+API_BASE = os.getenv("API_BASE", "your api url")
+API_KEY = os.getenv("API_KEY", "your api key")
+MODEL_NAME = os.getenv("MODEL_NAME", "your model name")
+MODEL_PROVIDER = os.getenv("MODEL_PROVIDER", "your model provider")
+
+class MyAgentCard(AgentCard):
+    model: Optional[ModelConfig] = Field(default=None)
+    sensitive_words: List[str] = Field(default_factory=list)
 
 
 def create_model_config() -> ModelConfig:
-    """通过环境变量获取大模型相关的配置信息"""
+    """Get LLM-related configuration information through environment variables"""
     return ModelConfig(
-        model_provider=os.getenv("MODEL_PROVIDER", ""),
+        model_provider=MODEL_PROVIDER,
         model_info=BaseModelInfo(
-            model=os.getenv("MODEL_NAME", ""),
-            api_base=os.getenv("API_BASE", ""),
-            api_key=os.getenv("API_KEY", ""),
+            model=MODEL_NAME,
+            api_base=API_BASE,
+            api_key=API_KEY,
             temperature=0.7,
             top_p=0.9,
             timeout=30,
         ),
     )
 
-
-class MyAgentConfig(AgentConfig):
-    model: Optional[ModelConfig] = Field(default=None)
-    sensitive_words: List[str] = Field(default_factory=list)
-
+# Create custom Agent configuration object
+my_agent_card = MyAgentCard(
+    id="my_agent_id",
+    name="my_agent",
+    description="My custom agent",
+    model=create_model_config(),  # Configure LLM-related parameter information
+    sensitive_words=["Custom sensitive words list"]
+)
 
 class MyAgent(BaseAgent):
-    def __init__(self, agent_config : AgentConfig):
-        # 初始化配置信息
-        super().__init__(agent_config)
-        # 获取大模型配置
-        self._model_config = agent_config.model
-        # 使用ModelFactory 创建大模型调用对象
-        self._llm = ModelFactory().get_model(
-            model_provider=self._model_config.model_provider,
-            api_key=self._model_config.model_info.api_key,
-            api_base=self._model_config.model_info.api_base
-        )
-        # 初始化配置自定义敏感词列表
-        self._sensitive_words = agent_config.sensitive_words
+    def configure(self, config) -> 'BaseAgent':
+        pass
 
-    async def invoke(self, inputs: Dict, runtime: Runtime = None):
-        # inputs是自定义智能体的输入，以llm_inputs为键，用户输入信息作为用户提示词
-        user_message = HumanMessage(content=inputs.get("llm_inputs", "")).model_dump(exclude_none=True)
-        # 自定义智能体的默认系统提示词
-        system_message = SystemMessage(content="你是一个AI助手").model_dump(exclude_none=True)
-        # 大模型输入包括：系统提示词和用户提示词
+    def __init__(self, agent_card: AgentCard):
+        # Initialize configuration information
+        super().__init__(agent_card)
+        # Get LLM configuration
+        self._model_config = agent_card.model
+        # Use Model + ModelClientConfig / ModelRequestConfig to create LLM call object
+        client_config = ModelClientConfig(
+            client_provider=self._model_config.model_provider,
+            api_key=self._model_config.model_info.api_key,
+            api_base=self._model_config.model_info.api_base,
+            timeout=self._model_config.model_info.timeout,
+            verify_ssl=False,
+        )
+        request_config = ModelRequestConfig(
+            model=self._model_config.model_info.model_name,
+            temperature=self._model_config.model_info.temperature,
+            top_p=self._model_config.model_info.top_p,
+        )
+        self._llm = Model(
+            model_client_config=client_config,
+            model_config=request_config,
+        )
+        # Initialize configured custom sensitive words list
+        self._sensitive_words = agent_card.sensitive_words
+
+    async def invoke(self, inputs: Dict, session: Session | None = None):
+        # inputs is the input of the custom Agent, with llm_inputs as the key, user input information as the user prompt
+        user_message = UserMessage(content=inputs.get("llm_inputs", "")).model_dump(exclude_none=True)
+        # Default system prompt of the custom Agent
+        system_message = SystemMessage(content="You are an AI assistant").model_dump(exclude_none=True)
+        # LLM input includes: system prompt and user prompt
         llm_input_messages = [system_message, user_message]
-        # 调用模型的异步执行方法方法得到模型的输出
-        res = await self._llm.ainvoke(model_name=self._model_config.model_info.model_name, messages=llm_input_messages)
+        # Call the model's asynchronous execution method to get the model's output
+        res = await self._llm.invoke(model=self._model_config.model_info.model_name, messages=llm_input_messages)
         llm_output = res.content
         for word in self._sensitive_words:
             if word in llm_output:
-                return "对不起，无法回答您的问题。"
-        # 如果大模型输出不包含敏感词，则直接返回大模型输出内容
+                return "Sorry, I cannot answer your question."
+        # If the LLM output does not contain sensitive words, directly return the LLM output content
         return llm_output
 
-    async def stream(self, inputs: Dict, runtime: Runtime = None) -> AsyncIterator[Any]:
+    async def stream(self,
+            inputs: Any,
+            session: Optional[Session] = None,
+            stream_modes: Optional[List[StreamMode]] = None
+    ) -> AsyncIterator[Any]:
         content = await self.invoke(inputs)
         yield {"type": "answer", "content": content}
 
+# Create custom Agent object
+my_agent = MyAgent(agent_card=my_agent_card)
 
-async def main():
-    # 创建自定义智能体配置信息的对象
-    my_agent_config = MyAgentConfig(
-        id="my_agent_id",
-        version="0.0.1",
-        description="我的自定义智能体",
-        model=create_model_config(),  # 配置大模型相关参数信息
-        sensitive_words=["自定义敏感词列表"]
-    )
-
-    # 创建自定义智能体的对象
-    my_agent = MyAgent(my_agent_config)
-
-    inputs = {"llm_inputs": "写一个笑话"}
-    res = await my_agent.invoke(inputs)
-    print(res)
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
+inputs = {"llm_inputs": "写一个笑话"}
+res = asyncio.run(my_agent.invoke(inputs))
+print(res)
 ```
 
-If the joke contains custom sensitive words, the final output result is:
+Final output result:
 
-```python
-对不起，无法回答您的问题。
 ```
+Why don't programmers like to go out in summer?
 
-Conversely, it outputs a joke generated by the LLM.
-
-```python
-问：小熊为什么不上班？答：因为它熊啊。
+Because they are afraid of "heatstroke" (heatstroke in Chinese is zhòng shǔ, which sounds like "middle number" - they deal with "middle number" problems all day, such as whether array indices start from 0 or 1, which is already a headache!) 😂
 ```

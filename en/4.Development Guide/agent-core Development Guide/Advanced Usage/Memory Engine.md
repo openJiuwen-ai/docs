@@ -1,284 +1,352 @@
-Memory Engine is the core component of the openJiuwen framework, primarily responsible for managing an agent’s memory. It provides standardized capabilities for recording, retrieving, and filtering information such as user conversation content, session variables, and user profiles. This helps developers more efficiently process and utilize user memory when building Agents.
+# Memory Engine (LongTermMemory)
 
-In intelligent dialogue scenarios, users generate a large amount of conversation data containing valuable information such as personal characteristics, interests, and behavioral habits. By intelligently managing this information, the Memory Engine helps agents better understand users and provide personalized services.
+The Memory Engine (`LongTermMemory`) is the unified memory management component provided by openJiuwen in the current version, responsible for managing user conversation messages, variable memories, and long-term user profiles.
 
-The development process of the Memory Engine consists of two steps:
+Unlike the old documentation's `MemoryEngine/SysMemConfig/MemoryConfig`, **starting from version 0.1.4, memory capabilities are entirely handled by the `LongTermMemory + MemoryEngineConfig + MemoryScopeConfig + AgentMemoryConfig` interface set**, and different business/Agent scenarios are distinguished by `scope_id`.
 
-1. Obtain a Memory Engine instance: Use the ```create_mem_engine_instance``` method to get a Memory Engine instance, with customizable configurations such as whether to record messages, the maximum length of AI messages used to generate memories, and the historical window size for generating memories, thereby initializing memory functionality.
-2. Use the Memory Engine instance: Supports adding conversation messages and extracting session variable memories and user profiles (long-term memories), as well as searching and displaying memories to help agents better understand and serve users.
+This chapter is strictly based on the public interfaces under the source code `openjiuwen.core.memory`.
 
-# Creating a Memory Engine Instance
+## Core Concepts and Configuration Classes
 
-Obtain a Memory Engine instance via the ```create_mem_engine_instance``` method by passing the appropriate configuration parameters. Configurations include whether to record messages, the maximum length of AI messages used to generate memories, and the size of the historical message window for generating memories. Data storage within the Memory Engine involves `kv_store`, `semantic_store`, and a relational database, which should be registered during initialization. Default implementations are provided under `openjiuwen.core.memory.store.impl`, and custom implementations can be created by inheriting from `openjiuwen.core.memory.store.base_kv_store.BaseKVStore`, `openjiuwen.core.memory.store.base_semantic_store.BaseSemanticStore`, and `openjiuwen.core.memory.store.base_db_store`. The `semantic_store` uses embeddings to compute semantic similarity; users can set up an embedding service or purchase one. In addition to configuring api_key, url, model name, and model dimensions, it is recommended to enable SSL verification by setting `EMBEDDING_SSL_VERIFY` to `true` in environment variables and configuring the certificate path in `EMBEDDING_SSL_CERT` to ensure secure communication.
+The core types of the memory engine are defined in the `openjiuwen.core.memory` and `openjiuwen.core.memory.config` modules:
 
-Below is an example of creating a Memory Engine instance using the default `DbmKVStore`, `MilvusSemanticStore`, and `DefaultDbStore`.
+- **`LongTermMemory`** (Memory Engine Core)
+  - Responsible for registering underlying storage (KV Store / Vector Store / DB), setting global engine configuration, managing memory configurations for each `scope`, and reading/writing user memories.
+
+- **`MemoryEngineConfig`** (Global Engine Configuration)
+  Defines engine-level common configuration:
+  - `default_model_cfg: ModelRequestConfig`: Default LLM request parameters for generating memories (model name, temperature, etc.).
+  - `default_model_client_cfg: ModelClientConfig`: Default LLM client configuration (`client_provider/api_base/api_key/verify_ssl`, etc.).
+  - `input_msg_max_len: int`: Maximum length of input messages (default: 8192).
+  - `crypto_key: bytes`: AES key for encrypting sensitive fields in storage (must be 32 bytes in length; empty means no encryption).
+
+- **`MemoryScopeConfig`** (Scope-level Configuration)
+  Used to define independent model/vector configurations for different `scope_id`:
+  - `model_cfg: ModelRequestConfig`: LLM request configuration used in this scope.
+  - `model_client_cfg: ModelClientConfig`: LLM client configuration used in this scope.
+  - `embedding_cfg: EmbeddingConfig`: Embedding model configuration used in this scope (`model_name/base_url/api_key`).
+
+- **`AgentMemoryConfig`** (Agent-level Memory Strategy Configuration)
+  Describes which "variable memories" and "long-term memories" an agent wants to extract and manage:
+  - `mem_variables: list[Param]`: Variable memory configuration list (each `Param` defines a variable name, description, type, whether it's required, etc.).
+  - `enable_long_term_mem: bool`: Whether to enable long-term memory (default: `True`).
+
+> These classes are defined in the source code at:  
+> `openjiuwen.core.memory.config.config` and `openjiuwen.core.memory.__init__`, and can be directly imported via `from openjiuwen.core.memory import MemoryEngineConfig, MemoryScopeConfig, AgentMemoryConfig, LongTermMemory`.
+
+## Creating a Memory Engine Instance
+
+The following example demonstrates how to create a complete and usable memory engine based on `LongTermMemory`, including:
+
+1. Registering KV store, vector store, and relational database store;
+2. Configuring global engine parameters;
+3. Creating and returning a reusable `LongTermMemory` instance.
 
 ```python
-import asyncio
 import os
-from datetime import datetime, timezone
-from pathlib import Path
-
+import asyncio
 from sqlalchemy.ext.asyncio import create_async_engine
 
-from openjiuwen.core.component.common.configs.model_config import ModelConfig, BaseModelInfo
-from openjiuwen.core.memory.config.config import SysMemConfig, MemoryConfig
-from openjiuwen.core.memory.engine.memory_engine import MemoryEngine, BaseMemoryEngine
-from openjiuwen.core.memory.store.impl.dbm_kv_store import DbmKVStore
-from openjiuwen.core.memory.store.impl.milvus_semantic_store import MilvusSemanticStore
-from openjiuwen.core.memory.embed_models.api import APIEmbedModel
-from openjiuwen.core.memory.store.impl.default_db_store import DefaultDbStore
-from openjiuwen.core.utils.llm.messages import BaseMessage
+from openjiuwen.core.memory import (
+    LongTermMemory,
+    MemoryEngineConfig,
+    MemoryScopeConfig,
+    AgentMemoryConfig,
+    MemoryMilvusVectorStore,
+)
+from openjiuwen.core.foundation.store.in_memory_kv_store import InMemoryKVStore
+from openjiuwen.core.foundation.store.default_db_store import DefaultDbStore
+from openjiuwen.core.foundation.llm.schema.config import ModelClientConfig, ModelRequestConfig
+from openjiuwen.core.common.schema.param import Param
+from openjiuwen.core.retrieval.common.config import EmbeddingConfig
+from openjiuwen.core.foundation.llm.schema.message import BaseMessage
 
-async def run() -> None:
-    # Define system configuration. If encryption is needed, configure the crypto_key parameter. Refer to SysMemConfig defaults.
-    sys_config_dict = {
-        "record_message": True,
-        "ai_msg_gen_max_len": 64,
-        "history_window_size_to_gen_mem": 5,
-    }
-    sys_config = SysMemConfig(**sys_config_dict)
-    # LLM-related environment variables and configuration
-    os.environ["LLM_SSL_VERIFY"] = "false"
-    os.environ["RESTFUL_SSL_VERIFY"] = "false"
-    os.environ["SSRF_PROTECT_ENABLED"] = "false"
-    # Embedding-related environment variables
-    os.environ["EMBEDDING_SSL_VERIFY"] = "false"
-    
-    base_model_config = ModelConfig(
-        model_provider="xxx",
-        model_info=BaseModelInfo(
-            api_key="xxx",
-            api_base="xxx",
-            model="xxx",
-        )
+
+async def create_memory_engine() -> LongTermMemory:
+    """Initialize and return a LongTermMemory instance"""
+    engine = LongTermMemory()
+
+    # 1. Create underlying storage
+    kv_store = InMemoryKVStore()
+
+    # Vector store (Milvus example, MemoryChromaVectorStore can also be used)
+    vector_store = MemoryMilvusVectorStore(
+        milvus_host=os.getenv("MILVUS_HOST", "localhost"),
+        milvus_port=os.getenv("MILVUS_PORT", "19530"),
+        token=os.getenv("MILVUS_TOKEN"),
+        embedding_dims=int(os.getenv("EMBEDDING_MODEL_DIMENSION", 1024)),
     )
-    # Create a MySQL database
-    # db_user: database username, db_passport: database password, db_host: MySQL host, db_port: MySQL port, agent_db_name: database name
-    db_user = "xxxx"
-    db_passport = "xxxx"
-    db_host = "xxxx"
-    db_port = "xxxx"
-    agent_db_name = "xxxx"
-    db_engine_instance = create_async_engine(
-        f"mysql+aiomysql://{db_user}:{db_passport}@{db_host}:{db_port}/{agent_db_name}?charset=utf8mb4",
+
+    # Relational database store (based on SQLAlchemy AsyncEngine + DefaultDbStore)
+    db_user = os.getenv("DB_USER", "user")
+    db_password = os.getenv("DB_PASSWORD", "password")
+    db_host = os.getenv("DB_HOST", "127.0.0.1")
+    db_port = os.getenv("DB_PORT", "3306")
+    agent_db_name = os.getenv("AGENT_DB_NAME", "agent_memory")
+
+    async_engine = create_async_engine(
+        f"mysql+aiomysql://{db_user}:{db_password}@{db_host}:{db_port}/{agent_db_name}?charset=utf8mb4",
         pool_size=20,
-        max_overflow=20
+        max_overflow=20,
     )
-    db_store = DefaultDbStore(db_engine_instance)
-    # Create a KV database
-    dbm_test_dir = "test_dbm"
-    os.makedirs(dbm_test_dir, exist_ok=True)
-    dbm_kv_path = os.path.join(dbm_test_dir, "testdb")
-    dbm_kv_store = DbmKVStore(dbm_kv_path)
-    # Create an embedding model
-    # model_name: embedding model name, base_url: embedding API endpoint, api_key: secret key, max_retries: max retries, timeout: request timeout
-    embed_model = APIEmbedModel(model_name="xxxx", base_url=r'https://xxxx', api_key='xxxx', max_retries=3, timeout=60)
-    # Create a Milvus Semantic database
-    # milvus_host: Milvus host address, milvus_port: Milvus port, token: authentication key
-    # embed_model: client instance used to generate vectors, collection_name: name of the collection storing vectors, embedding_dims: vector dimensions (must match embed_model output)
-    sem_store = MilvusSemanticStore(milvus_host="xxxx", milvus_port="xxxx", token="xxxx", embed_model=embed_model, collection_name="xxxx", embedding_dims=1024)
-    # Register stores and create a Memory Engine instance
-    memory_engine = await MemoryEngine.register_store(kv_store=dbm_kv_store, semantic_store=sem_store, db_store=db_store).create_mem_engine_instance(sys_config)
-    # Set base LLM configuration
-    # The memory engine also provides set_group_llm_config/set_group_llm to set group-level LLM (higher priority)
-    memory_engine.init_base_llm(base_model_config)
+    db_store = DefaultDbStore(async_engine)
 
+    # Register storage
+    await engine.register_store(
+        kv_store=kv_store,
+        vector_store=vector_store,
+        db_store=db_store,
+    )
+
+    # 2. Set global engine configuration (default LLM + encryption configuration)
+    default_model_cfg = ModelRequestConfig(
+        model=os.getenv("MEMORY_MODEL_NAME", "<model_name>"),
+        temperature=0.0,
+    )
+    default_model_client_cfg = ModelClientConfig(
+        client_id="default_memory_llm",
+        client_provider=os.getenv("MEMORY_MODEL_PROVIDER", "OpenAI"),
+        api_key=os.getenv("MEMORY_MODEL_API_KEY", "sk-xxxx"),
+        api_base=os.getenv("MEMORY_MODEL_API_BASE", "https://api.openai.com/v1"),
+        verify_ssl=False,
+    )
+
+    # crypto_key must be 32 bytes; empty means encryption is not enabled
+    crypto_key_env = os.getenv("SERVER_AES_MASTER_KEY_ENV", "")
+    crypto_key = crypto_key_env.encode("utf-8")[:32].ljust(32, b"\0") if crypto_key_env else b""
+
+    engine_config = MemoryEngineConfig(
+        default_model_cfg=default_model_cfg,
+        default_model_client_cfg=default_model_client_cfg,
+        crypto_key=crypto_key,
+    )
+    engine.set_config(engine_config)
+
+    return engine
 ```
 
-# Using the Memory Engine Instance
+> Note: Unlike the old `MemoryEngine.register_store(...).create_mem_engine_instance(SysMemConfig)`, `LongTermMemory` initialization is divided into two steps:  
+> 1) `await engine.register_store(...)` to register storage;  
+> 2) `engine.set_config(MemoryEngineConfig(...))` to set global configuration.
 
-The Memory Engine supports major operations such as adding conversation messages, querying variable memories and long-term memories, retrieving memories with high semantic similarity to a query, and updating or deleting memories.
 
-## Adding Messages
+## Configuring Scope and Agent Memory Strategy
 
-Use the ```add_conversation_messages``` method to add conversation messages, and the Memory Engine will analyze and extract memory information.
+The memory engine isolates memories from different businesses/Agents through `scope_id`. Each `scope_id` corresponds to a set of `MemoryScopeConfig` and several `AgentMemoryConfig`.
+
+### Configuring MemoryScopeConfig (Scope-level Model and Vector Configuration)
 
 ```python
-user_id = "user1"
-group_id = "group1"
-mem_config_dict = {
-    "mem_variables": {
-        "Name": "User name",
-        "Occupation": "User occupation",
-        "Residence": "User residence",
-        "Hobby": "User hobby"
-    },
-    "enable_long_term_mem": True,
-}
-mem_config = MemoryConfig(**mem_config_dict)
-memory_engine.set_group_config(group_id, mem_config)
+from openjiuwen.core.retrieval.common.config import EmbeddingConfig
+from openjiuwen.core.memory import MemoryScopeConfig
 
-message1 = BaseMessage(role="user",
-                       content="My name is Zhang San, and I like playing badminton")
-message2 = BaseMessage(role="assistant",
-                       content="Hello Zhang San, nice to meet you")
 
-timestamp = datetime.now(timezone.utc)
-message_id = await memory_engine.add_conversation_messages(user_id=user_id, group_id=group_id, messages=[message1, message2], timestamp=timestamp)
+async def configure_scope(engine: LongTermMemory) -> None:
+    scope_id = "app_demo_scope"
 
+    scope_model_cfg = ModelRequestConfig(
+        model=os.getenv("MEMORY_SCOPE_MODEL", "<model_name>"),
+        temperature=0.1,
+    )
+    scope_model_client_cfg = ModelClientConfig(
+        client_id="scope_llm_client",
+        client_provider=os.getenv("MEMORY_SCOPE_PROVIDER", "OpenAI"),
+        api_key=os.getenv("MEMORY_SCOPE_API_KEY", "sk-xxxx"),
+        api_base=os.getenv("MEMORY_SCOPE_API_BASE", "https://api.openai.com/v1"),
+        verify_ssl=False,
+    )
+    embed_cfg = EmbeddingConfig(
+        model_name=os.getenv("EMBED_MODEL_NAME", "text-embedding-v3"),
+        api_key=os.getenv("EMBED_API_KEY", "sk-embed-xxx"),
+        base_url=os.getenv("EMBED_API_BASE", "https://api.openai.com/v1/embeddings"),
+    )
+
+    scope_cfg = MemoryScopeConfig(
+        model_cfg=scope_model_cfg,
+        model_client_cfg=scope_model_client_cfg,
+        embedding_cfg=embed_cfg,
+    )
+
+    ok = await engine.set_scope_config(scope_id, scope_cfg)
+    assert ok, "Failed to set MemoryScopeConfig"
 ```
 
-## Query Variable Memories and Long-Term Memories
+> `set_scope_config(scope_id, MemoryScopeConfig)` automatically encrypts the configuration and writes it to KV storage, and caches it in memory; subsequent `add_messages/search_user_mem/...` will select the corresponding LLM and embedding model based on the scope's configuration.
 
-You can query extracted variable memories and long-term memories via the list_user_variables and list_user_mem interfaces.
+### Configuring AgentMemoryConfig (Variable Memory Fields)
 
 ```python
-# Query variable memories
-user_variables = await memory_engine.list_user_variables(user_id, group_id)
-# Query long-term memories
-user_mem = await memory_engine.list_user_mem(user_id=user_id, group_id=group_id, num=10, page=1)
+from openjiuwen.core.memory import AgentMemoryConfig
+from openjiuwen.core.common.schema.param import Param
+
+
+agent_mem_cfg = AgentMemoryConfig(
+    mem_variables=[
+        Param.string("Name", "User name", required=False),
+        Param.string("Occupation", "User occupation", required=False),
+        Param.string("Residence", "User residence", required=False),
+        Param.string("Hobby", "User hobby", required=False),
+        Param.string("Age", "User age", required=False),
+    ],
+    enable_long_term_mem=True,
+)
 ```
 
-## Retrieve Memories Most Similar to a Query
-You can search memories using the search_user_mem interface. The Memory Engine encodes the query via embeddings and retrieves the top num memory items with the highest semantic similarity.
+`AgentMemoryConfig` is passed when calling `add_messages` to guide the memory engine on which variables and long-term memories to extract from conversations.
+
+
+## Writing Messages and Generating Memories (add_messages)
+
+The memory engine no longer provides the old `add_conversation_messages(user_id, group_id, messages, timestamp)` interface. Instead, it uses `LongTermMemory.add_messages` to complete "write messages + extract memories":
 
 ```python
-# Get the user's hobby
-search_hobby = await memory_engine.search_user_mem(user_id=user_id, group_id=group_id, query="User's hobby", num=1)
-```
-
-## Update Variable Memories and Long-Term Memories
-You can update variable memories and long-term memories via the update_user_variable and update_mem_by_id interfaces.
-
-```python
-# Update variable memory
-await memory_engine.update_user_variable(user_id=user_id, group_id=group_id, name="Hobby", value="Basketball")
-# Update long-term memory
-await memory_engine.update_mem_by_id(user_id=user_id, group_id=group_id, mem_id=mem_id, memory="The user's hobby is basketball")
-```
-
-## Delete Variable Memories and Long-Term Memories
-You can delete variable memories and long-term memories via the delete_user_variable and delete_mem_by_id interfaces.
-
-```python
-# Delete variable memory
-await memory_engine.delete_user_variable(user_id=user_id, group_id=group_id, name="Hobby")
-# Delete long-term memory
-await memory_engine.delete_mem_by_id(user_id=user_id, group_id=group_id, mem_id=mem_id)
-
-```
-
-Output example
-
-```
-user_mem: [{'id': '019b35f578d9d2febbcf474e', ..., 'profile_type': 'personal_information', 'mem': 'The user's name is Zhang San', ...}, {'id': '019b360491e11ca26f505123', ..., 'profile_type': 'interest_hobbies', 'mem': 'The user's hobby is playing badminton', ...}]
-user_variables: {'Name': 'Zhang San', 'Hobby': 'playing badminton'}
-search_hobby: [{'id': '019b35f578d9d2febbcf474e', ..., 'profile_type': 'personal_information', 'mem': 'The user's name is Zhang San', ...]
-```
-
-# Complete Example of Using the Memory Engine
-
-```python
-import asyncio
-import os
 from datetime import datetime, timezone
-from pathlib import Path
-
-from sqlalchemy.ext.asyncio import create_async_engine
-
-from openjiuwen.core.component.common.configs.model_config import ModelConfig, BaseModelInfo
-from openjiuwen.core.memory.config.config import SysMemConfig, MemoryConfig
-from openjiuwen.core.memory.engine.memory_engine import MemoryEngine, BaseMemoryEngine
-from openjiuwen.core.memory.store.impl.dbm_kv_store import DbmKVStore
-from openjiuwen.core.memory.store.impl.milvus_semantic_store import MilvusSemanticStore
-from openjiuwen.core.memory.store.impl.default_db_store import DefaultDbStore
-from openjiuwen.core.memory.embed_models.api import APIEmbedModel
-from openjiuwen.core.utils.llm.messages import BaseMessage
+from openjiuwen.core.foundation.llm.schema.message import BaseMessage
 
 
-async def run() -> None:
-    sys_config_dict = {
-        "record_message": True,
-        "ai_msg_gen_max_len": 64,
-        "history_window_size_to_gen_mem": 5,
-    }
-    sys_config = SysMemConfig(**sys_config_dict)
-    os.environ["LLM_SSL_VERIFY"] = "false"
-    os.environ["RESTFUL_SSL_VERIFY"] = "false"
-    os.environ["SSRF_PROTECT_ENABLED"] = "false"
-    os.environ["EMBEDDING_SSL_VERIFY"] = "false"
-    base_model_config = ModelConfig(
-        model_provider="xxx",
-        model_info=BaseModelInfo(
-            api_key="xxx",
-            api_base="xxx",
-            model="xxx",
-        )
-    )
-    # Create MySQL database tables
-    db_user = "xxxx"
-    db_passport = "xxxx"
-    db_host = "xxxx"
-    db_port = "xxxx"
-    agent_db_name = "xxxx"
-    db_engine_instance = create_async_engine(
-        f"mysql+aiomysql://{db_user}:{db_passport}@{db_host}:{db_port}/{agent_db_name}?charset=utf8mb4",
-        pool_size=20,
-        max_overflow=20
-    )
-    db_store = DefaultDbStore(db_engine_instance)
-
-    dbm_test_dir = "test_dbm"
-    os.makedirs(dbm_test_dir, exist_ok=True)
-    dbm_kv_path = os.path.join(dbm_test_dir, "testdb")
-    dbm_kv_store = DbmKVStore(dbm_kv_path)
-    # Create an embedding model
-    embed_model = APIEmbedModel(model_name="xxxx", base_url=r'https://xxxx', api_key='xxxx', max_retries=3, timeout=60)
-    sem_store = MilvusSemanticStore(milvus_host="xxxx", milvus_port="xxxx", token="xxxx", embed_model=embed_model, collection_name="xxxx", embedding_dims=1024)
-    memory_engine = await MemoryEngine.register_store(kv_store=dbm_kv_store, semantic_store=sem_store, db_store=db_store).create_mem_engine_instance(sys_config)
-    memory_engine.init_base_llm(base_model_config)
-
+async def add_conversation(engine: LongTermMemory):
     user_id = "user1"
-    group_id = "group1"
-    mem_config_dict = {
-        "mem_variables": {
-            "Name": "User name",
-            "Occupation": "User occupation",
-            "Residence": "User residence",
-            "Hobby": "User hobby"
-        },
-        "enable_long_term_mem": True,
-    }
-    mem_config = MemoryConfig(**mem_config_dict)
-    memory_engine.set_group_config(group_id, mem_config)
+    scope_id = "app_demo_scope"
+    session_id = "session_001"
 
-    message1 = BaseMessage(role="user",
-                           content="My name is Zhang San, and I like playing badminton")
-    message2 = BaseMessage(role="assistant",
-                           content="Hello Zhang San, nice to meet you")
+    messages = [
+        BaseMessage(role="user", content="My name is Zhang San, I like playing badminton"),
+        BaseMessage(role="assistant", content="Hello Zhang San, nice to meet you"),
+        BaseMessage(role="user", content="I am a software engineer, living in Hangzhou"),
+    ]
 
     timestamp = datetime.now(timezone.utc)
-    message_id = await memory_engine.add_conversation_messages(user_id=user_id, group_id=group_id, messages=[message1, message2], timestamp=timestamp)
-    user_variables = await memory_engine.list_user_variables(user_id, group_id)
-    user_mem = await memory_engine.list_user_mem(user_id=user_id, group_id=group_id, num=10, page=1)
-    search_hobby = await memory_engine.search_user_mem(user_id=user_id, group_id=group_id, query="User's hobby", num=1)
-    print(f"message_id: {message_id}\n"
-          f"user_mem: {user_mem}\n"
-          f"user_variables: {user_variables}\n"
-          f"search_hobby: {search_hobby}\n")
-    
-    await memory_engine.update_user_variable(user_id=user_id, group_id=group_id, name="Hobby", value="Basketball")
-    if len(search_hobby) == 1:
-        await memory_engine.update_mem_by_id(user_id=user_id, group_id=group_id, mem_id=search_hobby[0]['id'], memory="The user's hobby is basketball")
-    user_variables = await memory_engine.list_user_variables(user_id, group_id)
-    user_mem = await memory_engine.list_user_mem(user_id=user_id, group_id=group_id, num=10, page=1)
-    print(f"after update user_mem: {user_mem}, user_variables: {user_variables}")
 
-    await memory_engine.delete_user_variable(user_id=user_id, group_id=group_id, name="Hobby")
-    if len(search_hobby) == 1:
-        await memory_engine.delete_mem_by_id(user_id=user_id, group_id=group_id, mem_id=search_hobby[0]['id'])
-    user_variables = await memory_engine.list_user_variables(user_id, group_id)
-    user_mem = await memory_engine.list_user_mem(user_id=user_id, group_id=group_id, num=10, page=1)
-    print(f"after delete user_mem: {user_mem}, user_variables: {user_variables}")
-    # Dispose the database engine
-    await db_engine_instance.dispose()
-
-    # Close any aiohttp session opened by the embedding model
-    if hasattr(embed_model, '_session') and embed_model._session:
-        await embed_model._session.close()
-
-
-if __name__ == '__main__':
-    asyncio.run(run())
+    await engine.add_messages(
+        messages=messages,
+        agent_config=agent_mem_cfg,
+        user_id=user_id,
+        scope_id=scope_id,
+        session_id=session_id,
+        timestamp=timestamp,
+        gen_mem=True,                  # Whether to generate long-term memory
+        gen_mem_with_history_msg_num=5 # How many historical messages to use when generating memory
+    )
 ```
+
+> Internally it will automatically:  
+> - Write messages to the message table;  
+> - Combine historical messages with `AgentMemoryConfig`, call the LLM to extract variables/user profiles;  
+> - Write the extracted long-term memories to vector storage and DB.
+
+
+## Querying Variable Memories (get_variables)
+
+Use `get_variables` to query currently extracted variable memories by `user_id + scope_id`:
+
+```python
+variables = await engine.get_variables(user_id="user1", scope_id="app_demo_scope")
+print(variables)
+# Possible output:
+# {"Name": "Zhang San", "Occupation": "Software Engineer", "Residence": "Hangzhou", "Hobby": "Badminton", "Age": "20"}
+```
+
+If you only want to read some variables, you can pass the `names` parameter:
+
+```python
+name_only = await engine.get_variables(user_id="user1", scope_id="app_demo_scope", names=["Name", "Occupation"])
+```
+
+
+## Paginated Viewing of Long-term Memories (get_user_mem_by_page)
+
+Long-term memories (such as user profiles) can be viewed through the pagination interface:
+
+```python
+from openjiuwen.core.memory.long_term_memory import MemoryType
+
+
+mem_list = await engine.get_user_mem_by_page(
+    user_id="user1",
+    scope_id="app_demo_scope",
+    page_size=10,
+    page_idx=0,
+    memory_type=MemoryType.USER_PROFILE,  # Only view user profile type memories
+)
+
+for mem in mem_list:
+    print(mem.mem_id, mem.type, mem.content)
+```
+
+
+## Semantic Memory Retrieval (search_user_mem)
+
+`search_user_mem` provides vector similarity-based memory retrieval:
+
+```python
+search_results = await engine.search_user_mem(
+    query="What is the user's occupation?",
+    num=5,
+    user_id="user1",
+    scope_id="app_demo_scope",
+    threshold=0.3,  # Filter results below the threshold
+)
+
+for item in search_results:
+    mem = item.mem_info
+    print(f"mem_id={mem.mem_id}, type={mem.type}, score={item.score:.4f}, content={mem.content}")
+```
+
+The return value is a list of `MemResult`, each containing:
+
+- `mem_info: MemInfo`: Includes `mem_id/content/type`;
+- `score: float`: Similarity score.
+
+
+## Updating and Deleting Memories
+
+### Updating Variable Memories (update_variables)
+
+```python
+await engine.update_variables(
+    variables={"Hobby": "Basketball"},
+    user_id="user1",
+    scope_id="app_demo_scope",
+)
+```
+
+### Deleting Variable Memories (delete_variables)
+
+```python
+await engine.delete_variables(
+    names=["Hobby"],
+    user_id="user1",
+    scope_id="app_demo_scope",
+)
+```
+
+### Deleting Long-term Memory by Memory ID (delete_mem_by_id)
+
+```python
+# Assume a mem_id has been obtained through search_user_mem or get_user_mem_by_page
+await engine.delete_mem_by_id(
+    mem_id="mem_123",
+    user_id="user1",
+    scope_id="app_demo_scope",
+)
+```
+
+### Deleting All Memories by User or Scope
+
+```python
+# Delete all memories for a user in a scope
+await engine.delete_mem_by_user_id(user_id="user1", scope_id="app_demo_scope")
+
+# Delete all memories for all users in a scope (and scope configuration)
+await engine.delete_mem_by_scope(scope_id="app_demo_scope")
+await engine.delete_scope_config(scope_id="app_demo_scope")
+```
+
+
+## Statistics and Auxiliary Queries
+
+- **Get Statistics**: Use `get_user_mem_by_page` / `user_mem_total_num` to count the number of memories for a user in a scope.
+- **Get Recent Messages**: `get_recent_messages(user_id, scope_id, session_id, num)` returns the most recent `BaseMessage` items.
+- **Query by Message ID**: `get_message_by_id(msg_id)` returns the corresponding message and timestamp.
+
+These interfaces are defined in the source code at `openjiuwen.core.memory.long_term_memory.LongTermMemory` and `openjiuwen.core.memory.knowledge_base`. The naming and signatures in the documentation are fully consistent with the source code and no longer use the deleted old interfaces such as `SysMemConfig/MemoryConfig/MemoryEngine.register_store/create_mem_engine_instance/add_conversation_messages/list_user_mem/update_user_variable/delete_user_variable`.
