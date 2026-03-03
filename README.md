@@ -1,19 +1,20 @@
 # 文档中心
 ## 概述
-docs仓主要包含openJiuwen社区各个SIG组的技术相关文档内容。
+docs 仓库用于存放 openJiuwen 产品简介文档，各个 SIG 的技术文档存储在对应仓库的 docs 目录下。
+
 
 ## 目录结构
 <pre>
 |-- zh
-|   |-- 1. 产品简介
-|   |-- 2. 安装指导
-|   |-- 3. 快速入手
-|   |-- 4. 开发指南
-|   |-- 5. 实践教程
+|   |-- 产品简介
 |-- en
-|   |-- 1. Product Overview
-|   |-- 2. Installation Instructions
-|   |-- 3. Quick Start Guide
-|   |-- 4. Development Guide
-|   |-- 5. Practical Tutorial
+|   |-- Product Overview
 </pre>
+
+## openJiuwen 社区各 SIG 组技术文档地址
+
+| SIG 组名称 | 文档地址 |
+|------------|----------|
+| agent-studio | https://gitcode.com/openJiuwen/agent-studio/tree/develop/docs |
+| agent-core | https://gitcode.com/openJiuwen/agent-core/tree/develop/docs |
+| deepsearch | https://gitcode.com/openJiuwen/deepsearch/tree/dev/docs |
