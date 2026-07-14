@@ -35,31 +35,95 @@ Key advantages of the openJiuwen platform include:
 
 # System Architecture
 
-The openJiuwen system architecture consists of three main components: openJiuwen Core, openJiuwen Studio, and openJiuwen Ops.
+openJiuwen adopts a layered architecture that covers the complete lifecycle of AI Agents, from development and execution to deployment, operations, and maintenance. The overall architecture consists of **DeepAgents**, **Agent Studio**, **Agent Framework**, **Agent Distributed Runtime**, and **Agent System Service**.
 
-- openJiuwen Core: Provides a comprehensive suite of SDKs and tools for AI Agent development and optimisation. Developers can use these SDKs to build, tune, and debug intelligent agents efficiently. The Core integrates foundational tools, core components, workflow orchestration, and agent control capabilities across multiple scenarios, supporting agent task execution, cross-agent collaboration, and complex task handling while ensuring efficient and precise operation in production environments.
-- openJiuwen Studio: A one-stop AI Agent development platform that delivers a full-stack solution from development to deployment. It uses low-code and zero-code visual design and orchestration tools, enabling developers to quickly build, configure, and debug Agents, applications, and workflows.
-- openJiuwen Ops: A core AgentOps platform that provides full lifecycle management for AI Agents, covering debugging, evaluation, observability, and optimisation. It offers end-to-end observability, prompt engineering management, and automated evaluation. The platform records execution traces, optimises prompts, and quantifies agent quality, enabling online quality monitoring and performance comparison across iterations to ensure stable production operation.
+* **DeepAgents**: Provides complex, scenario-oriented Agents such as JiuwenSwarm, JiuwenSymbiosis, and DeepSearch, enabling out-of-the-box use.
+* **Agent Studio**: A one-stop AI Agent development platform that provides low-code and no-code visual development capabilities. It supports Agent development, workflow orchestration, prompt optimization, online debugging, and resource management, helping developers quickly build and debug Agents and workflows.
+* **Agent Framework**: The core framework and execution engine of openJiuwen that provides developers with intuitive APIs for building, orchestrating, and invoking AI Agents across diverse scenarios. It delivers comprehensive capabilities including complex task planning, iterative execution, tool and skill invocation, context management, memory subsystems, multi-agent collaboration, agent self-evolution, and affinity-aware scheduling, enabling the engineering of both single-agent and multi-agent applications.
+* **Agent Distributed Runtime**: Provides the distributed runtime foundation for AI Agents, supporting both low-code and code-first deployment models with one-click deployment and unified lifecycle management. It natively supports multi-tenant isolation, elastic scaling, service registration and discovery, and high-performance cross-cluster communication, enabling reliable operation and large-scale deployment of enterprise-grade multi-agent systems.
+* **Agent System Service**: Provides the foundational system services of AgentOS, including system-level security sandboxing, unified persistent memory storage, native CLI utilities, a standardized Agent file system, and a cross-agent message bus. These core capabilities provide a secure runtime environment, unified resource management, and efficient collaboration for AI Agents across the platform.
 
-The following figure illustrates the openJiuwen architecture (components shown within the grey dashed box will be gradually open-sourced in future releases):
+<img src="./images/architecture.png" alt="openJiuwen Capability Architecture" style="display: block; width: 100%; max-width: 1000px; height: auto; margin: 16px auto;" />
 
-![image](./images/architecture.png)
+## Implementation Overview
 
-- openJiuwen Core as the central component of the openJiuwen architecture, provides the following core capabilities in this open-source release:
+openJiuwen adopts a modular repository design to build the AI Agent development ecosystem layer by layer. Each repository can evolve independently or be used in combination with others, covering the complete workflow from Agent applications, Skill distribution, and visual orchestration to framework development and service-based execution.
 
-  - **SDK interface layer:** Focuses on the development needs of LLM-based applications and provides Python SDK interfaces for developers. The SDK supports agent instantiation, workflow design and orchestration, LLM invocation, output parsing, prompt template construction and dynamic rendering, as well as local tool invocation for accessing external services.
+<img src="./images/repositories.jpg" alt="openJiuwen Implementation Architecture" style="display: block; width: 100%; max-width: 1000px; height: auto; margin: 16px auto;" />
 
-  - **Agent engine:** Designed for both ReAct-based intelligent interaction and automated workflow transitions. By introducing an Agent controller, it supports complex task planning, tool selection and invocation, and dynamic workflow switching. The engine provides a standardised, out-of-the-box runtime environment along with core capabilities such as conversation context management and foundational toolsets, significantly lowering the barrier to Agent development.
+### Repository Overview
 
-- openJiuwen Studio, built on top of openJiuwen Core, provides visual and low-code capabilities for developing Agents and workflows. In this open-source release, its core features include:
-
-  - **Agent development and testing:** On-demand plugin selection, visualised workflow orchestration, and flexible configuration of knowledge bases and memory allow developers to quickly equip Agents with target business capabilities. Integrated online debugging, testing, and publishing seamlessly support the entire development lifecycle.
-
-  - **Prompt development and optimisation:** Supports one-click prompt generation, automatic optimisation, multi-version comparison testing, and full lifecycle version management, enabling developers to efficiently produce high-quality prompts while lowering the barrier to building an Agent’s core capabilities.
-
-  - **Visualised workflow orchestration:** Provides a drag-and-drop canvas, rich node components, and configuration panels to support visual construction of Agent business logic and parameter customisation. Combined with step-by-step debugging and real-time log viewing, complex workflow development becomes more efficient and manageable.
-
-  - **Resource management:** Offers unified management of models, plugins, knowledge bases, and memory. Supports fast model integration and switching, one-click plugin installation and updates, knowledge base import and classification, and personalised memory policy configuration, providing efficient resource support for Agent development.
+<div style="overflow-x: auto;">
+<table style="width: 100%; border-collapse: collapse; table-layout: fixed;">
+  <colgroup>
+    <col style="width: 18%;" />
+    <col style="width: 26%;" />
+    <col style="width: 56%;" />
+  </colgroup>
+  <thead>
+    <tr>
+      <th style="border: 1px solid; padding: 10px 12px; text-align: left; font-weight: 700;">Module</th>
+      <th style="border: 1px solid; padding: 10px 12px; text-align: left; font-weight: 700;">Repository</th>
+      <th style="border: 1px solid; padding: 10px 12px; text-align: left; font-weight: 700;">Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td rowspan="3" style="border: 1px solid; padding: 10px 12px; font-weight: 700; vertical-align: middle;">DeepAgents</td>
+      <td style="border: 1px solid; padding: 10px 12px; vertical-align: top;"><a href="https://gitcode.com/openJiuwen/jiuwenswarm">jiuwenswarm</a></td>
+      <td style="border: 1px solid; padding: 10px 12px; vertical-align: top;">A multi-Agent collaboration framework and official flagship application that supports complex task collaboration and autonomous Skill evolution.</td>
+    </tr>
+    <tr>
+      <td style="border: 1px solid; padding: 10px 12px; vertical-align: top;"><a href="https://gitcode.com/openJiuwen/jiuwensymbiosis">jiuwensymbiosis</a></td>
+      <td style="border: 1px solid; padding: 10px 12px; vertical-align: top;">An Agent framework for embodied intelligence that supports embodiment-independent capability reuse and safety control.</td>
+    </tr>
+    <tr>
+      <td style="border: 1px solid; padding: 10px 12px; vertical-align: top;"><a href="https://gitcode.com/openJiuwen/deepsearch">deepsearch</a></td>
+      <td style="border: 1px solid; padding: 10px 12px; vertical-align: top;">A knowledge-enhanced deep search and research Agent designed for search, reasoning, and report generation scenarios.</td>
+    </tr>
+    <tr>
+      <td style="border: 1px solid; padding: 10px 12px; font-weight: 700; vertical-align: middle;">SkillHub</td>
+      <td style="border: 1px solid; padding: 10px 12px; vertical-align: top;"><a href="https://gitcode.com/openJiuwen/skillhub">skillhub</a></td>
+      <td style="border: 1px solid; padding: 10px 12px; vertical-align: top;">A Skill hosting and distribution platform that supports Skill publishing, version management, search and download, sharing and reuse, and private deployment.</td>
+    </tr>
+    <tr>
+      <td style="border: 1px solid; padding: 10px 12px; font-weight: 700; vertical-align: middle;">Agent Studio</td>
+      <td style="border: 1px solid; padding: 10px 12px; vertical-align: top;"><a href="https://gitcode.com/openJiuwen/agent-studio">agent-studio</a></td>
+      <td style="border: 1px solid; padding: 10px 12px; vertical-align: top;">A one-stop visual Agent development platform that supports Agent editing, workflow orchestration, resource configuration, prompt optimization, and online debugging.</td>
+    </tr>
+    <tr>
+      <td rowspan="4" style="border: 1px solid; padding: 10px 12px; font-weight: 700; vertical-align: middle;">Agent Framework</td>
+      <td style="border: 1px solid; padding: 10px 12px; vertical-align: top;">agent-gateway</td>
+      <td style="border: 1px solid; padding: 10px 12px; vertical-align: top;">A unified access gateway that provides Channel management, message processing, scheduled tasks, heartbeat management, and other capabilities. Currently opening soon.</td>
+    </tr>
+    <tr>
+      <td style="border: 1px solid; padding: 10px 12px; vertical-align: top;"><a href="https://gitcode.com/openJiuwen/agent-core">agent-core</a></td>
+      <td style="border: 1px solid; padding: 10px 12px; vertical-align: top;">A Python Agent SDK that provides core capabilities including Agent orchestration, runtime management, model integration, tools, retrieval, and evaluation.</td>
+    </tr>
+    <tr>
+      <td style="border: 1px solid; padding: 10px 12px; vertical-align: top;"><a href="https://gitcode.com/openJiuwen/agent-core-java">agent-core-java</a></td>
+      <td style="border: 1px solid; padding: 10px 12px; vertical-align: top;">A Java Agent SDK that provides the Java ecosystem with Agent development capabilities consistent with those of the Python SDK.</td>
+    </tr>
+    <tr>
+      <td style="border: 1px solid; padding: 10px 12px; vertical-align: top;"><a href="https://gitcode.com/openJiuwen/agent-memory">agent-memory</a></td>
+      <td style="border: 1px solid; padding: 10px 12px; vertical-align: top;">A long-term memory system for Agents that supports memory extraction, compression, hybrid retrieval, knowledge accumulation, and autonomous evolution.</td>
+    </tr>
+    <tr>
+      <td rowspan="3" style="border: 1px solid; padding: 10px 12px; font-weight: 700; vertical-align: middle;">Agent Distributed Runtime</td>
+      <td style="border: 1px solid; padding: 10px 12px; vertical-align: top;"><a href="https://gitcode.com/openJiuwen/agent-runtime">agent-runtime</a></td>
+      <td style="border: 1px solid; padding: 10px 12px; vertical-align: top;">A Python Agent Runtime responsible for service-based Agent execution, session management, and lifecycle management.</td>
+    </tr>
+    <tr>
+      <td style="border: 1px solid; padding: 10px 12px; vertical-align: top;"><a href="https://gitcode.com/openJiuwen/agent-runtime-java">agent-runtime-java</a></td>
+      <td style="border: 1px solid; padding: 10px 12px; vertical-align: top;">A Java Agent Runtime based on Spring Boot that provides service-based Agent execution and deployment capabilities.</td>
+    </tr>
+    <tr>
+      <td style="border: 1px solid; padding: 10px 12px; vertical-align: top;"><a href="https://gitcode.com/openJiuwen/agent-protocol">agent-protocol</a></td>
+      <td style="border: 1px solid; padding: 10px 12px; vertical-align: top;">An Agent interoperability protocol SDK that provides the MCP SDK, A2A SDK, and A2X Registry.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
 
 # Function Features
 
