@@ -23,6 +23,33 @@ Enterprises can leverage openJiuwen’s workflow engine and multi-agent collabor
 - Financial industry: Through multi-agent collaboration, the system supports multi-level intent routing, intelligent task allocation, and dynamic agent scheduling. This enables financial institutions to build integrated service systems with high precision, low latency, strong reliability, and robust security.
 - Healthcare: Supports customised development of medical Agents for efficient medical record summarisation, preliminary screening of medical imaging data, and generation of diagnostic and treatment recommendations. By deeply integrating professional medical knowledge with contextual information, the system provides accurate and comprehensive clinical decision support, improving diagnostic efficiency and accuracy.
 
+### Agent Lifecycle Sequence Diagram
+
+Whether in consumer or enterprise scenarios, an Agent follows a unified lifecycle from creation to execution and feedback. The following sequence diagram illustrates a complete Agent invocation process:
+
+```mermaid
+sequenceDiagram
+    actor User as User
+    participant Studio as Agent Studio
+    participant Core as Agent Framework
+    participant Runtime as Agent Runtime
+    participant Memory as Memory System
+
+    User->>Studio: 1. Create / Orchestrate Agent
+    Studio->>Core: 2. Submit Agent Definition
+    Core->>Core: 3. Parse Task + Plan Execution
+    Core->>Memory: 4. Read Historical Memory
+    Memory-->>Core: 5. Return Context
+    Core->>Runtime: 6. Schedule Execution
+    Runtime->>Runtime: 7. Execute Tools / Invoke LLM
+    Runtime-->>Core: 8. Return Execution Result
+    Core->>Memory: 9. Persist New Memory
+    Core-->>Studio: 10. Return Agent Response
+    Studio-->>User: 11. Present Result
+```
+
+> **Note**: The user orchestrates and submits an Agent definition in Agent Studio. Agent Framework parses the task and plans execution, reads historical context from the memory system, then delegates execution to Agent Runtime. Runtime completes tool invocation and LLM reasoning, returns the result, Framework persists new memory, and finally the response is presented to the user via Studio.
+
 # Product Advantages
 
 Key advantages of the openJiuwen platform include:
@@ -42,6 +69,51 @@ openJiuwen adopts a layered architecture that covers the complete lifecycle of A
 * **Agent Framework**: The core framework and execution engine of openJiuwen that provides developers with intuitive APIs for building, orchestrating, and invoking AI Agents across diverse scenarios. It delivers comprehensive capabilities including complex task planning, iterative execution, tool and skill invocation, context management, memory subsystems, multi-agent collaboration, agent self-evolution, and affinity-aware scheduling, enabling the engineering of both single-agent and multi-agent applications.
 * **Agent Distributed Runtime**: Provides the distributed runtime foundation for AI Agents, supporting both low-code and code-first deployment models with one-click deployment and unified lifecycle management. It natively supports multi-tenant isolation, elastic scaling, service registration and discovery, and high-performance cross-cluster communication, enabling reliable operation and large-scale deployment of enterprise-grade multi-agent systems.
 * **Agent System Service**: Provides the foundational system services of AgentOS, including system-level security sandboxing, unified persistent memory storage, native CLI utilities, a standardized Agent file system, and a cross-agent message bus. These core capabilities provide a secure runtime environment, unified resource management, and efficient collaboration for AI Agents across the platform.
+
+### Architecture Component Relationship Diagram
+
+The following diagram illustrates the invocation relationships and data flow between the five core components of openJiuwen, helping developers quickly understand the overall architecture topology:
+
+```mermaid
+graph TD
+    %% External systems
+    User([User])
+    LLM([Large Language Model])
+
+    %% Core services
+    DeepAgents["DeepAgents<br/>Complex Agent Layer<br/>JiuwenSwarm / JiuwenSymbiosis / DeepSearch"]
+    Studio["Agent Studio<br/>Development Platform<br/>Low-code / No-code Visual Development"]
+    Framework["Agent Framework<br/>Core Framework & Execution Engine<br/>Agent Orchestration / Tool Invocation / Memory"]
+    Runtime["Agent Distributed Runtime<br/>Distributed Runtime<br/>Deployment / Scaling / Service Discovery"]
+    SystemService["Agent System Service<br/>System Services<br/>Security Sandbox / Memory Storage / File System"]
+
+    %% Data storage
+    Memory[("Memory Storage")]
+    Skill[("Skill Repository")]
+
+    %% Data flow
+    User -->|Develop / Invoke| Studio
+    User -->|Use| DeepAgents
+    Studio -->|Orchestrate| Framework
+    DeepAgents -->|Based on| Framework
+    Framework -->|Runs on| Runtime
+    Runtime -->|Calls| SystemService
+    Framework -.via SystemService.-> Memory
+    LLM -->|Reasoning| Framework
+    SystemService -->|Persist| Memory
+    Framework -->|Invoke Skill| Skill
+
+    %% Legend
+    classDef external fill:#e1f5fe,stroke:#0288d1,color:#000
+    classDef core fill:#fff3e0,stroke:#f57c00,color:#000
+    classDef storage fill:#f3e5f5,stroke:#7b1fa2,color:#000
+
+    class User,LLM external
+    class DeepAgents,Studio,Framework,Runtime,SystemService core
+    class Memory,Skill storage
+```
+
+> **Legend**: Blue nodes represent external systems (User / Large Language Model), orange nodes represent openJiuwen core services, and purple nodes represent data storage.
 
 <img src="./images/architecture.png" alt="openJiuwen Capability Architecture" style="display: block; width: 100%; max-width: 1000px; height: auto; margin: 16px auto;" />
 
@@ -140,6 +212,46 @@ openJiuwen delivers an extensible and flexible Agent application development fra
 - Workflow Agent: A multi-step, task-oriented process automation Agent that executes complex tasks by strictly following predefined execution flows. It emphasises predictability, standardised execution, and efficiency, making it suitable for scenarios where task structures are clearly defined and decomposable into multiple steps.
 
   ![image](./images/WorkflowAgent.png)
+
+### Agent Framework Internal Module Invocation Chain
+
+The following diagram illustrates the invocation relationships between internal modules of Agent Framework, helping developers understand how ReActAgent / WorkflowAgent collaborate with the core SDK, execution engine, and memory system:
+
+```mermaid
+flowchart LR
+    %% Agent types
+    ReAct["ReActAgent<br/>Reasoning + Action Loop"]
+    Workflow["WorkflowAgent<br/>Process Automation"]
+
+    %% Core modules
+    Gateway["agent-gateway<br/>Unified Access Gateway<br/>(Opening Soon)"]
+    Core["agent-core<br/>Python Agent SDK"]
+    CoreJava["agent-core-java<br/>Java Agent SDK"]
+    Memory["agent-memory<br/>Long-term Memory System"]
+
+    %% Execution engine
+    Engine["High-reliability Execution Engine<br/>Hybrid Batch-Stream Graph Execution"]
+
+    %% Invocation chain
+    Gateway --> ReAct
+    Gateway --> Workflow
+    ReAct --> Core
+    Workflow --> Core
+    Core --> Engine
+    CoreJava --> Engine
+    Engine --> Memory
+
+    %% Legend
+    classDef agentType fill:#e8f5e9,stroke:#388e3c,color:#000
+    classDef module fill:#fff3e0,stroke:#f57c00,color:#000
+    classDef engine fill:#fce4ec,stroke:#c2185b,color:#000
+
+    class ReAct,Workflow agentType
+    class Gateway,Core,CoreJava,Memory module
+    class Engine engine
+```
+
+> **Legend**: Green nodes represent Agent types (ReActAgent / WorkflowAgent), orange nodes represent core module repositories of Agent Framework, and pink nodes represent the high-reliability execution engine.
 
 **High-reliability Execution Engine**
 
