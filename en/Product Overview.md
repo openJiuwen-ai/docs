@@ -43,7 +43,7 @@ openJiuwen adopts a layered architecture that covers the complete lifecycle of A
 * **Agent Distributed Runtime**: Provides the distributed runtime foundation for AI Agents, supporting both low-code and code-first deployment models with one-click deployment and unified lifecycle management. It natively supports multi-tenant isolation, elastic scaling, service registration and discovery, and high-performance cross-cluster communication, enabling reliable operation and large-scale deployment of enterprise-grade multi-agent systems.
 * **Agent System Service**: Provides the foundational system services of AgentOS, including system-level security sandboxing, unified persistent memory storage, native CLI utilities, a standardized Agent file system, and a cross-agent message bus. These core capabilities provide a secure runtime environment, unified resource management, and efficient collaboration for AI Agents across the platform.
 
-<img src="./images/architecture.png" alt="openJiuwen Capability Architecture" style="display: block; width: 100%; max-width: 1000px; height: auto; margin: 16px auto;" />
+<img src="./images/architecture​en.png" alt="openJiuwen Capability Architecture" style="display: block; width: 100%; max-width: 1000px; height: auto; margin: 16px auto;" />
 
 ## Implementation Overview
 
