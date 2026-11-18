@@ -15,6 +15,6 @@ The docs repository hosts the openJiuwen product overview documentation; the tec
 
 | SIG Name | Documentation URL |
 |----------|-------------------|
-| agent-studio | https://github.com/openJiuwen-ai/agent-studio/tree/develop/docs |
-| agent-core | https://github.com/openJiuwen-ai/agent-core/tree/develop/docs |
-| deepsearch | https://github.com/openJiuwen-ai/deepsearch/tree/dev/deepsearch/docs |
+| agent-studio | https://gitcode.com/openJiuwen/agent-studio/tree/develop/docs |
+| agent-core | https://gitcode.com/openJiuwen/agent-core/tree/develop/docs |
+| deepsearch | https://gitcode.com/openJiuwen/deepsearch/tree/dev/deepsearch/docs |
